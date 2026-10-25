@@ -38,6 +38,8 @@ export default async function ApiPage() {
           ['DELETE /api/v1/projects/:slug/memory/:path', '—', '{ "deleted": true }'],
           ['POST /api/v1/projects/:slug/search', '{ "query", "path_prefix?", "limit?" }', 'ranked hits'],
           ['GET /api/v1/projects/:slug/digest?budget_tokens=', '—', 'a digest for session start'],
+          ['GET /api/v1/projects/:slug/versions?path=', 'memory.read', 'versions of a memory, newest first'],
+          ['POST /api/v1/projects/:slug/versions/:id/restore', 'memory.restore_version', 'put an old body back'],
           ['POST /api/v1/projects/:slug/ingest', '{ "files": [{ "path", "body" }], "prefix?" }', 'written and skipped counts'],
         ]}
       />

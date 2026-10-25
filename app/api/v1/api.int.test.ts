@@ -5,7 +5,7 @@ import { GET as readMemoryRoute, PUT as writeMemoryRoute } from '@/app/api/v1/pr
 import { GET as healthRoute } from '@/app/api/health/route'
 import { POST as ingestRoute } from '@/app/api/v1/projects/[slug]/ingest/route'
 import { GET as readMemoryGet } from '@/app/api/v1/projects/[slug]/memory/[...path]/route'
-import { GET as listVersionsRoute } from '@/app/api/v1/projects/[slug]/memory/[...path]/versions/route'
+import { GET as listVersionsRoute } from '@/app/api/v1/projects/[slug]/versions/route'
 import { POST as restoreVersionRoute } from '@/app/api/v1/projects/[slug]/versions/[id]/restore/route'
 import { sha256 } from '@/lib/crypto'
 import { adminPool } from '@/lib/db/pool'
@@ -148,8 +148,8 @@ describe('memory history over the rest api', () => {
     )
 
     const listed = await listVersionsRoute(
-      req(`/api/v1/projects/${slug}/memory/hist/x/versions`),
-      params({ path: ['hist', 'x'] }),
+      req(`/api/v1/projects/${slug}/versions?path=hist%2Fx`),
+      { params: Promise.resolve({ slug }) },
     )
     const body = (await listed.json()) as { versions: { id: string; bytes: number; body?: string }[] }
     expect(listed.status).toBe(200)
@@ -171,8 +171,8 @@ describe('memory history over the rest api', () => {
     expect((await read.json()).body).toBe('first')
 
     const after = await listVersionsRoute(
-      req(`/api/v1/projects/${slug}/memory/hist/x/versions`),
-      params({ path: ['hist', 'x'] }),
+      req(`/api/v1/projects/${slug}/versions?path=hist%2Fx`),
+      { params: Promise.resolve({ slug }) },
     )
     // The body the restore replaced is history now, so a restore can be undone.
     expect(((await after.json()) as { versions: unknown[] }).versions).toHaveLength(2)

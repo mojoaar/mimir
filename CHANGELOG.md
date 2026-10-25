@@ -5,13 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2026-10-26
+
+History you can undo.
+
+### Added
+
+- Every write keeps the body it replaced, so an agent that overwrites a memory
+  no longer destroys what was there. The last 20 versions per memory are kept
+  and pruned by the nightly purge job.
+- A history panel in the memory browser: the versions of a memory, a line diff
+  against what is live now, and a restore button. A restore is itself a write,
+  so a mistaken restore can be undone the same way.
+- `GET /api/v1/projects/:slug/memory/*path/versions` and
+  `POST /api/v1/projects/:slug/versions/:id/restore`, so an agent can read and
+  restore history too.
+- `diff` as a dependency, for the line diff.
 
 ### Changed
 
-- A wrong URL now gets a real 404 and a page worth reading: Mimir looked, and
-  found nothing. The theme cookie decides the colours, and the joke is stable
-  per path, so a broken link is at least a consistent one.
+- A wrong URL now gets a real 404 and a page worth reading instead of the
+  framework's bare one. The theme cookie picks the colours and the line is
+  stable per path.
+- `runPurge` reports `{ removed, versionsRemoved }`, and the `memory.purge`
+  audit row carries both counts.
 
 ## [0.5.0] - 2026-10-26
 

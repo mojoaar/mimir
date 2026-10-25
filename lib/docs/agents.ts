@@ -68,7 +68,7 @@ export const AGENTS: AgentDoc[] = [
       ),
     notes: [
       `Or add it from the CLI: claude mcp add --transport http mimir <your-url>/mcp --header "Authorization: Bearer $${TOKEN}"`,
-      'Add the session-start hook from the hooks directory to inject the project digest when a session begins.',
+      'Add the session-start hook to inject the project digest when a session begins: point SessionStart at hooks/mimir-session-start.sh (see hooks/README.md).',
     ],
   },
   {

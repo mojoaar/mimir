@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
-import { writeMemory } from '@/lib/memory/service'
+import { readMemory, writeMemory } from '@/lib/memory/service'
 
 import {
   archiveProject,
@@ -109,6 +109,24 @@ describe('archiving', () => {
       [aliceProjectId],
     )
     expect(rows[0]?.count).toBe(1)
+  })
+
+  it('refuses agent writes to an archived project instead of failing inside a dead transaction', async () => {
+    const p = await resolveProject(alice, { repo: 'github.com/alice/archived-repo', create: true })
+    await writeMemory({ userId: alice, projectId: p.id, path: 'a/b', body: 'kept' })
+    await archiveProject(alice, p.id)
+
+    // What the plugin actually does: resolve by repo, then write.
+    const again = await resolveProject(alice, { repo: 'github.com/alice/archived-repo', create: true })
+
+    expect(again.id).toBe(p.id)
+    await expect(
+      writeMemory({ userId: alice, projectId: again.id, path: 'a/b', body: 'new' }),
+    ).rejects.toMatchObject({ code: 'forbidden' })
+    await expect(readMemory(alice, again.id, 'a/b')).rejects.toMatchObject({ code: 'forbidden' })
+
+    await restoreProject(alice, p.id)
+    expect((await readMemory(alice, again.id, 'a/b'))?.body).toBe('kept')
   })
 
   it('a read grantee cannot archive', async () => {

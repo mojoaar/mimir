@@ -35,7 +35,7 @@ describe('browser actions', () => {
   it('saves the body and records one audit row', async () => {
     const state = await saveMemoryAction({}, form({ projectId: 'p1', slug: 'demo', path: 'a/b', body: 'text' }))
 
-    expect(state).toEqual({ ok: 'Saved. The summary clears until the model rewrites it.' })
+    expect(state).toEqual({ ok: 'Saved.' })
     expect(mocks.writeMemory).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'u1', projectId: 'p1', path: 'a/b', body: 'text', source: 'web' }),
     )
@@ -52,6 +52,24 @@ describe('browser actions', () => {
     await expect(deleteMemoryAction(form({ projectId: 'p1', slug: 'demo', path: 'a/b' }))).rejects.toThrow('NEXT_REDIRECT')
     expect(mocks.audit).toHaveBeenCalledWith(expect.objectContaining({ action: 'memory.delete', targetId: 'a/b' }))
     expect(mocks.redirect).toHaveBeenCalledWith('/app/projects/demo?deleted=1')
+  })
+
+  it('says why a restore was refused instead of landing silently', async () => {
+    mocks.restoreMemory.mockResolvedValueOnce({ restored: false, reason: 'conflict' } as never)
+
+    await expect(restoreMemoryAction(form({ projectId: 'p1', slug: 'demo', path: 'a/b' }))).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mocks.audit).not.toHaveBeenCalled()
+    expect(mocks.redirect).toHaveBeenCalledWith(expect.stringContaining('deleted=1&error='))
+    expect(mocks.redirect).toHaveBeenCalledWith(expect.stringContaining('written%20again'))
+  })
+
+  it('does not audit a delete that found nothing', async () => {
+    mocks.deleteMemory.mockResolvedValueOnce(false)
+
+    await expect(deleteMemoryAction(form({ projectId: 'p1', slug: 'demo', path: 'a/b' }))).rejects.toThrow('NEXT_REDIRECT')
+
+    expect(mocks.audit).not.toHaveBeenCalled()
   })
 
   it('restores and opens the memory', async () => {

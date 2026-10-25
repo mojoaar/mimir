@@ -19,7 +19,10 @@ Seeing what the agents wrote.
 
 ### Fixed
 
-- A URL that is not a page answers a real `404` instead of `200` with a not-found body, and `/app/*` keeps its `noindex` header.
+- A URL that is not a page — an unknown locale, an unknown docs agent, any path with no route — answers a real `404` instead of `200` with a not-found body, and `/app/*` keeps its `noindex` header. A valid route with a missing id (a purged memory, a deleted project) still renders the not-found page with `200`, because Next streams a dynamic route's shell before the page can decide.
+- An archived project refuses reads and writes through the API instead of failing with an internal error, and the zero-config repo lookup no longer dead-ends on the repo-key unique index.
+- Editing a memory in the browser keeps its title, and a refused or impossible restore says why instead of landing silently.
+- Archiving is owner-only in the UI: a write or read grantee no longer sees a Restore button that cannot work.
 
 
 ## [0.4.0] - 2026-10-26

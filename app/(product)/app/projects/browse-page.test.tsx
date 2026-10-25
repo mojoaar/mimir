@@ -56,4 +56,9 @@ describe('project browser', () => {
   it('404s a path that is not stored', async () => {
     await expect(page({ path: 'a/b' })).rejects.toThrow('NEXT_NOT_FOUND')
   })
+
+  it('survives a repeated query parameter instead of crashing on it', async () => {
+    const html = renderToStaticMarkup(await page({ q: ['one', 'two'] as never }))
+    expect(html).toContain('Search this project')
+  })
 })

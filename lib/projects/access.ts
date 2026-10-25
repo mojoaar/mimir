@@ -19,15 +19,22 @@ const RANK: Record<Exclude<ProjectRole, null>, number> = { read: 1, write: 2, ow
  * means either "no access" or "no such project" — deliberately the same
  * answer, so a caller cannot probe for someone else's slugs.
  */
-export async function projectRole(userId: string, projectId: string): Promise<ProjectRole> {
+export async function projectRole(
+  userId: string,
+  projectId: string,
+  opts: { includeArchived?: boolean } = {},
+): Promise<ProjectRole> {
   return withUser(userId, async (tx) => {
     const { rows } = await tx.query<{ owner_user_id: string; role: 'read' | 'write' | null }>(
+      // An archived project is out of reach for every verb, so a memory write by
+      // id is refused the same way a read is. Only archive/restore pass
+      // includeArchived, so they can still find the row they are changing.
       `select p.owner_user_id, g.role
          from projects p
          left join project_grants g
            on g.project_id = p.id and g.principal_type = 'user' and g.principal_id = $2
-        where p.id = $1`,
-      [projectId, userId],
+        where p.id = $1 and ($3::boolean or p.archived_at is null)`,
+      [projectId, userId, opts.includeArchived ?? false],
     )
     const row = rows[0]
     if (!row) return null

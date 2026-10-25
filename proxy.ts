@@ -28,6 +28,8 @@ function rootOf(pathname: string): string {
 function isKnownPath(pathname: string): boolean {
   const segments = pathname.split('/').filter(Boolean)
   const root = segments[0] ?? ''
+  // public/ assets carry an extension; they are served, not routed.
+  if (/\.[a-z0-9]+$/i.test(segments.at(-1) ?? '')) return true
   if ((LOCALES as readonly string[]).includes(root)) return true
   if (!PUBLIC_ROOTS.has(root)) return false
   // /docs/agents/<id> is generated per agent; anything else there is not a page.

@@ -3,7 +3,7 @@ import type { PoolClient } from 'pg'
 import { withUser } from '@/lib/db/tx'
 import { audit } from '@/lib/audit'
 
-import { forbidden, requireProjectRole } from './access'
+import { forbidden, projectRole, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
 
 export type ProjectRole = 'owner' | 'write' | 'read'
@@ -104,6 +104,10 @@ async function createProject(
 
   for (let attempt = 1; attempt <= 5; attempt++) {
     const slug = attempt === 1 ? base : `${base}-${attempt}`
+    // The repo_key unique index can fire on an archived project, and a failed
+    // statement aborts the whole transaction: the savepoint is what lets the
+    // recovery SELECT run at all.
+    await client.query('SAVEPOINT create_project')
     try {
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO projects (owner_user_id, name, slug, repo_key)
@@ -113,10 +117,15 @@ async function createProject(
         [userId, name, slug, repoKey],
       )
       const row = inserted.rows[0]
-      if (row) return { id: row.id, slug, role: 'owner' }
+      if (row) {
+        await client.query('RELEASE SAVEPOINT create_project')
+        return { id: row.id, slug, role: 'owner' }
+      }
+      await client.query('RELEASE SAVEPOINT create_project')
     } catch (error) {
       // Two clients created the same repo at once: adopt the winner.
       if ((error as { code?: string }).code !== '23505' || !repoKey) throw error
+      await client.query('ROLLBACK TO SAVEPOINT create_project')
       const existing = await client.query<{ id: string; slug: string }>(
         'SELECT id, slug FROM projects WHERE owner_user_id = $1 AND repo_key = $2',
         [userId, repoKey],
@@ -264,7 +273,8 @@ export async function restoreProject(userId: string, projectId: string): Promise
 }
 
 async function setArchived(userId: string, projectId: string, archived: boolean): Promise<void> {
-  await requireProjectRole(userId, projectId, 'owner')
+  const role = await projectRole(userId, projectId, { includeArchived: true })
+  if (role !== 'owner') throw forbidden('Only the project owner can change that.')
 
   await withUser(userId, async (client) => {
     const result = await client.query(

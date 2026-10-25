@@ -29,9 +29,10 @@ export async function saveMemoryAction(_prev: ActionState, formData: FormData): 
   const slug = field(formData, 'slug')
   const path = field(formData, 'path')
   const body = field(formData, 'body')
+  const title = field(formData, 'title')
 
   try {
-    await writeMemory({ userId: user.id, projectId, path, body, source: 'web' })
+    await writeMemory({ userId: user.id, projectId, path, body, title: title || undefined, source: 'web' })
     await audit({
       actorType: 'user',
       actorId: user.id,
@@ -41,7 +42,7 @@ export async function saveMemoryAction(_prev: ActionState, formData: FormData): 
       detail: { via: 'web' },
     })
     revalidatePath(`/app/projects/${slug}`)
-    return { ok: 'Saved. The summary clears until the model rewrites it.' }
+    return { ok: 'Saved.' }
   } catch (error) {
     return { error: messageOf(error) }
   }
@@ -53,15 +54,17 @@ export async function deleteMemoryAction(formData: FormData): Promise<void> {
   const projectId = field(formData, 'projectId')
   const path = field(formData, 'path')
 
-  await deleteMemory(user.id, projectId, path)
-  await audit({
-    actorType: 'user',
-    actorId: user.id,
-    action: 'memory.delete',
-    targetType: 'memory',
-    targetId: path,
-    detail: { via: 'web' },
-  })
+  const deleted = await deleteMemory(user.id, projectId, path)
+  if (deleted) {
+    await audit({
+      actorType: 'user',
+      actorId: user.id,
+      action: 'memory.delete',
+      targetType: 'memory',
+      targetId: path,
+      detail: { via: 'web' },
+    })
+  }
   revalidatePath(`/app/projects/${slug}`)
   redirect(`/app/projects/${slug}?deleted=1`)
 }
@@ -73,16 +76,23 @@ export async function restoreMemoryAction(formData: FormData): Promise<void> {
   const path = field(formData, 'path')
 
   const result = await restoreMemory(user.id, projectId, path)
-  if (result.restored) {
-    await audit({
-      actorType: 'user',
-      actorId: user.id,
-      action: 'memory.restore',
-      targetType: 'memory',
-      targetId: path,
-      detail: { via: 'web' },
-    })
-  }
   revalidatePath(`/app/projects/${slug}`)
+
+  if (!result.restored) {
+    const reason =
+      result.reason === 'conflict'
+        ? 'That path was written again after it was deleted, so this copy stayed deleted.'
+        : 'That memory is no longer in the bin.'
+    redirect(`/app/projects/${slug}?deleted=1&error=${encodeURIComponent(reason)}`)
+  }
+
+  await audit({
+    actorType: 'user',
+    actorId: user.id,
+    action: 'memory.restore',
+    targetType: 'memory',
+    targetId: path,
+    detail: { via: 'web' },
+  })
   redirect(`/app/projects/${slug}?path=${encodeURIComponent(path)}`)
 }

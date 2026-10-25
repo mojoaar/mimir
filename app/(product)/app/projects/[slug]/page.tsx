@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
 import { listDeletedMemories, readMemory, treeMemory } from '@/lib/memory/service'
+import { InvalidPath } from '@/lib/memory/path'
 import { searchMemories } from '@/lib/memory/search'
 import { getProject } from '@/lib/projects/service'
 
@@ -14,7 +15,15 @@ export const instant = false
 
 const BODY_DISPLAY_LIMIT = 200_000
 
-type Search = { path?: string; q?: string; deleted?: string }
+// A repeated parameter arrives as a string array; treat every occurrence as the
+// first one rather than crashing on `.trim`.
+type Param = string | string[] | undefined
+type Search = { path?: Param; q?: Param; deleted?: Param }
+
+const first = (value: Param): string => (Array.isArray(value) ? (value[0] ?? '') : (value ?? ''))
+
+// Memories live as deep as an agent writes them; the tree shows them all.
+const TREE_DEPTH = 12
 
 export default async function ProjectBrowser({
   params,
@@ -29,22 +38,24 @@ export default async function ProjectBrowser({
   const project = await getProject(user.id, slug)
   if (!project) notFound()
 
-  const query = search.q?.trim() ?? ''
-  const showDeleted = search.deleted === '1'
-  const requested = search.path ?? ''
+  const query = first(search.q).trim()
+  const showDeleted = first(search.deleted) === '1'
+  const requested = first(search.path)
 
   let memory = null
   if (requested) {
     try {
       memory = await readMemory(user.id, project.id, requested)
-    } catch {
+    } catch (error) {
+      // A bad path is a 404; anything else (database down) must not look like one.
+      if ((error as { code?: string }).code !== 'invalid_path') throw error
       notFound()
     }
     if (!memory) notFound()
   }
 
   const [entries, deleted, hits] = await Promise.all([
-    treeMemory(user.id, project.id, '', 4),
+    treeMemory(user.id, project.id, '', TREE_DEPTH),
     listDeletedMemories(user.id, project.id),
     query ? searchMemories({ userId: user.id, projectId: project.id, query, limit: 50 }) : Promise.resolve([]),
   ])
@@ -71,7 +82,11 @@ export default async function ProjectBrowser({
       </header>
 
       <form action={base} className="flex flex-wrap gap-2">
+        <label htmlFor="memory-search" className="sr-only">
+          Search this project
+        </label>
         <input
+          id="memory-search"
           type="search"
           name="q"
           defaultValue={query}
@@ -113,7 +128,14 @@ export default async function ProjectBrowser({
               </p>
               {canWrite ? (
                 <>
-                  <MemoryEditor slug={slug} projectId={project.id} path={memory.path} body={memory.body} />
+                  <MemoryEditor
+                    slug={slug}
+                    projectId={project.id}
+                    path={memory.path}
+                    title={memory.title}
+                    body={memory.body}
+                    learning={project.learningEnabled}
+                  />
                   <form action={deleteMemoryAction} className="flex items-center gap-3">
                     <input type="hidden" name="slug" value={slug} />
                     <input type="hidden" name="projectId" value={project.id} />

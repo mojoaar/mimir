@@ -88,15 +88,17 @@ export default async function DashboardPage({
                     {project.slug} · hidden from every list and API call
                   </p>
                 </div>
-                <form action={restoreProjectAction}>
-                  <input type="hidden" name="projectId" value={project.id} />
-                  <button
-                    type="submit"
-                    className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-sunken)]"
-                  >
-                    Restore
-                  </button>
-                </form>
+                {project.role === 'owner' ? (
+                  <form action={restoreProjectAction}>
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <button
+                      type="submit"
+                      className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-sunken)]"
+                    >
+                      Restore
+                    </button>
+                  </form>
+                ) : null}
               </li>
             ))}
           </ul>

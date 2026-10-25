@@ -17,6 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <nav className="flex gap-4">
           <Link href="/app">Projects</Link>
           <Link href="/app/settings">Settings</Link>
+          <Link href="/app/settings/providers">Providers</Link>
         </nav>
         <div className="flex items-center gap-3">
           <span className="text-[var(--text-muted)]">{user.email}</span>

@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg'
 
 import { withUser } from '@/lib/db/tx'
 
+import { forbidden, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
 
 export type ProjectRole = 'owner' | 'write' | 'read'
@@ -132,9 +133,7 @@ export type ProjectSummary = {
   name: string
   role: ProjectRole | null
   memoryCount: number
-}
-
-/** Projects the caller owns or holds a grant on — RLS already hides the rest. */
+}/** Projects the caller owns or holds a grant on — RLS already hides the rest. */
 export async function listProjects(userId: string): Promise<ProjectSummary[]> {
   return withUser(userId, async (client) => {
     const { rows } = await client.query<{
@@ -165,5 +164,75 @@ export async function listProjects(userId: string): Promise<ProjectSummary[]> {
       role: row.owner_user_id === userId ? 'owner' : row.grant_role,
       memoryCount: row.memory_count,
     }))
+  })
+}
+
+export type ProjectSettings = {
+  id: string
+  slug: string
+  name: string
+  learningEnabled: boolean
+  llmProviderId: string | null
+  role: ProjectRole
+}
+
+/** One project by slug, with the caller's role. RLS hides what the caller cannot reach. */
+export async function getProject(userId: string, slug: string): Promise<ProjectSettings | null> {
+  return withUser(userId, async (client) => {
+    const { rows } = await client.query<{
+      id: string
+      slug: string
+      name: string
+      learning_enabled: boolean
+      llm_provider_id: string | null
+      is_owner: boolean
+      grant_role: ProjectRole | null
+    }>(
+      `SELECT p.id, p.slug, p.name, p.learning_enabled, p.llm_provider_id,
+              (p.owner_user_id = $1) AS is_owner,
+              (SELECT g.role::text FROM project_grants g
+                WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1) AS grant_role
+         FROM projects p
+        WHERE p.archived_at IS NULL AND p.slug = $2
+        LIMIT 1`,
+      [userId, slug],
+    )
+    const row = rows[0]
+    if (!row) return null
+    return {
+      id: row.id,
+      slug: row.slug,
+      name: row.name,
+      learningEnabled: row.learning_enabled,
+      llmProviderId: row.llm_provider_id,
+      role: row.is_owner ? 'owner' : (row.grant_role ?? 'read'),
+    }
+  })
+}
+
+/**
+ * Project settings belong to the owner: the provider change spends the owner's
+ * key, and the RLS update policy is owner-only, so a write grantee would get a
+ * silent no-op. Requiring owner keeps the answer honest.
+ */
+export async function updateProjectSettings(
+  userId: string,
+  projectId: string,
+  patch: { learningEnabled?: boolean; llmProviderId?: string | null },
+): Promise<void> {
+  await requireProjectRole(userId, projectId, 'owner')
+  const providerChanged = patch.llmProviderId !== undefined
+
+  await withUser(userId, async (client) => {
+    const result = await client.query(
+      `UPDATE projects
+          SET learning_enabled = COALESCE($2::boolean, learning_enabled),
+              llm_provider_id = CASE WHEN $3::boolean THEN $4::uuid ELSE llm_provider_id END
+        WHERE id = $1`,
+      [projectId, patch.learningEnabled ?? null, providerChanged, patch.llmProviderId ?? null],
+    )
+    if (result.rowCount === 0) {
+      throw forbidden('Only the project owner can change that.')
+    }
   })
 }

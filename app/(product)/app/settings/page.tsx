@@ -25,6 +25,18 @@ export default async function SettingsPage() {
         <h2 className="text-lg font-medium">Your keys</h2>
         <KeyList keys={keys} />
       </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-medium">Providers</h2>
+        <p className="text-sm text-[var(--text-muted)]">
+          The language models that summarise your memory, and the embeddings that make it
+          searchable by meaning. Configure them on the{' '}
+          <a href="/app/settings/providers" className="underline">
+            providers page
+          </a>
+          .
+        </p>
+      </section>
     </main>
   )
 }

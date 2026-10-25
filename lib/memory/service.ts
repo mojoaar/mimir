@@ -1,5 +1,7 @@
 import { withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
+import { EXTRACT_DEBOUNCE_SECONDS } from '@/lib/jobs/constants'
+import { embedText } from './embeddings'
 import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
 import { MEMORY_KINDS } from './types'
 import type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
@@ -40,12 +42,16 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   const kind = input.kind ?? 'note'
   const source = input.source ?? 'agent'
 
-  return withUser(input.userId, async (tx) => {
+  // Before the transaction: a provider round trip inside it would hold a
+  // pooled connection for the duration of someone else's network call.
+  const embedding = await embedText([path, title, input.body].join('\n'))
+
+  const result = await withUser(input.userId, async (tx) => {
     const { rows } = await tx.query<{ created: boolean }>(
-      `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id)
+      `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id, embedding)
        select $1, $2, $3, null, $4,
               to_tsvector(coalesce(p.fts_language, 'english')::regconfig, $2 || ' ' || $3 || ' ' || $4),
-              $5, $6, $7
+              $5, $6, $7, $8::vector
          from projects p where p.id = $1
        on conflict (project_id, lower(path)) do update
           set title = excluded.title,
@@ -55,14 +61,36 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
               kind = excluded.kind,
               source = excluded.source,
               author_user_id = excluded.author_user_id,
+              embedding = excluded.embedding,
               updated_at = now(),
               deleted_at = null
        returning (xmax = 0) as created`,
-      [input.projectId, path, title, input.body, kind, source, input.userId],
+      [input.projectId, path, title, input.body, kind, source, input.userId, embedding],
     )
 
     return { path, created: rows[0]?.created ?? false }
   })
+
+  await enqueueExtraction(input.projectId)
+  return result
+}
+
+/**
+ * Every write queues an extraction; the queue's `short` policy collapses them
+ * per project, and the handler checks `learning_enabled` at run time because
+ * the flag can change between the write and the job.
+ */
+async function enqueueExtraction(projectId: string): Promise<void> {
+  try {
+    const { sendJob } = await import('@/lib/jobs/boss')
+    await sendJob(
+      'extract',
+      { projectId },
+      { singletonKey: projectId, startAfter: EXTRACT_DEBOUNCE_SECONDS },
+    )
+  } catch (error) {
+    console.error(`could not queue extraction (${(error as Error).message})`)
+  }
 }
 
 export async function readMemory(

@@ -1,8 +1,23 @@
-import { afterAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { closePools } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
 import { searchMemories } from './search'
 import { writeMemory } from './service'
+
+const mocks = vi.hoisted(() => ({
+  embed: vi.fn(),
+  resolveEmbeddingProvider: vi.fn(),
+}))
+
+vi.mock('@/lib/providers/client', () => ({ embed: mocks.embed }))
+vi.mock('@/lib/providers/resolve', () => ({
+  resolveEmbeddingProvider: mocks.resolveEmbeddingProvider,
+}))
+
+// Two well-separated 768-dimension vectors: "about rotation" and everything else.
+const ROTATION = [1, ...Array(767).fill(0)]
+const OTHER = [0, 1, ...Array(766).fill(0)]
+const target = { id: 'p1', preset: 'ollama', baseUrl: 'http://ollama', model: 'nomic', apiKey: null }
 
 let f: Fixtures
 let projectId: string
@@ -11,6 +26,9 @@ beforeEach(async () => {
   await resetFixtures()
   f = await seedTwoUsersWithProjects()
   projectId = f.aliceProjectId
+  mocks.embed.mockReset()
+  mocks.resolveEmbeddingProvider.mockReset()
+  mocks.resolveEmbeddingProvider.mockResolvedValue(null)
 })
 
 afterAll(async () => {
@@ -53,6 +71,62 @@ describe('searchMemories', () => {
 
   it('returns an empty list for an empty query', async () => {
     expect(await searchMemories({ userId: f.alice, projectId, query: '   ' })).toEqual([])
+  })
+})
+
+describe('the vector arm', () => {
+  it('finds a memory whose words the query does not contain', async () => {
+    mocks.resolveEmbeddingProvider.mockResolvedValue(target)
+    mocks.embed.mockImplementation(async (_provider: unknown, texts: string[]) =>
+      texts.map((text) => (/rotation|refresh-token/.test(text) ? ROTATION : OTHER)),
+    )
+
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'auth/refresh-token-lifetime',
+      title: 'Refresh token lifetime',
+      body: 'the refresh token lives for thirty days',
+    })
+
+    // "rotation" appears nowhere in that memory, so the keyword arm finds nothing.
+    const hits = await searchMemories({
+      userId: f.alice,
+      projectId,
+      query: 'token rotation',
+    })
+
+    expect(hits.map((hit) => hit.path)).toContain('auth/refresh-token-lifetime')
+  })
+
+  it('still answers from keywords when every vector is null', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy', body: 'rollback the deploy' })
+
+    const hits = await searchMemories({ userId: f.alice, projectId, query: 'rollback' })
+
+    expect(hits.map((hit) => hit.path)).toEqual(['deploy'])
+  })
+
+  it('returns nothing for an empty query even with a provider configured', async () => {
+    mocks.resolveEmbeddingProvider.mockResolvedValue(target)
+    mocks.embed.mockImplementation(async (_provider: unknown, texts: string[]) =>
+      texts.map(() => OTHER),
+    )
+
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy', body: 'rollback the deploy' })
+
+    expect(await searchMemories({ userId: f.alice, projectId, query: '  ' })).toEqual([])
+  })
+
+  it('still answers from keywords when the provider fails', async () => {
+    mocks.resolveEmbeddingProvider.mockResolvedValue(target)
+    mocks.embed.mockRejectedValue(new Error('provider responded 500'))
+
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy', body: 'rollback the deploy' })
+
+    const hits = await searchMemories({ userId: f.alice, projectId, query: 'rollback' })
+
+    expect(hits.map((hit) => hit.path)).toEqual(['deploy'])
   })
 })
 

@@ -8,11 +8,13 @@ import Link from 'next/link'
  */
 export function UserMenu({
   email,
+  avatarSrc,
   profile,
   signOutLabel,
   signOut,
 }: {
   email: string
+  avatarSrc: string
   profile: string
   signOutLabel: string
   signOut: (formData: FormData) => Promise<void>
@@ -20,6 +22,14 @@ export function UserMenu({
   return (
     <details className="relative">
       <summary className="flex cursor-pointer list-none items-center gap-1 text-[var(--text-muted)] hover:text-[var(--fg)]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={avatarSrc}
+          alt=""
+          width={24}
+          height={24}
+          className="h-6 w-6 rounded-full border border-[var(--border)] object-cover"
+        />
         <span className="max-w-[12rem] truncate">{email}</span>
         <span aria-hidden="true">▾</span>
       </summary>

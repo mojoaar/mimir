@@ -31,6 +31,7 @@ vi.mock('@/lib/auth/context', () => ({
     locale: state.locale,
   }),
 }))
+vi.mock('@/lib/users/avatar', () => ({ avatarVersion: async () => '7' }))
 vi.mock('@/lib/auth/mfa', () => ({ mfaEnabled: async () => true }))
 vi.mock('@/lib/http/allowlist', () => ({ isRequestAllowed: async () => true }))
 vi.mock('@/lib/settings/security', () => ({ getRequireMfa: async () => false }))
@@ -51,6 +52,7 @@ describe('the app shell', () => {
     expect(html).toContain('body')
     expect(html).toContain('alice@example.test')
     // The account name is the menu: profile and sign-out live behind it.
+    expect(html).toContain('/app/avatar?v=7')
     expect(html).toContain('<details')
     expect(html).toContain('Your profile')
     expect(html).toContain('Sign out')

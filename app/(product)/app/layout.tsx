@@ -9,6 +9,7 @@ import AppFooter from '@/components/app/footer'
 import { Enrolment } from './settings/mfa/enrolment'
 import { signOutAction } from './actions'
 import { UserMenu } from '@/app/user-menu'
+import { avatarVersion } from '@/lib/users/avatar'
 import { translator } from '@/lib/i18n/request'
 
 export const instant = false
@@ -54,6 +55,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="ml-auto flex items-center gap-3">
             <UserMenu
               email={user.email}
+              avatarSrc={`/app/avatar?v=${await avatarVersion(user.id)}`}
               profile={t('app.user.profile')}
               signOutLabel={t('app.nav.signOut')}
               signOut={signOutAction}

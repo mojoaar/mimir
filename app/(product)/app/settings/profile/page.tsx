@@ -5,6 +5,7 @@ import { SESSION_COOKIE } from '@/lib/auth/cookie-name'
 import { sessionIdFor } from '@/lib/auth/session'
 import { translator } from '@/lib/i18n/request'
 import { listMySessions } from '@/lib/users/self'
+import { avatarVersion } from '@/lib/users/avatar'
 import { ProfileForm } from './profile-form'
 import { PasswordForm } from './password-form'
 import { AvatarForm } from './avatar-form'
@@ -51,7 +52,7 @@ export default async function ProfilePage({
         <h2 className="text-lg font-medium">{t('app.profile.avatar')}</h2>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/app/avatar"
+          src={`/app/avatar?v=${await avatarVersion(user.id)}`}
           alt=""
           width={56}
           height={56}

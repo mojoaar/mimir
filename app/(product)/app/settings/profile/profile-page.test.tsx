@@ -26,6 +26,7 @@ vi.mock('@/lib/auth/context', () => ({
 vi.mock('@/lib/auth/session', () => ({ sessionIdFor: async () => 's1' }))
 vi.mock('@/lib/auth/cookie-name', () => ({ SESSION_COOKIE: 'mimir_session' }))
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
+vi.mock('@/lib/users/avatar', () => ({ avatarVersion: async () => '9' }))
 vi.mock('@/lib/users/self', () => ({
   listMySessions: async () => mocks.sessions,
   updateProfile: async (_id: string, patch: Record<string, unknown>) => {
@@ -150,7 +151,7 @@ describe('the picture', () => {
     expect(html).toContain('type="file"')
     expect(html).toContain('name="avatar"')
     expect(html).toContain('image/png')
-    expect(html).toContain('src="/app/avatar"')
+    expect(html).toContain('/app/avatar?v=9')
     expect(html).toContain('rounded-full')
   })
 })

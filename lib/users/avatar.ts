@@ -18,7 +18,7 @@ export async function setAvatar(userId: string, bytes: Buffer, type: string): Pr
   if (bytes.length > MAX_AVATAR_BYTES) throw invalid('an avatar must be at most 128 KB')
 
   await withUser(userId, async (client) => {
-    await client.query('update users set avatar = $2, avatar_type = $3 where id = $1', [
+    await client.query('update users set avatar = $2, avatar_type = $3, avatar_updated_at = now() where id = $1', [
       userId,
       bytes,
       type,
@@ -39,7 +39,7 @@ export async function setAvatar(userId: string, bytes: Buffer, type: string): Pr
 
 export async function clearAvatar(userId: string): Promise<void> {
   await withUser(userId, async (client) => {
-    await client.query('update users set avatar = null, avatar_type = null where id = $1', [userId])
+    await client.query('update users set avatar = null, avatar_type = null, avatar_updated_at = now() where id = $1', [userId])
   })
 }
 
@@ -64,4 +64,15 @@ export function initialAvatar(email: string): Buffer {
       `<text x="32" y="42" font-family="system-ui,sans-serif" font-size="30" font-weight="600"` +
       ` fill="#ffffff" text-anchor="middle">${letter}</text></svg>`,
   )
+}
+
+/** Changes whenever the picture does, so the image URL can change with it. */
+export async function avatarVersion(userId: string): Promise<string> {
+  return withUser(userId, async (client) => {
+    const result = await client.query<{ version: string }>(
+      "select coalesce(extract(epoch from avatar_updated_at)::bigint, 0)::text as version from users where id = $1",
+      [userId],
+    )
+    return result.rows[0]?.version ?? '0'
+  })
 }

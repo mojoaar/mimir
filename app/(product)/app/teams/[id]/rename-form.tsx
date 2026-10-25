@@ -7,16 +7,31 @@ import { renameTeamAction, type ActionState } from '../actions'
 const FIELD =
   'rounded border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-sm outline-none focus-visible:outline-2 focus-visible:outline-[var(--accent)]'
 
-export function RenameForm({ teamId, name }: { teamId: string; name: string }) {
+export type RenameFormLabels = {
+  heading: string
+  name: string
+  submit: string
+  pending: string
+}
+
+export function RenameForm({
+  teamId,
+  name,
+  labels,
+}: {
+  teamId: string
+  name: string
+  labels: RenameFormLabels
+}) {
   const [state, action, pending] = useActionState<ActionState, FormData>(renameTeamAction, {})
 
   return (
     <section className="flex flex-col gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] p-4">
-      <h2 className="text-sm font-semibold">Team name</h2>
+      <h2 className="text-sm font-semibold">{labels.heading}</h2>
       <form action={action} className="flex flex-wrap items-end gap-2">
         <input type="hidden" name="teamId" value={teamId} />
         <label className="flex flex-1 flex-col gap-1 text-sm">
-          <span className="text-[var(--text-muted)]">Name</span>
+          <span className="text-[var(--text-muted)]">{labels.name}</span>
           <input name="name" defaultValue={name} maxLength={80} className={FIELD} />
         </label>
         <button
@@ -24,7 +39,7 @@ export function RenameForm({ teamId, name }: { teamId: string; name: string }) {
           disabled={pending}
           className="rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-[var(--accent-fg)] disabled:opacity-60"
         >
-          {pending ? 'Renaming…' : 'Rename'}
+          {pending ? labels.pending : labels.submit}
         </button>
       </form>
       {state.error ? (

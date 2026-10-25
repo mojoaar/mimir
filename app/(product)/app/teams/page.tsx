@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { requireUser } from '@/lib/auth/context'
+import { translator } from '@/lib/i18n/request'
 import { listTeams } from '@/lib/teams/service'
 
 import { TeamForm } from './team-form'
@@ -13,25 +14,23 @@ export default async function TeamsPage({
   searchParams: Promise<{ notice?: string }>
 }) {
   const user = await requireUser()
+  const t = await translator()
   const { notice } = await searchParams
   const teams = await listTeams(user.id)
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
       <header>
-        <h1 className="text-xl font-semibold tracking-tight">Teams</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Share a project with several people at once. A team grants access; it never owns a
-          project.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t('app.teams.title')}</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">{t('app.teams.intro')}</p>
       </header>
 
       {notice === 'deleted' ? (
-        <p className="text-sm text-[var(--text-muted)]">Team deleted, and everything it shared.</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.teams.deleted')}</p>
       ) : null}
 
       {teams.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">No teams yet.</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.teams.empty')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {teams.map((team) => (
@@ -43,7 +42,9 @@ export default async function TeamsPage({
                 <span className="font-medium">{team.name}</span>
                 <span className="text-sm text-[var(--text-muted)]">
                   {team.role} · {team.memberCount}{' '}
-                  {team.memberCount === 1 ? 'member' : 'members'}
+                  {team.memberCount === 1
+                    ? t('app.teams.memberOne')
+                    : t('app.teams.memberMany')}
                 </span>
               </Link>
             </li>
@@ -51,7 +52,14 @@ export default async function TeamsPage({
         </ul>
       )}
 
-      <TeamForm />
+      <TeamForm
+        labels={{
+          heading: t('app.teams.newTeam'),
+          hint: t('app.teams.newHint'),
+          submit: t('app.teams.create'),
+          pending: t('app.teams.creating'),
+        }}
+      />
     </main>
   )
 }

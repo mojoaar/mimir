@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   role: 'owner' as 'owner' | 'member',
   teams: [] as unknown[],
   detail: null as unknown,
+  locale: 'en',
 }))
 
 vi.mock('next/navigation', () => ({
@@ -13,7 +14,8 @@ vi.mock('next/navigation', () => ({
   },
 }))
 vi.mock('@/lib/auth/context', () => ({
-  requireUser: async () => ({ id: 'u1', email: 'alice@example.test' }),
+  requireUser: async () => ({ id: 'u1', email: 'alice@example.test', locale: mocks.locale }),
+  getCurrentUser: async () => ({ id: 'u1', email: 'alice@example.test', locale: mocks.locale }),
 }))
 vi.mock('@/lib/teams/service', () => ({
   listTeams: async () => mocks.teams,
@@ -73,6 +75,27 @@ describe('a team page', () => {
     expect(html).toContain('owner')
     expect(html).toContain('Add member')
     expect(html).toContain('Delete team')
+  })
+
+  it('speaks the language saved on the account', async () => {
+    mocks.locale = 'da'
+    mocks.detail = {
+      team: team({ role: 'owner' }),
+      members: [
+        { userId: 'u1', email: 'alice@example.test', name: 'Alice', role: 'owner' },
+        { userId: 'u3', email: 'carol@example.test', name: 'Carol', role: 'owner' },
+        { userId: 'u2', email: 'bob@example.test', name: 'Bob', role: 'member' },
+      ],
+    }
+    const html = renderToStaticMarkup(
+      await TeamDetailPage({ params, searchParams: Promise.resolve({}) }),
+    )
+    mocks.locale = 'en'
+
+    expect(html).toContain('Tilføj medlem')
+    expect(html).toContain('Forlad hold')
+    expect(html).toContain('du er owner')
+    expect(html).toContain('bob@example.test')
   })
 
   it('hides the destructive controls from a plain member', async () => {

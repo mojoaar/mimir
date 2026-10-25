@@ -4,7 +4,20 @@ import { useActionState } from 'react'
 
 import { addMemberAction, type ActionState } from '../actions'
 
-export function MemberForm({ teamId }: { teamId: string }) {
+export type MemberFormLabels = {
+  heading: string
+  hint: string
+  submit: string
+  pending: string
+}
+
+export function MemberForm({
+  teamId,
+  labels,
+}: {
+  teamId: string
+  labels: MemberFormLabels
+}) {
   const [state, action, pending] = useActionState<ActionState, FormData>(addMemberAction, {})
 
   return (
@@ -14,7 +27,7 @@ export function MemberForm({ teamId }: { teamId: string }) {
     >
       <input type="hidden" name="teamId" value={teamId} />
       <label className="flex flex-col gap-1 text-sm">
-        <span className="font-medium">Add member</span>
+        <span className="font-medium">{labels.heading}</span>
         <input
           name="email"
           type="email"
@@ -23,9 +36,7 @@ export function MemberForm({ teamId }: { teamId: string }) {
           className="rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1.5"
         />
       </label>
-      <p className="text-sm text-[var(--text-muted)]">
-        They must already have an active account. Their access starts on their next request.
-      </p>
+      <p className="text-sm text-[var(--text-muted)]">{labels.hint}</p>
       {state.error ? (
         <p role="alert" className="text-sm text-[var(--danger)]">
           {state.error}
@@ -37,7 +48,7 @@ export function MemberForm({ teamId }: { teamId: string }) {
         disabled={pending}
         className="self-start rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-[var(--accent-fg)] disabled:opacity-60"
       >
-        {pending ? 'Adding…' : 'Add member'}
+        {pending ? labels.pending : labels.submit}
       </button>
     </form>
   )

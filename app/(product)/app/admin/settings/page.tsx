@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/auth/admin'
 import { listProviders } from '@/lib/providers/service'
 import { getEmbeddingConfig } from '@/lib/settings/embedding'
 import { EmbeddingForm } from './embedding-form'
+import { ReembedForm } from './reembed-form'
 
 export const instant = false
 
@@ -48,6 +49,11 @@ export default async function AdminSettingsPage() {
         <EmbeddingForm
           providers={providers.map((p) => ({ id: p.id, label: p.label, model: p.model }))}
         />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-medium">Rebuild the index</h2>
+        <ReembedForm />
       </section>
     </main>
   )

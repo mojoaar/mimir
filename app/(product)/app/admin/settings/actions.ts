@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { audit } from '@/lib/audit'
 import { requireAdmin } from '@/lib/auth/admin'
 import { sendJob } from '@/lib/jobs/boss'
 import { getProviderSecret, recordVerification } from '@/lib/providers/service'
@@ -52,4 +53,35 @@ export async function saveEmbeddingAction(
   } catch (error) {
     return { error: message(error) }
   }
+}
+
+export type ReembedFormState = { ok?: string; error?: string }
+
+export async function reembedAction(
+  _prev: ReembedFormState,
+  formData: FormData,
+): Promise<ReembedFormState> {
+  const user = await requireAdmin()
+
+  if (String(formData.get('confirm') ?? '') !== 'reembed') {
+    return { error: 'Type reembed to confirm.' }
+  }
+
+  // Queued, not run inline: a large install embeds for minutes and the request
+  // must not hold that long. runReembed reports nothing back, so the audit row
+  // records the request rather than a total it cannot know yet.
+  const jobId = await sendJob('reembed', { confirm: true })
+  if (!jobId) return { error: 'The job queue is not running.' }
+
+  await audit({
+    actorType: 'user',
+    actorId: user.id,
+    action: 'admin.reembed',
+    targetType: 'settings',
+    targetId: 'embedding',
+    detail: { queued: true },
+  })
+
+  revalidatePath('/app/admin/settings')
+  return { ok: 'Re-embedding queued. Every memory keeps its text while the vectors rebuild.' }
 }

@@ -55,6 +55,11 @@ describe('memory service', () => {
     expect((await readMemory(f.alice, projectId, 'a/d'))!.summary).toBeNull()
   })
 
+  it('rejects a body with a NUL byte instead of letting postgres raise 22021', async () => {
+    await expect(writeMemory({ userId: f.alice, projectId, path: 'nul/x', body: 'a\u0000b' }))
+      .rejects.toMatchObject({ code: 'invalid_params' })
+  })
+
   it('lets two concurrent writes to one path settle on one row', async () => {
     await Promise.all([
       writeMemory({ userId: f.alice, projectId, path: 'race/x', body: 'one' }),

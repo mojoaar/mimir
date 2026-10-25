@@ -1,12 +1,12 @@
 import type { NextRequest } from 'next/server'
-import { withApiAuth } from '@/lib/http/auth'
-import { toResponse } from '@/lib/http/errors'
+import { withAudit } from '@/lib/http/audited'
 import { resolveProject } from '@/lib/projects/service'
 import { buildDigest } from '@/lib/memory/digest'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  try {
-    const { user } = await withApiAuth(request)
+type Params = { params: Promise<{ slug: string }> }
+
+export async function GET(request: NextRequest, { params }: Params) {
+  return withAudit(request, 'memory.read', async (user) => {
     const { slug } = await params
     const project = await resolveProject(user.id, { project: slug })
 
@@ -14,7 +14,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const budgetTokens = Number.isInteger(raw) && raw > 0 ? raw : undefined
 
     return Response.json(await buildDigest({ userId: user.id, projectId: project.id, budgetTokens }))
-  } catch (error) {
-    return toResponse(error)
-  }
+  })
 }

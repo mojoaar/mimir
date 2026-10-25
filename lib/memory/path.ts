@@ -10,6 +10,14 @@ export class InvalidPath extends Error {
   }
 }
 
+export class InvalidInput extends Error {
+  readonly code = 'invalid_params' as const
+  constructor(reason: string) {
+    super(`invalid_params: ${reason}`)
+    this.name = 'InvalidInput'
+  }
+}
+
 export class BodyTooLarge extends Error {
   readonly code = 'body_too_large'
   constructor(size: number) {

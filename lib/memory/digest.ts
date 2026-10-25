@@ -44,7 +44,7 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
 
   const groups = new Map<string, typeof rows>()
   for (const row of rows) {
-    const top = row.path.includes('/') ? row.path.slice(0, row.path.indexOf('/')) : '.'
+    const top = row.path.includes('/') ? row.path.slice(0, row.path.indexOf('/')) : row.path
     const bucket = groups.get(top)
     if (bucket) bucket.push(row)
     else groups.set(top, [row])
@@ -61,7 +61,7 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
     for (const row of entries) {
       const chunk = recent.has(row.path)
         ? `## ${row.path}\n${row.summary ?? row.title}\n\n`
-        : `- ${row.path.slice(dir.length + 1)} — ${row.title}\n`
+        : `- ${row.path.includes('/') ? row.path.slice(dir.length + 1) : row.path} — ${row.title}\n`
       const candidate = emittedHeader ? text + chunk : text + header + chunk
 
       if (Math.ceil(candidate.length / 4) > budget) {

@@ -35,24 +35,39 @@ function isTrusted(peer: string, trustedProxies: string[]): boolean {
 /**
  * The client address to use for the allowlist, rate limiting and auditing.
  *
- * `X-Forwarded-For` is trivially forged, so it is honoured only when the peer
- * that handed us the request is itself a trusted proxy. Next's server runtime
- * does not expose the socket peer (`peer` is null there), and this container
- * publishes its port on loopback only — the reverse proxy is the sole way in —
- * so a configured proxy list is itself the proof of trust in that case.
+ * `X-Forwarded-For` is trivially forged, so a chain is walked right to left
+ * and the first address that is not itself a trusted proxy is the client.
+ * nginx appends with `$proxy_add_x_forwarded_for`, so anything a stranger
+ * sends ends up on the left and can never be reached by this walk.
+ *
+ * Next's server runtime does not expose the socket peer (`peer` is null
+ * there), and this container publishes its port on loopback only — the
+ * reverse proxy is the sole way in. With an unknown peer we therefore take
+ * the last hop, the one the proxy appended.
  */
 export function clientIp(
   headers: Headers,
   trustedProxies: string[],
   peer: string | null,
 ): string | null {
-  const canTrustHeader =
-    (peer !== null && isTrusted(peer, trustedProxies)) ||
-    (peer === null && trustedProxies.length > 0)
+  if (trustedProxies.length === 0) return peer
 
-  if (!canTrustHeader) return peer
+  const hops = (headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((hop) => hop.trim())
+    .filter((hop) => isIP(hop) !== 0)
 
-  const forwarded = headers.get('x-forwarded-for')
-  const first = forwarded?.split(',')[0]?.trim()
-  return first && isIP(first) ? first : peer
+  if (hops.length === 0) return peer
+
+  // Unknown peer: only the hop our own proxy appended is trustworthy.
+  if (peer === null) return hops[hops.length - 1] ?? peer
+
+  if (!isTrusted(peer, trustedProxies)) return peer
+
+  for (let i = hops.length - 1; i >= 0; i--) {
+    const hop = hops[i]
+    if (hop && !isTrusted(hop, trustedProxies)) return hop
+  }
+
+  return peer
 }

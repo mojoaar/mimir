@@ -1,12 +1,12 @@
 import type { NextRequest } from 'next/server'
-import { withApiAuth } from '@/lib/http/auth'
-import { toResponse } from '@/lib/http/errors'
+import { withAudit } from '@/lib/http/audited'
 import { resolveProject } from '@/lib/projects/service'
 import { treeMemory } from '@/lib/memory/service'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
-  try {
-    const { user } = await withApiAuth(request)
+type Params = { params: Promise<{ slug: string }> }
+
+export async function GET(request: NextRequest, { params }: Params) {
+  return withAudit(request, 'memory.read', async (user) => {
     const { slug } = await params
     const project = await resolveProject(user.id, { project: slug })
 
@@ -16,7 +16,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const depth = Number.isInteger(rawDepth) && rawDepth > 0 ? rawDepth : 3
 
     return Response.json({ memories: await treeMemory(user.id, project.id, prefix, depth) })
-  } catch (error) {
-    return toResponse(error)
-  }
+  })
 }

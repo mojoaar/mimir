@@ -34,12 +34,22 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 /** Project-not-found and forbidden are the same answer to a client: neither reveals that the other project exists. */
+const SERVICE_CODES = new Set([
+  'forbidden',
+  'not_found',
+  'invalid_path',
+  'invalid_params',
+  'body_too_large',
+  'rate_limited',
+])
+
 function errorCodeFor(err: unknown): string {
   const code = (err as { code?: unknown }).code
-  if (typeof code === 'string') {
-    return code === 'project_not_found' ? 'forbidden' : code
-  }
-  return 'internal'
+  if (typeof code !== 'string') return 'internal'
+  // An unrecognised code may be a postgres SQLSTATE or a driver message; it
+  // must never be echoed to a client, only our own documented codes are.
+  if (code === 'project_not_found') return 'forbidden'
+  return SERVICE_CODES.has(code) ? code : 'internal'
 }
 
 /**

@@ -54,6 +54,20 @@ describe('rest api', () => {
     expect((await read.json()).body).toBe('hello')
   })
 
+  it('writes exactly one audit row per rest call', async () => {
+    await writeMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/notes/audited`, { method: 'PUT', body: { body: 'traced' } }),
+      params({ path: ['notes', 'audited'] }),
+    )
+
+    const { rows } = await adminPool().query<{ action: string; target_id: string }>(
+      `select action, target_id from audit_log where actor_id = $1 order by id desc limit 2`,
+      [fixtures.alice],
+    )
+    expect(rows[0]).toMatchObject({ action: 'memory.write' })
+    expect(rows[0]!.target_id).toContain('/memory/notes/audited')
+  })
+
   it('lists projects for the key owner', async () => {
     const res = await listProjects(req('/api/v1/projects'))
     const body = await res.json()

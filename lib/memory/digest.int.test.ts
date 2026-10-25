@@ -35,6 +35,18 @@ describe('buildDigest', () => {
     expect(digest.text).not.toContain('L2-MARKER')
   })
 
+  it('names a top-level path exactly, not a sliced fragment', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy', body: 'Deploy notes' })
+    await writeMemory({ userId: f.alice, projectId, path: 'readme', body: 'Read me' })
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+
+    // Both are among the five most recent, so they render as full entries.
+    expect(digest.text).toContain('## deploy')
+    expect(digest.text).toContain('## readme')
+    expect(digest.text).not.toContain('### .')
+  })
+
   it('respects the token budget and says it truncated', async () => {
     for (let i = 0; i < 12; i++) {
       await writeMemory({ userId: f.alice, projectId, path: `d${i}/m`, body: 'word '.repeat(40) })

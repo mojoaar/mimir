@@ -5,6 +5,7 @@ import { getConfig } from '@/lib/config'
 import { checkApiRateLimit } from '@/lib/auth/rate-limit'
 import { handleRpc } from '@/lib/mcp/server'
 import { PARSE_ERROR, rpcError } from '@/lib/mcp/errors'
+import { rejectOversized } from '@/lib/http/limit'
 
 function json(body: unknown, status: number, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
@@ -14,6 +15,11 @@ function json(body: unknown, status: number, headers: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  // Reject a huge body before parsing it: the per-field cap runs after the
+  // whole request is already in memory.
+  const tooLarge = rejectOversized(request)
+  if (tooLarge) return tooLarge
+
   const header = request.headers.get('authorization') ?? ''
   const token = header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : ''
   const user = token ? await resolveApiKey(token) : null

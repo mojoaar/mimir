@@ -1,6 +1,6 @@
 import { withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
-import { BodyTooLarge, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
+import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
 import type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
 
 export type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
@@ -23,6 +23,11 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   const path = normalisePath(input.path)
   const size = Buffer.byteLength(input.body, 'utf8')
   if (size > MAX_BODY_BYTES) throw new BodyTooLarge(size)
+  // Postgres rejects a NUL byte with 22021, which would reach the caller as a
+  // raw driver error. Refuse it here so agents get the documented code.
+  if (input.body.includes('\u0000') || (input.title ?? '').includes('\u0000')) {
+    throw new InvalidInput('text must not contain NUL bytes')
+  }
 
   await requireProjectRole(input.userId, input.projectId, 'write')
 

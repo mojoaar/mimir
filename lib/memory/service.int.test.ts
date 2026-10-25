@@ -1,7 +1,15 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { adminPool, closePools } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
-import { deleteMemory, readMemory, treeMemory, writeMemory } from './service'
+import {
+  deleteMemory,
+  listDeletedMemories,
+  purgeDeletedMemories,
+  readMemory,
+  restoreMemory,
+  treeMemory,
+  writeMemory,
+} from './service'
 
 let f: Fixtures
 let projectId: string
@@ -131,5 +139,61 @@ describe('treeMemory path prefixes', () => {
 
     const entries = await treeMemory(f.alice, projectId, 'deploy', 3)
     expect(entries.map((entry) => entry.path).sort()).toEqual(['deploy', 'deploy/runbook'])
+  })
+
+  it('lists and restores a deleted memory', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'gone/x', body: 'Original body' })
+    await deleteMemory(f.alice, projectId, 'gone/x')
+
+    const deleted = await listDeletedMemories(f.alice, projectId)
+    expect(deleted.map((row) => row.path)).toContain('gone/x')
+    await writeMemory({ userId: f.alice, projectId, path: 'keep/y', body: 'live' })
+    expect((await listDeletedMemories(f.alice, projectId)).map((row) => row.path)).not.toContain('keep/y')
+
+    expect(await restoreMemory(f.alice, projectId, 'gone/x')).toEqual({ restored: true })
+    expect((await readMemory(f.alice, projectId, 'gone/x'))?.body).toBe('Original body')
+  })
+
+  it('refuses to restore over a live memory at the same path', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'a/x', body: 'old' })
+    await deleteMemory(f.alice, projectId, 'a/x')
+    await writeMemory({ userId: f.alice, projectId, path: 'a/x', body: 'new' })
+
+    expect(await restoreMemory(f.alice, projectId, 'a/x')).toEqual({
+      restored: false,
+      reason: 'conflict',
+    })
+    expect((await readMemory(f.alice, projectId, 'a/x'))?.body).toBe('new')
+  })
+
+  it('reports a restore of something that never existed', async () => {
+    expect(await restoreMemory(f.alice, projectId, 'never/was')).toEqual({
+      restored: false,
+      reason: 'not_found',
+    })
+  })
+
+  it('lets a read grantee look at the bin but not empty it', async () => {
+    await seedGrant(projectId, f.bob, 'read')
+    await writeMemory({ userId: f.alice, projectId, path: 'a/bin', body: 'x' })
+    await deleteMemory(f.alice, projectId, 'a/bin')
+
+    expect((await listDeletedMemories(f.bob, projectId)).map((row) => row.path)).toContain('a/bin')
+    await expect(restoreMemory(f.bob, projectId, 'a/bin')).rejects.toMatchObject({ code: 'forbidden' })
+  })
+
+  it('purges only what is past its window', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'a/old', body: 'old' })
+    await writeMemory({ userId: f.alice, projectId, path: 'a/live', body: 'live' })
+    await deleteMemory(f.alice, projectId, 'a/old')
+
+    expect(await purgeDeletedMemories()).toEqual({ removed: 0 })
+    expect(await purgeDeletedMemories(new Date(Date.now() + 31 * 86_400_000))).toEqual({ removed: 1 })
+
+    const { rows } = await adminPool().query<{ n: string }>(
+      'select count(*)::text as n from memories where project_id = $1',
+      [projectId],
+    )
+    expect(rows[0]?.n).toBe('1')
   })
 })

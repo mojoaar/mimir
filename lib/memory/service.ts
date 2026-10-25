@@ -1,4 +1,4 @@
-import { withUser } from '@/lib/db/tx'
+import { withAdmin, withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
 import { EXTRACT_DEBOUNCE_SECONDS } from '@/lib/jobs/constants'
 import { embedText } from './embeddings'
@@ -178,5 +178,79 @@ export async function deleteMemory(
       [projectId, normalised],
     )
     return (rowCount ?? 0) > 0
+  })
+}
+
+/** How long a deleted memory stays recoverable before the purge job removes it. */
+export const PURGE_AFTER_DAYS = 30
+
+export type DeletedMemory = { path: string; title: string; deletedAt: Date }
+
+export async function listDeletedMemories(
+  userId: string,
+  projectId: string,
+  limit = 100,
+): Promise<DeletedMemory[]> {
+  await requireProjectRole(userId, projectId, 'read')
+  const take = Math.min(Math.max(Math.trunc(limit) || 100, 1), 500)
+
+  return withUser(userId, async (tx) => {
+    const { rows } = await tx.query<{ path: string; title: string; deleted_at: Date }>(
+      `select path, title, deleted_at
+         from memories
+        where project_id = $1 and deleted_at is not null
+        order by deleted_at desc
+        limit $2`,
+      [projectId, take],
+    )
+    return rows.map((row) => ({ path: row.path, title: row.title, deletedAt: row.deleted_at }))
+  })
+}
+
+/**
+ * Undoes a soft delete. A live row at the same path wins: restoring over it
+ * would silently destroy someone's work, so the caller is told to rename first.
+ */
+export async function restoreMemory(
+  userId: string,
+  projectId: string,
+  path: string,
+): Promise<{ restored: true } | { restored: false; reason: 'not_found' | 'conflict' }> {
+  const normalised = normalisePath(path)
+  await requireProjectRole(userId, projectId, 'write')
+
+  return withUser(userId, async (tx) => {
+    const { rowCount } = await tx.query(
+      `update memories set deleted_at = null
+        where project_id = $1 and lower(path) = $2 and deleted_at is not null`,
+      [projectId, normalised],
+    )
+    if ((rowCount ?? 0) > 0) return { restored: true as const }
+
+    const { rows } = await tx.query<{ deleted_at: Date | null }>(
+      `select deleted_at from memories
+        where project_id = $1 and lower(path) = $2
+        order by deleted_at nulls first
+        limit 1`,
+      [projectId, normalised],
+    )
+    if (rows[0]?.deleted_at === null) return { restored: false as const, reason: 'conflict' as const }
+    return { restored: false as const, reason: 'not_found' as const }
+  })
+}
+
+/**
+ * Install-wide, so it runs as the owner: a sessionless job has no
+ * mimir.user_id and the memories policy would hide every row from it.
+ */
+export async function purgeDeletedMemories(now: Date = new Date()): Promise<{ removed: number }> {
+  const cutoff = new Date(now.getTime() - PURGE_AFTER_DAYS * 86_400_000)
+
+  return withAdmin(async (tx) => {
+    const { rowCount } = await tx.query(
+      `delete from memories where deleted_at is not null and deleted_at < $1`,
+      [cutoff],
+    )
+    return { removed: rowCount ?? 0 }
   })
 }

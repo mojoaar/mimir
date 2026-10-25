@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth/context'
 import { createApiKey, revokeApiKey } from '@/lib/auth/apikey'
 import { audit } from '@/lib/audit'
+import { translator } from '@/lib/i18n/request'
 
 export type CreateKeyState = { token?: string; error?: string }
 
@@ -13,7 +14,7 @@ export async function createKeyAction(
 ): Promise<CreateKeyState> {
   const user = await requireUser()
   const name = String(formData.get('name') ?? '').trim()
-  if (!name) return { error: 'Give the key a name so you can tell it apart later.' }
+  if (!name) return { error: (await translator())('app.settings.keyNeedName') }
 
   const key = await createApiKey(user.id, name)
   await audit({

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth/context'
 import { audit } from '@/lib/audit'
+import { translator } from '@/lib/i18n/request'
 import { presetFor, type PresetId, type ProviderKind } from '@/lib/providers/presets'
 import {
   createProvider,
@@ -31,6 +32,7 @@ export async function createProviderAction(
   formData: FormData,
 ): Promise<ProviderFormState> {
   const user = await requireUser()
+  const t = await translator()
 
   const kind = String(formData.get('kind') ?? 'llm')
   const presetId = String(formData.get('preset') ?? '')
@@ -40,17 +42,22 @@ export async function createProviderAction(
   const apiKey = String(formData.get('apiKey') ?? '').trim()
   const isDefault = formData.get('isDefault') === 'on'
 
-  if (kind !== 'llm' && kind !== 'embedding') return { error: 'Pick a provider type.' }
-  if (!label) return { error: 'Give the provider a label so you can tell it apart later.' }
+  if (kind !== 'llm' && kind !== 'embedding') return { error: t('app.providers.needKind') }
+  if (!label) return { error: t('app.providers.needLabel') }
 
   let preset
   try {
     preset = presetFor(presetId)
   } catch {
-    return { error: 'Pick a provider from the list.' }
+    return { error: t('app.providers.needPreset') }
   }
   if (!preset.kinds.includes(kind as ProviderKind)) {
-    return { error: `${preset.label} cannot be used for ${kind === 'llm' ? 'language models' : 'embeddings'}.` }
+    return {
+      error: t('app.providers.wrongKind', {
+        preset: preset.label,
+        kind: kind === 'llm' ? t('app.providers.kindLlm') : t('app.providers.kindEmbedding'),
+      }),
+    }
   }
 
   try {
@@ -66,7 +73,7 @@ export async function createProviderAction(
       isDefault,
     })
   } catch (error) {
-    return { error: messageOf(error, 'Could not save the provider.') }
+    return { error: messageOf(error, t('app.providers.saveFailed')) }
   }
 
   revalidatePath(PATH)

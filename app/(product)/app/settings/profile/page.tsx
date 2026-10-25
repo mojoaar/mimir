@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { requireUser } from '@/lib/auth/context'
 import { SESSION_COOKIE } from '@/lib/auth/cookie-name'
 import { sessionIdFor } from '@/lib/auth/session'
+import { translator } from '@/lib/i18n/request'
 import { listMySessions } from '@/lib/users/self'
 import { ProfileForm } from './profile-form'
 import { PasswordForm } from './password-form'
@@ -16,6 +17,7 @@ export default async function ProfilePage({
   searchParams: Promise<{ notice?: string; error?: string }>
 }) {
   const user = await requireUser()
+  const t = await translator()
   const { notice, error } = await searchParams
   const cookieValue = (await cookies()).get(SESSION_COOKIE)?.value ?? ''
   const currentSessionId = (await sessionIdFor(cookieValue)) ?? ''
@@ -24,20 +26,18 @@ export default async function ProfilePage({
   return (
     <section className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-8 sm:px-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Your profile</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Your name, the address you sign in with, and your password.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t('app.profile.title')}</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">{t('app.profile.body')}</p>
       </div>
 
       {notice === 'revoked' ? (
         <p className="rounded-md border border-[var(--border)] px-3 py-2 text-sm">
-          That session is signed out.
+          {t('app.profile.revokedNotice')}
         </p>
       ) : null}
       {notice === 'others' ? (
         <p className="rounded-md border border-[var(--border)] px-3 py-2 text-sm">
-          Every other device is signed out.
+          {t('app.profile.othersNotice')}
         </p>
       ) : null}
       {error ? (
@@ -47,23 +47,38 @@ export default async function ProfilePage({
       ) : null}
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Name and email</h2>
-        <ProfileForm user={user} />
+        <h2 className="text-lg font-medium">{t('app.profile.nameAndEmail')}</h2>
+        <ProfileForm
+          user={user}
+          labels={{
+            name: t('app.profile.name'),
+            email: t('app.profile.email'),
+            currentPassword: t('app.profile.currentPassword'),
+            currentPasswordHint: t('app.profile.currentPasswordHint'),
+            save: t('app.profile.save'),
+            saving: t('app.profile.saving'),
+          }}
+        />
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Password</h2>
-        <p className="text-sm text-[var(--text-muted)]">
-          Changing it signs out every other device, and keeps this one.
-        </p>
-        <PasswordForm />
+        <h2 className="text-lg font-medium">{t('app.profile.password')}</h2>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.profile.passwordBody')}</p>
+        <PasswordForm
+          labels={{
+            currentPassword: t('app.profile.currentPassword'),
+            newPassword: t('app.profile.newPassword'),
+            confirmPassword: t('app.profile.confirmPassword'),
+            passwordHint: t('app.profile.passwordHint'),
+            changePassword: t('app.profile.changePassword'),
+            changing: t('app.profile.changing'),
+          }}
+        />
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Sessions</h2>
-        <p className="text-sm text-[var(--text-muted)]">
-          Every browser and agent signed in as you. Revoke one you do not recognise.
-        </p>
+        <h2 className="text-lg font-medium">{t('app.profile.sessions')}</h2>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.profile.sessionsBody')}</p>
 
         <ul className="flex flex-col gap-2">
           {sessions.map((session) => (
@@ -73,16 +88,18 @@ export default async function ProfilePage({
             >
               <span className="flex flex-col">
                 <span>
-                  {session.ip ?? 'an unknown address'}
+                  {session.ip ?? t('app.profile.unknownAddress')}
                   {session.current ? (
                     <span className="ml-2 rounded border border-[var(--accent)] px-1.5 py-0.5 text-xs text-[var(--accent)]">
-                      This session
+                      {t('app.profile.thisSession')}
                     </span>
                   ) : null}
                 </span>
                 <span className="text-xs text-[var(--text-muted)]">
-                  {session.userAgent ?? 'unknown device'} · last seen{' '}
-                  {session.lastSeenAt.toISOString().slice(0, 16).replace('T', ' ')} UTC
+                  {session.userAgent ?? t('app.profile.unknownDevice')} ·{' '}
+                  {t('app.profile.lastSeen', {
+                    when: session.lastSeenAt.toISOString().slice(0, 16).replace('T', ' '),
+                  })}
                 </span>
               </span>
 
@@ -93,7 +110,7 @@ export default async function ProfilePage({
                     type="submit"
                     className="rounded-md border border-[var(--danger)] px-3 py-1 text-sm text-[var(--danger)]"
                   >
-                    Revoke
+                    {t('app.profile.revoke')}
                   </button>
                 </form>
               )}
@@ -107,7 +124,7 @@ export default async function ProfilePage({
               type="submit"
               className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
             >
-              Sign out everywhere else
+              {t('app.profile.signOutOthers')}
             </button>
           </form>
         ) : null}

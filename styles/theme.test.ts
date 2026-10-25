@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const css = readFileSync('styles/theme.css', 'utf8')
@@ -29,5 +30,24 @@ describe('theme alias layer', () => {
 
   it('never hardcodes a colour, only references a vendored token', () => {
     expect(css).not.toMatch(/#[0-9a-f]{3,8}/i)
+  })
+})
+
+function tsxFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) return tsxFiles(path)
+    return entry.name.endsWith('.tsx') ? [path] : []
+  })
+}
+
+describe('pages', () => {
+  it('use theme aliases instead of tailwind palette colours', () => {
+    const offenders = tsxFiles('app').filter((file) =>
+      /(bg|text|border)-(neutral|red|green|blue|gray|white|black)(-\d{2,3})?\b/.test(
+        readFileSync(file, 'utf8'),
+      ),
+    )
+    expect(offenders).toEqual([])
   })
 })

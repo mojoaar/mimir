@@ -5,13 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2026-10-26
+
+History you can undo.
+
+### Added
+
+- Every write keeps the body it replaced, so an agent that overwrites a memory
+  no longer destroys what was there. The last 20 versions per memory are kept
+  and pruned by the nightly purge job.
+- A history panel in the memory browser: the versions of a memory, a line diff
+  against what is live now, and a restore button. A restore is itself a write,
+  so a mistaken restore can be undone the same way.
+- `GET /api/v1/projects/:slug/memory/*path/versions` and
+  `POST /api/v1/projects/:slug/versions/:id/restore`, so an agent can read and
+  restore history too.
+- `diff` as a dependency, for the line diff.
 
 ### Changed
 
-- A wrong URL now gets a real 404 and a page worth reading: Mimir looked, and
-  found nothing. The theme cookie decides the colours, and the joke is stable
-  per path, so a broken link is at least a consistent one.
+- A wrong URL now gets a real 404 and a page worth reading instead of the
+  framework's bare one. The theme cookie picks the colours and the line is
+  stable per path.
+- `runPurge` reports `{ removed, versionsRemoved }`, and the `memory.purge`
+  audit row carries both counts.
+
+### Fixed (review pass)
+
+- A body is no longer lost when two writers create the same memory at the same
+  time. The archive now reads the row the update actually replaced, instead of
+  locking a row that does not exist yet.
+- History stays at twenty bodies per memory as it is written, not only after the
+  nightly sweep, so a path rewritten in a loop cannot grow all day.
+- The history panel ignores a version id belonging to a different memory, and
+  the API's restore audit row records `via: api`.
+- Size is reported in bytes, not characters, so a body of emoji reports what it
+  costs on disk.
 
 ## [0.5.0] - 2026-10-26
 

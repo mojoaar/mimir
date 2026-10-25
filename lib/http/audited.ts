@@ -20,7 +20,7 @@ export async function withAudit(
   request: NextRequest,
   action: string,
   run: (user: AuthUser) => Promise<Response>,
-  options: { maxBytes?: number } = {},
+  options: { maxBytes?: number; detail?: Record<string, unknown> } = {},
 ): Promise<Response> {
   // Before authentication, so a blocked caller learns nothing about keys.
   if (!(await isRequestAllowed(request))) return blockedResponse()
@@ -48,7 +48,10 @@ export async function withAudit(
     action,
     targetType: 'api',
     targetId: new URL(request.url).pathname,
-    detail: response.status >= 400 ? { ok: false, status: response.status } : { ok: true },
+    detail:
+      response.status >= 400
+        ? { ...options.detail, ok: false, status: response.status }
+        : { ...options.detail, ok: true },
     ip: clientIp(request.headers, getConfig().trustedProxies, null) ?? undefined,
     userAgent: request.headers.get('user-agent') ?? undefined,
   })

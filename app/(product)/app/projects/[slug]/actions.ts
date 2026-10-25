@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { audit } from '@/lib/audit'
 import { requireUser } from '@/lib/auth/context'
 import { deleteMemory, restoreMemory, writeMemory } from '@/lib/memory/service'
+import { restoreVersion } from '@/lib/memory/versions'
 
 export type ActionState = { ok?: string; error?: string }
 
@@ -95,4 +96,31 @@ export async function restoreMemoryAction(formData: FormData): Promise<void> {
     detail: { via: 'web' },
   })
   redirect(`/app/projects/${slug}?path=${encodeURIComponent(path)}`)
+}
+
+export async function restoreVersionAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const slug = field(formData, 'slug')
+  const projectId = field(formData, 'projectId')
+  const path = field(formData, 'path')
+  const versionId = field(formData, 'versionId')
+
+  const result = await restoreVersion(user.id, projectId, versionId)
+  revalidatePath(`/app/projects/${slug}`)
+
+  if (!result.restored) {
+    redirect(`/app/projects/${slug}?path=${encodeURIComponent(path)}&history=1&error=That%20version%20is%20gone.`)
+  }
+
+  await audit({
+    actorType: 'user',
+    actorId: user.id,
+    action: 'memory.restore_version',
+    targetType: 'memory',
+    targetId: result.path,
+    detail: { via: 'web', versionId },
+  })
+  redirect(
+    `/app/projects/${slug}?path=${encodeURIComponent(result.path)}&history=1&notice=Restored.%20The%20previous%20body%20is%20in%20history.`,
+  )
 }

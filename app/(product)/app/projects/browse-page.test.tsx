@@ -32,6 +32,33 @@ vi.mock('@/lib/memory/service', () => ({
   readMissing: null,
 }))
 vi.mock('@/lib/memory/search', () => ({ searchMemories: async () => [] }))
+vi.mock('@/lib/memory/versions', () => ({
+  listVersions: async () => [
+    {
+      id: '9',
+      path: 'auth/rotation',
+      title: 'Rotate tokens',
+      kind: 'note',
+      source: 'agent',
+      updatedAt: new Date(0),
+      createdAt: new Date(0),
+      bytes: 20,
+    },
+  ],
+  // A version from a different memory in the same project: the page must not
+  // diff it against the memory that is open.
+  getVersion: async () => ({
+    id: '9',
+    path: 'other/path',
+    title: 'Foreign',
+    summary: null,
+    body: 'FOREIGN BODY',
+    kind: 'note',
+    source: 'agent',
+    updatedAt: new Date(0),
+    createdAt: new Date(0),
+  }),
+}))
 
 import ProjectBrowser from './[slug]/page'
 
@@ -46,6 +73,7 @@ describe('project browser', () => {
     expect(html).toContain('Rotate tokens')
     expect(html).toContain('Rotate every 30 days.')
     expect(html).toContain('?path=auth%2Fcookies')
+    expect(html).toContain('History (1)')
   })
 
   it('asks the reader to choose something before a path is picked', async () => {
@@ -60,5 +88,13 @@ describe('project browser', () => {
   it('survives a repeated query parameter instead of crashing on it', async () => {
     const html = renderToStaticMarkup(await page({ q: ['one', 'two'] as never }))
     expect(html).toContain('Search this project')
+  })
+
+  it('ignores a version that belongs to another memory', async () => {
+    const html = renderToStaticMarkup(
+      await page({ path: 'auth/rotation', history: '1', version: '9' }),
+    )
+
+    expect(html).not.toContain('FOREIGN BODY')
   })
 })

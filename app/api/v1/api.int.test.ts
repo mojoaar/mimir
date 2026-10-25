@@ -5,6 +5,8 @@ import { GET as readMemoryRoute, PUT as writeMemoryRoute } from '@/app/api/v1/pr
 import { GET as healthRoute } from '@/app/api/health/route'
 import { POST as ingestRoute } from '@/app/api/v1/projects/[slug]/ingest/route'
 import { GET as readMemoryGet } from '@/app/api/v1/projects/[slug]/memory/[...path]/route'
+import { GET as listVersionsRoute } from '@/app/api/v1/projects/[slug]/versions/route'
+import { POST as restoreVersionRoute } from '@/app/api/v1/projects/[slug]/versions/[id]/restore/route'
 import { sha256 } from '@/lib/crypto'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
@@ -131,5 +133,62 @@ describe('rest api', () => {
       params({ path: ['import', 'docs', 'a.md'] }),
     )
     expect((await read.json()).body).toBe('imported')
+  })
+})
+
+describe('memory history over the rest api', () => {
+  it('lists versions without their bodies and restores one as a new version', async () => {
+    await writeMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/hist/x`, { method: 'PUT', body: { body: 'first' } }),
+      params({ path: ['hist', 'x'] }),
+    )
+    await writeMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/hist/x`, { method: 'PUT', body: { body: 'second' } }),
+      params({ path: ['hist', 'x'] }),
+    )
+
+    const listed = await listVersionsRoute(
+      req(`/api/v1/projects/${slug}/versions?path=hist%2Fx`),
+      { params: Promise.resolve({ slug }) },
+    )
+    const body = (await listed.json()) as { versions: { id: string; bytes: number; body?: string }[] }
+    expect(listed.status).toBe(200)
+    expect(body.versions).toHaveLength(1)
+    expect(body.versions[0]?.body).toBeUndefined()
+    expect(body.versions[0]?.bytes).toBe('first'.length)
+    expect(body.versions[0]?.id).toMatch(/^\d+$/)
+
+    const restored = await restoreVersionRoute(
+      req(`/api/v1/projects/${slug}/versions/${body.versions[0]!.id}/restore`, { method: 'POST' }),
+      { params: Promise.resolve({ slug, id: body.versions[0]!.id }) },
+    )
+    expect(await restored.json()).toEqual({ restored: true, path: 'hist/x' })
+
+    const read = await readMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/hist/x`),
+      params({ path: ['hist', 'x'] }),
+    )
+    expect((await read.json()).body).toBe('first')
+
+    const after = await listVersionsRoute(
+      req(`/api/v1/projects/${slug}/versions?path=hist%2Fx`),
+      { params: Promise.resolve({ slug }) },
+    )
+    // The body the restore replaced is history now, so a restore can be undone.
+    expect(((await after.json()) as { versions: unknown[] }).versions).toHaveLength(2)
+
+    const { rows } = await adminPool().query<{ detail: { via?: string } }>(
+      `select detail from audit_log where action = 'memory.restore_version' order by id desc limit 1`,
+    )
+    expect(rows[0]?.detail).toMatchObject({ via: 'api' })
+  })
+
+  it('refuses a version from another project', async () => {
+    const other = await restoreVersionRoute(
+      req(`/api/v1/projects/${slug}/versions/999999/restore`, { method: 'POST' }),
+      { params: Promise.resolve({ slug, id: '999999' }) },
+    )
+    expect(other.status).toBe(404)
+    expect((await other.json()).code).toBe('not_found')
   })
 })

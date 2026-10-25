@@ -69,6 +69,12 @@ docker compose up -d`}</Code>
         learning job writes a new one; deleting keeps the memory recoverable for 30 days, after which a nightly job
         removes it for good. Archiving a project hides it from every list and API call without touching its rows.
       </P>
+      <P>
+        Every write keeps the body it replaced. Open a memory and follow <strong>History</strong> to see the last 20
+        bodies, diff one against what is live now, and restore it. A restore is an ordinary write, so the body it
+        replaced becomes history too and a mistaken restore can be undone the same way. History is dropped when a
+        memory is purged, 30 days after it was deleted.
+      </P>
 
       <H2>Health</H2>
       <P>

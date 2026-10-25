@@ -38,7 +38,7 @@ export default async function DashboardPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Link
-                  href={`/app/projects/${project.slug}/settings`}
+                  href={`/app/projects/${project.slug}`}
                   className="font-medium hover:underline"
                 >
                   {project.name}

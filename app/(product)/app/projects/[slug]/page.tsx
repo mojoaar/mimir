@@ -1,0 +1,190 @@
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+
+import { requireUser } from '@/lib/auth/context'
+import { listDeletedMemories, readMemory, treeMemory } from '@/lib/memory/service'
+import { searchMemories } from '@/lib/memory/search'
+import { getProject } from '@/lib/projects/service'
+
+import { MemoryTree } from './tree'
+
+export const instant = false
+
+const BODY_DISPLAY_LIMIT = 200_000
+
+type Search = { path?: string; q?: string; deleted?: string }
+
+export default async function ProjectBrowser({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<Search>
+}) {
+  const user = await requireUser()
+  const { slug } = await params
+  const search = await searchParams
+  const project = await getProject(user.id, slug)
+  if (!project) notFound()
+
+  const query = search.q?.trim() ?? ''
+  const showDeleted = search.deleted === '1'
+  const requested = search.path ?? ''
+
+  let memory = null
+  if (requested) {
+    try {
+      memory = await readMemory(user.id, project.id, requested)
+    } catch {
+      notFound()
+    }
+    if (!memory) notFound()
+  }
+
+  const [entries, deleted, hits] = await Promise.all([
+    treeMemory(user.id, project.id, '', 4),
+    listDeletedMemories(user.id, project.id),
+    query ? searchMemories({ userId: user.id, projectId: project.id, query, limit: 50 }) : Promise.resolve([]),
+  ])
+
+  const base = `/app/projects/${slug}`
+  const canWrite = project.role === 'owner' || project.role === 'write'
+
+  return (
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <Link href="/app" className="text-sm text-[var(--text-muted)] underline">
+          ← Projects
+        </Link>
+        <Link href={`${base}/settings`} className="text-sm text-[var(--text-muted)] underline">
+          Settings
+        </Link>
+      </div>
+
+      <header className="flex flex-col gap-1">
+        <h1 className="text-xl font-semibold tracking-tight">{project.name}</h1>
+        <p className="text-sm text-[var(--text-muted)]">
+          {project.slug} · {project.role}
+        </p>
+      </header>
+
+      <form action={base} className="flex flex-wrap gap-2">
+        <input
+          type="search"
+          name="q"
+          defaultValue={query}
+          placeholder="Search this project"
+          className="min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-sm"
+        />
+        <button type="submit" className="rounded bg-[var(--accent)] px-3 py-2 text-sm text-[var(--accent-fg)]">
+          Search
+        </button>
+      </form>
+
+      <div className="flex flex-col gap-6 lg:flex-row">
+        <aside className="lg:w-80 lg:shrink-0">
+          <MemoryTree
+            slug={slug}
+            entries={entries}
+            active={memory?.path}
+            deletedCount={deleted.length}
+            showDeleted={showDeleted}
+          />
+        </aside>
+
+        <section className="min-w-0 flex-1">
+          {showDeleted ? (
+            <DeletedList slug={slug} rows={deleted} canWrite={canWrite} />
+          ) : query ? (
+            <SearchResults hits={hits} base={base} />
+          ) : memory ? (
+            <article className="flex flex-col gap-3">
+              <p className="text-sm text-[var(--text-muted)]">{memory.path.split('/').join(' / ')}</p>
+              <h2 className="text-lg font-semibold">{memory.title}</h2>
+              {memory.summary ? (
+                <p className="text-sm text-[var(--text-muted)]">{memory.summary}</p>
+              ) : (
+                <p className="text-sm text-[var(--text-muted)]">No summary yet.</p>
+              )}
+              <p className="text-xs text-[var(--text-muted)]">
+                {memory.kind} · updated {memory.updatedAt.toISOString()}
+              </p>
+              <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded border border-[var(--border)] bg-[var(--bg-raised)] p-3 text-sm">
+                {memory.body.length > BODY_DISPLAY_LIMIT
+                  ? `${memory.body.slice(0, BODY_DISPLAY_LIMIT)}\n\n[truncated for display]`
+                  : memory.body}
+              </pre>
+            </article>
+          ) : (
+            <p className="text-sm text-[var(--text-muted)]">Choose a memory, or search.</p>
+          )}
+        </section>
+      </div>
+    </main>
+  )
+}
+
+function SearchResults({ hits, base }: { hits: Awaited<ReturnType<typeof searchMemories>>; base: string }) {
+  if (hits.length === 0) {
+    return <p className="text-sm text-[var(--text-muted)]">No matches.</p>
+  }
+  return (
+    <ul className="flex flex-col gap-2">
+      {hits.map((hit) => (
+        <li key={hit.path}>
+          <Link
+            href={`${base}?path=${encodeURIComponent(hit.path)}`}
+            className="block rounded border border-[var(--border)] p-3 hover:bg-[var(--bg-raised)]"
+          >
+            <span className="block text-sm font-medium">{hit.title}</span>
+            <span className="block text-xs text-[var(--text-muted)]">{hit.path}</span>
+            {hit.summary ? (
+              <span className="mt-1 block text-sm text-[var(--text-muted)]">{hit.summary}</span>
+            ) : null}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function DeletedList({
+  slug,
+  rows,
+  canWrite,
+}: {
+  slug: string
+  rows: Awaited<ReturnType<typeof listDeletedMemories>>
+  canWrite: boolean
+}) {
+  if (rows.length === 0) {
+    return <p className="text-sm text-[var(--text-muted)]">Nothing in the bin.</p>
+  }
+  return (
+    <ul className="flex flex-col gap-2">
+      {rows.map((row) => (
+        <li
+          key={row.path}
+          className="flex flex-wrap items-center justify-between gap-2 rounded border border-[var(--border)] p-3"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm">{row.title}</span>
+            <span className="block text-xs text-[var(--text-muted)]">
+              {row.path} · deleted {row.deletedAt.toISOString()}
+            </span>
+          </span>
+          {canWrite ? (
+            <span className="text-xs text-[var(--text-muted)]">Restore from here</span>
+          ) : null}
+        </li>
+      ))}
+      <li className="text-xs text-[var(--text-muted)]">
+        Deleted memories are removed for good after 30 days. Open{' '}
+        <Link href={`/app/projects/${slug}`} className="underline">
+          live memory
+        </Link>
+        .
+      </li>
+    </ul>
+  )
+}

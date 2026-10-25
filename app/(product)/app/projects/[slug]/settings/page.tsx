@@ -31,9 +31,14 @@ export default async function ProjectSettingsPage({
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <Link href="/app" className="text-sm text-[var(--text-muted)] underline">
-        ← Projects
-      </Link>
+      <div className="flex gap-4 text-sm">
+        <Link href="/app" className="text-[var(--text-muted)] underline">
+          ← Projects
+        </Link>
+        <Link href={`/app/projects/${slug}`} className="text-[var(--text-muted)] underline">
+          Memory
+        </Link>
+      </div>
 
       <header>
         <h1 className="text-xl font-semibold tracking-tight">{project.name}</h1>

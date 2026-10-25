@@ -90,13 +90,43 @@ describe('runExtract', () => {
     expect(await runExtract({ projectId })).toEqual({ extracted: 0 })
   })
 
-  it('leaves the row intact when the provider fails', async () => {
+  it('leaves the row intact when the provider fails, and fails the job so the queue retries', async () => {
     await setLearning(projectId, true)
     withFakeCompletionFailing()
-    expect(await runExtract({ projectId })).toEqual({ extracted: 0 })
+    await expect(runExtract({ projectId })).rejects.toThrow(/provider responded 500/)
     expect((await readMemory(f.alice, projectId, 'deploy/rollback'))?.title).toBe(
       'Roll back with compose down then up.',
     )
+  })
+
+  // Newest-first meant a slow model re-read the same burst and never reached
+  // the rows behind it; the live install had summaries on 1 of 5 memories.
+  it('works from the oldest memory forward, so nothing is starved', async () => {
+    await setLearning(projectId, true)
+    for (let i = 1; i <= 21; i += 1) {
+      const path = `bulk/m${String(i).padStart(2, '0')}`
+      await writeMemory({ userId: f.alice, projectId, path, body: `body ${i}` })
+      await adminPool().query(
+        `update memories set updated_at = now() - ($3 || ' minutes')::interval
+          where project_id = $1 and lower(path) = $2`,
+        [projectId, path, String(22 - i)],
+      )
+    }
+    // Take the fixture row out of the queue so exactly 21 memories are pending.
+    await adminPool().query(
+      `update memories set summary = 'already known' where project_id = $1 and lower(path) = 'deploy/rollback'`,
+      [projectId],
+    )
+    withFakeCompletion('{"title":"Bulk row","summary":"One of the bulk memories."}')
+
+    const result = await runExtract({ projectId })
+
+    expect(result.extracted).toBe(20)
+    const { rows } = await adminPool().query<{ path: string }>(
+      `select path from memories where project_id = $1 and summary is null and deleted_at is null`,
+      [projectId],
+    )
+    expect(rows.map((row) => row.path)).toEqual(['bulk/m21'])
   })
 
   it('leaves the row intact when the reply cannot be parsed', async () => {

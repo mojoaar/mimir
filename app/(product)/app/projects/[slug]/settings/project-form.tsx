@@ -40,13 +40,15 @@ export function ProjectForm({
           type="checkbox"
           name="learningEnabled"
           defaultChecked={learningEnabled}
+          disabled={!isOwner}
           className="mt-0.5"
         />
         <span className="text-sm">
           <span className="font-medium">Learn from this project</span>
           <span className="mt-1 block text-[var(--text-muted)]">
-            Let Mimir write a one-line title and a short summary for each memory using your
-            language model.
+            {isOwner
+              ? 'Let Mimir write a one-line title and a short summary for each memory using your language model.'
+              : 'Only the project owner can change this.'}
           </span>
         </span>
       </label>

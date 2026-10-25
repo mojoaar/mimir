@@ -8,10 +8,14 @@ import { writeMemory } from './service'
 const state = vi.hoisted(() => ({
   target: null as ProviderTarget | null,
   vectors: (async () => []) as () => Promise<number[]>,
+  resolverThrows: false,
 }))
 
 vi.mock('@/lib/providers/resolve', () => ({
-  resolveEmbeddingProvider: async () => state.target,
+  resolveEmbeddingProvider: async () => {
+    if (state.resolverThrows) throw new Error('cannot decrypt: wrong key or tampered data')
+    return state.target
+  },
 }))
 
 vi.mock('@/lib/providers/client', async (importOriginal) => {
@@ -47,6 +51,7 @@ let projectId: string
 beforeEach(async () => {
   state.target = null
   state.vectors = async () => []
+  state.resolverThrows = false
   await resetFixtures()
   f = await seedTwoUsersWithProjects()
   projectId = f.aliceProjectId
@@ -123,6 +128,39 @@ describe('embedding on write', () => {
     await writeMemory({ userId: f.alice, projectId, path: 'a/b', body: 'body' })
 
     expect(await embeddingOf('a/b')).toBeNull()
+  })
+
+  it('a vector of the right size but not numbers is refused rather than stored', async () => {
+    state.target = target
+    state.vectors = async () => new Array(768).fill('x') as unknown as number[]
+
+    const result = await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'deploy/rollback',
+      body: 'Rollback: compose down then up.',
+    })
+
+    expect(result.created).toBe(true)
+    expect(await embeddingOf('deploy/rollback')).toBeNull()
+    const hits = await searchMemories({ userId: f.alice, projectId, query: 'rollback' })
+    expect(hits[0]?.path).toBe('deploy/rollback')
+  })
+
+  it('a provider that cannot even be resolved does not fail the write', async () => {
+    state.resolverThrows = true
+
+    const result = await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'deploy/rollback',
+      body: 'Rollback: compose down then up.',
+    })
+
+    expect(result.created).toBe(true)
+    expect(await embeddingOf('deploy/rollback')).toBeNull()
+    const hits = await searchMemories({ userId: f.alice, projectId, query: 'rollback' })
+    expect(hits[0]?.path).toBe('deploy/rollback')
   })
 
   it('embedText truncates a long body before sending it', async () => {

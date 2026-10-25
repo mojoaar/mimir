@@ -2,7 +2,7 @@ import type { PoolClient } from 'pg'
 
 import { withUser } from '@/lib/db/tx'
 
-import { requireProjectRole } from './access'
+import { forbidden, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
 
 export type ProjectRole = 'owner' | 'write' | 'read'
@@ -211,24 +211,28 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
 }
 
 /**
- * Changing the provider spends the owner's key, so it needs owner; everything
- * else about the project only needs write.
+ * Project settings belong to the owner: the provider change spends the owner's
+ * key, and the RLS update policy is owner-only, so a write grantee would get a
+ * silent no-op. Requiring owner keeps the answer honest.
  */
 export async function updateProjectSettings(
   userId: string,
   projectId: string,
   patch: { learningEnabled?: boolean; llmProviderId?: string | null },
 ): Promise<void> {
+  await requireProjectRole(userId, projectId, 'owner')
   const providerChanged = patch.llmProviderId !== undefined
-  await requireProjectRole(userId, projectId, providerChanged ? 'owner' : 'write')
 
   await withUser(userId, async (client) => {
-    await client.query(
+    const result = await client.query(
       `UPDATE projects
           SET learning_enabled = COALESCE($2::boolean, learning_enabled),
               llm_provider_id = CASE WHEN $3::boolean THEN $4::uuid ELSE llm_provider_id END
         WHERE id = $1`,
       [projectId, patch.learningEnabled ?? null, providerChanged, patch.llmProviderId ?? null],
     )
+    if (result.rowCount === 0) {
+      throw forbidden('Only the project owner can change that.')
+    }
   })
 }

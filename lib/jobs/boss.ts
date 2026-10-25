@@ -56,7 +56,8 @@ export async function startJobs(): Promise<void> {
     })
     // A queue error must never take the web process down with it.
     instance.on('error', (error) => {
-      console.error('mimir: job queue error', error)
+      // Connection-level errors can carry the connection string, so only the message.
+      console.error(`mimir: job queue error (${(error as Error).message})`)
     })
 
     await instance.start()

@@ -39,6 +39,25 @@ search matches meaning as well as words.
 - A write never fails because a provider is down, slow or misconfigured — the
   memory is stored either way, and search stays on keywords.
 
+### Fixed (review pass)
+
+- A provider that could not be resolved — an embedding provider whose key was
+  encrypted under another `MIMIR_SECRET`, for example — failed the write
+  instead of degrading to keyword search.
+- A provider that answered with a full-length vector of non-numbers reached the
+  `::vector` cast and failed the write.
+- A write grantee could toggle learning on a project, be told "Saved.", and
+  change nothing, because the row-level policy is owner-only. Project settings
+  are now owner-only and say so.
+- **Admin → Settings** probed the stored model but saved the typed one, so a
+  typo could pass the dimension check and then leave every memory unembedded.
+- Re-embedding could drop every vector and report success when the provider was
+  unavailable; it now refuses to start without a provider and fails the job if
+  rows are still empty afterwards.
+- Extraction took the newest memories first, so a slow model starved older rows
+  indefinitely; it now works oldest-first, fails the job on a provider error so
+  the queue retries, and queues another batch when one fills.
+
 ## [0.1.1] - 2026-10-25
 
 Review pass on 0.1.0, plus the theme system the UI was waiting for.

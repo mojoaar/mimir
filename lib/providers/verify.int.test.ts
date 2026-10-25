@@ -42,6 +42,31 @@ test('records success and the probed dimension', async () => {
   expect(row?.lastVerifiedAt).not.toBeNull()
 })
 
+test('probes the model it is about to save, not the stored one', async () => {
+  const p = await createProvider({
+    userId: fixtures.admin,
+    kind: 'embedding',
+    preset: 'ollama',
+    label: 'e2',
+    baseUrl: 'https://x.test',
+    model: 'nomic-embed-text',
+    dim: 768,
+  })
+  let sent = ''
+  vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+    sent = String(init.body)
+    return new Response(
+      JSON.stringify({ data: [{ embedding: new Array(1024).fill(0.1) }] }),
+    )
+  })
+
+  expect(await verifyProvider(fixtures.admin, p.id, { model: 'mxbai-embed-large' })).toEqual({
+    ok: true,
+    dim: 1024,
+  })
+  expect(sent).toContain('mxbai-embed-large')
+})
+
 test('records the failure without the key', async () => {
   const p = await createProvider({
     userId: fixtures.admin,

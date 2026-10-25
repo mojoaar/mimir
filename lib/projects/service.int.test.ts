@@ -54,4 +54,14 @@ describe('project settings', () => {
 
     expect((await getProject(alice, 'alice-project'))?.learningEnabled).toBe(true)
   })
+
+  it('a write grantee cannot toggle learning, and is told so', async () => {
+    await seedGrant(aliceProjectId, bob, 'write')
+
+    await expect(
+      updateProjectSettings(bob, aliceProjectId, { learningEnabled: true }),
+    ).rejects.toMatchObject({ code: 'forbidden' })
+
+    expect((await getProject(alice, 'alice-project'))?.learningEnabled).toBe(false)
+  })
 })

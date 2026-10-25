@@ -21,10 +21,12 @@ export async function embedText(
   text: string,
   options: { timeoutMs?: number } = {},
 ): Promise<string | null> {
-  const provider = await resolveEmbeddingProvider()
-  if (!provider) return null
-
+  // Everything, including provider resolution, is inside the try: a rotated
+  // MIMIR_SECRET makes decryption throw, and that must not fail the write.
   try {
+    const provider = await resolveEmbeddingProvider()
+    if (!provider) return null
+
     const [values] = await embed(provider, [text.slice(0, EMBED_TEXT_LIMIT)], {
       timeoutMs: options.timeoutMs ?? 10_000,
     })
@@ -33,6 +35,13 @@ export async function embedText(
       console.error(
         `embedding unavailable (returned ${values?.length ?? 0} dimensions, expected ${EMBEDDING_DIM})`,
       )
+      return null
+    }
+
+    // pgvector rejects the whole write on a non-numeric literal, so a provider
+    // that answers with strings must degrade here instead of reaching SQL.
+    if (!values.every((value) => typeof value === 'number' && Number.isFinite(value))) {
+      console.error('embedding unavailable (the vector held a value that is not a number)')
       return null
     }
 

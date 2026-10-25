@@ -66,7 +66,7 @@ describe('the re-embed job', () => {
     await writeThreeEmbeddedMemoriesAndOneDeleted()
     state.vectors = async () => new Array(768).fill(0.25)
 
-    expect(await runReembed({ confirm: true })).toEqual({ total: 3 })
+    expect(await runReembed({ confirm: true })).toEqual({ total: 3, missing: 0 })
     expect(await liveRows(true)).toBe(0)
   })
 
@@ -77,5 +77,24 @@ describe('the re-embed job', () => {
       code: 'invalid_params',
     })
     expect(await liveRows(false)).toBe(3)
+  })
+
+  it('refuses to drop anything when no embedding provider is configured', async () => {
+    await writeThreeEmbeddedMemoriesAndOneDeleted()
+    state.target = null
+
+    await expect(runReembed({ confirm: true })).rejects.toMatchObject({
+      code: 'invalid_params',
+    })
+    expect(await liveRows(false)).toBe(3)
+  })
+
+  it('fails loudly when the provider dies mid-run instead of reporting a clean rebuild', async () => {
+    await writeThreeEmbeddedMemoriesAndOneDeleted()
+    state.vectors = async () => {
+      throw new Error('provider responded 500')
+    }
+
+    await expect(runReembed({ confirm: true })).rejects.toThrow(/still without a vector/)
   })
 })

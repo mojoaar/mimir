@@ -35,7 +35,7 @@ export async function saveEmbeddingAction(
       return { error: 'That provider is not an embedding provider.' }
     }
 
-    const probe = await verifyProvider(user.id, providerId)
+    const probe = await verifyProvider(user.id, providerId, { model })
     if (!probe.ok) return { error: `The provider did not answer: ${probe.error}` }
 
     if (probe.dim !== EMBEDDING_DIM) {

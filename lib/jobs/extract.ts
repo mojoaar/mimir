@@ -64,7 +64,7 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
     client.query<PendingRow>(
       `select id, path, body from memories
         where project_id = $1 and summary is null and deleted_at is null
-        order by updated_at desc
+        order by updated_at asc
         limit ${BATCH}`,
       [projectId],
     ),
@@ -90,9 +90,10 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
         console.error('extract skipped: the model returned no answer')
         continue
       }
-      // The provider is down or refusing: stop, and the rest stay pending.
+      // The provider is down or refusing: fail the job so pg-boss retries it
+      // instead of marking the batch complete with the rows still pending.
       console.error(`extract stopped (${(error as Error).message})`)
-      break
+      throw error
     }
     const parsed = parseExtraction(reply)
     if (!parsed) {
@@ -109,6 +110,15 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
     )
     extracted += 1
   }
+
+  // A full batch means there is probably more behind it, and nothing else will
+  // ask for it until the next write. Only continue when something was written:
+  // a batch of unparseable rows would otherwise loop forever.
+  if (extracted > 0 && rows.length === BATCH) {
+    const { sendJob } = await import('./boss')
+    await sendJob('extract', { projectId }, { singletonKey: projectId })
+  }
+
   return { extracted }
 }
 

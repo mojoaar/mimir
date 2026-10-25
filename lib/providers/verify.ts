@@ -6,13 +6,19 @@ export type VerifyResult = { ok: true; models?: string[]; dim?: number } | { ok:
 const PROBE_TIMEOUT_MS = 15_000
 
 /** Probes a provider and records the outcome. The key never enters the result. */
-export async function verifyProvider(userId: string, id: string): Promise<VerifyResult> {
+export async function verifyProvider(
+  userId: string,
+  id: string,
+  overrides: { model?: string } = {},
+): Promise<VerifyResult> {
   const secret = await getProviderSecret(userId, id)
   const target: ProviderTarget = {
     id: secret.id,
     preset: secret.preset,
     baseUrl: secret.baseUrl,
-    model: secret.model,
+    // Probe what is about to be saved: probing the stored model while saving
+    // another would pass at 768 and then embed at 1024 forever.
+    model: overrides.model ?? secret.model,
     apiKey: secret.apiKey,
   }
 

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-26
+
+Bring your own project.
+
+### Added
+
+- `mimir ingest` walks a folder and imports its documentation and
+  configuration — READMEs, `docs/`, markdown, compose files, `package.json` —
+  in batches the server accepts, into `import/` where search finds them.
+  Source code is skipped by default, because the agent already has it.
+- `--project` names a project yourself, for a folder that is not a git
+  repository. In a repository the import joins the project your agents already
+  write to.
+- `--all` imports every text file; `--dry-run` prints the plan and sends
+  nothing.
+- A project can now be created by the name the caller asks for, so a named
+  import does not need a second run.
+
 ## [0.6.0] - 2026-10-26
 
 History you can undo.

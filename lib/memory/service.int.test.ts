@@ -37,6 +37,25 @@ describe('memory service', () => {
     expect((await readMemory(f.alice, projectId, 'conventions/commits'))!.body).toBe('second')
   })
 
+  it('clears the summary on a rewrite and records exactly one version', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'conventions/summarised', body: 'first' })
+    await adminPool().query('update memories set summary = $1 where project_id = $2', [
+      'a summary',
+      projectId,
+    ])
+
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'conventions/summarised',
+      body: 'second',
+    })
+
+    const { listVersions } = await import('./versions')
+    expect((await readMemory(f.alice, projectId, 'conventions/summarised'))!.summary).toBeNull()
+    expect(await listVersions(f.alice, projectId, 'conventions/summarised')).toHaveLength(1)
+  })
+
   it('derives a title from the first line when none is given', async () => {
     await writeMemory({ userId: f.alice, projectId, path: 'a/b', body: '\n\nUse pnpm for workspaces\nmore' })
     expect((await readMemory(f.alice, projectId, 'a/b'))!.title).toBe('Use pnpm for workspaces')

@@ -2,6 +2,7 @@ import { withAdmin, withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
 import { EXTRACT_DEBOUNCE_SECONDS } from '@/lib/jobs/constants'
 import { embedText } from './embeddings'
+import { archivePrevious } from './versions'
 import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
 import { MEMORY_KINDS } from './types'
 import type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
@@ -47,6 +48,9 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   const embedding = await embedText([path, title, input.body].join('\n'))
 
   const result = await withUser(input.userId, async (tx) => {
+    // Archive before writing: the row this statement replaces becomes history.
+    await archivePrevious(tx, { projectId: input.projectId, path, nextBody: input.body })
+
     const { rows } = await tx.query<{ created: boolean }>(
       `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id, embedding)
        select $1, $2, $3, null, $4,

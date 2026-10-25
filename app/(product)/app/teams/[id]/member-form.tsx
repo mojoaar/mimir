@@ -4,7 +4,7 @@ import { useActionState } from 'react'
 
 import { addMemberAction, type ActionState } from '../actions'
 
-export function MemberForm({ teamId, slug }: { teamId: string; slug: string }) {
+export function MemberForm({ teamId }: { teamId: string }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(addMemberAction, {})
 
   return (
@@ -13,7 +13,7 @@ export function MemberForm({ teamId, slug }: { teamId: string; slug: string }) {
       className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] p-4"
     >
       <input type="hidden" name="teamId" value={teamId} />
-      <input type="hidden" name="slug" value={slug} />
+      <input type="hidden" name="teamId" value={teamId} />
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-medium">Add member</span>
         <input

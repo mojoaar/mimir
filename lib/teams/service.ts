@@ -16,6 +16,8 @@ export type TeamSummary = {
 
 export type TeamMember = { userId: string; email: string; name: string; role: TeamRole }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 function fail(code: 'forbidden' | 'invalid_params' | 'not_found', message: string) {
   const error = new Error(message) as Error & { code: typeof code }
   error.code = code
@@ -97,17 +99,19 @@ export async function listTeams(userId: string): Promise<TeamSummary[]> {
 
 export async function getTeam(
   userId: string,
-  slug: string,
+  teamId: string,
 ): Promise<{ team: TeamSummary; members: TeamMember[] } | null> {
+  // The route passes whatever is in the URL; a non-uuid would make Postgres
+  // raise 22P02 instead of a 404.
+  if (!UUID.test(teamId)) return null
   return withUser(userId, async (client) => {
     const found = await client.query<TeamSummary>(
       `select t.id, t.slug, t.name, m.role,
               (select count(*)::int from team_members x where x.team_id = t.id) as "memberCount"
          from teams t
          join team_members m on m.team_id = t.id and m.user_id = $1
-        where t.slug = $2
-        limit 1`,
-      [userId, slug],
+        where t.id = $2`,
+      [userId, teamId],
     )
     const team = found.rows[0]
     if (!team) return null

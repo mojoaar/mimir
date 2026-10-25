@@ -13,13 +13,13 @@ export default async function TeamDetailPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>
+  params: Promise<{ id: string }>
   searchParams: Promise<{ error?: string; notice?: string }>
 }) {
   const user = await requireUser()
-  const { slug } = await params
+  const { id } = await params
   const { error, notice } = await searchParams
-  const found = await getTeam(user.id, slug)
+  const found = await getTeam(user.id, id)
   if (!found) notFound()
 
   const { team, members } = found
@@ -62,7 +62,7 @@ export default async function TeamDetailPage({
             {isOwner && member.role !== 'owner' ? (
               <form action={removeMemberAction}>
                 <input type="hidden" name="teamId" value={team.id} />
-                <input type="hidden" name="slug" value={team.slug} />
+                <input type="hidden" name="teamId" value={team.id} />
                 <input type="hidden" name="userId" value={member.userId} />
                 <button
                   type="submit"
@@ -76,7 +76,7 @@ export default async function TeamDetailPage({
         ))}
       </ul>
 
-      {isOwner ? <MemberForm teamId={team.id} slug={team.slug} /> : null}
+      {isOwner ? <MemberForm teamId={team.id} /> : null}
 
       {isOwner ? (
         <section className="flex flex-col gap-2 rounded-lg border border-[var(--danger)] p-4">
@@ -87,7 +87,7 @@ export default async function TeamDetailPage({
           </p>
           <form action={deleteTeamAction} className="self-start">
             <input type="hidden" name="teamId" value={team.id} />
-            <input type="hidden" name="slug" value={team.slug} />
+            <input type="hidden" name="teamId" value={team.id} />
             <button
               type="submit"
               className="rounded border border-[var(--danger)] px-3 py-1.5 text-sm text-[var(--danger)]"

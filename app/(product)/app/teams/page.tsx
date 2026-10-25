@@ -37,7 +37,7 @@ export default async function TeamsPage({
           {teams.map((team) => (
             <li key={team.id}>
               <Link
-                href={`/app/teams/${team.slug}`}
+                href={`/app/teams/${team.id}`}
                 className="flex items-center justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] px-4 py-3 hover:bg-[var(--bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
               >
                 <span className="font-medium">{team.name}</span>

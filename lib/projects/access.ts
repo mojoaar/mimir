@@ -123,7 +123,7 @@ export async function listGrants(
   actorUserId: string,
   projectId: string,
 ): Promise<GrantRow[]> {
-  await requireProjectRole(actorUserId, projectId, 'write')
+  await requireProjectRole(actorUserId, projectId, 'owner')
   return withUser(actorUserId, async (tx) => {
     const { rows } = await tx.query<{
       principal_type: PrincipalType

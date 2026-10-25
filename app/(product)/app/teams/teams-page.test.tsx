@@ -25,7 +25,7 @@ vi.mock('@/lib/teams/service', () => ({
 }))
 
 import TeamsPage from './page'
-import TeamDetailPage from './[slug]/page'
+import TeamDetailPage from './[id]/page'
 
 function team(overrides: Record<string, unknown> = {}) {
   return {
@@ -57,7 +57,7 @@ describe('the teams page', () => {
 })
 
 describe('a team page', () => {
-  const params = Promise.resolve({ slug: 'platform' })
+  const params = Promise.resolve({ id: 't1' })
 
   it('shows the members and lets an owner delete the team', async () => {
     mocks.detail = {

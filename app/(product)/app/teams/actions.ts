@@ -8,18 +8,17 @@ import { addTeamMember, createTeam, deleteTeam, removeTeamMember } from '@/lib/t
 
 export type ActionState = { ok?: string; error?: string }
 
-const KNOWN: Record<string, string> = {
-  forbidden: 'Only a team owner can do that.',
-  invalid_params: 'That did not work.',
-  not_found: 'That team no longer exists.',
-}
+const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
 
 function messageOf(error: unknown): string {
   const code = (error as { code?: string }).code ?? ''
-  if (KNOWN[code]) return KNOWN[code] as string
-  // A service message is written for a person; a stack trace is not.
   const message = (error as Error).message ?? ''
-  return message && !message.includes('\n') && message.length < 200 ? message : 'That did not work.'
+  // Only our own service errors are written for a person. A driver error
+  // carries a SQLSTATE in `code` and text nobody should read.
+  if (!KNOWN.has(code) || !message || message.includes('\n') || message.length > 200) {
+    return 'That did not work. Try again.'
+  }
+  return message
 }
 
 export async function createTeamAction(
@@ -30,16 +29,16 @@ export async function createTeamAction(
   const name = String(formData.get('name') ?? '').trim()
   if (!name) return { error: 'A team needs a name.' }
 
-  let slug: string
+  let id: string
   try {
     const team = await createTeam(user.id, name)
-    slug = team.slug
+    id = team.id
   } catch (error) {
     return { error: messageOf(error) }
   }
 
   revalidatePath('/app/teams')
-  redirect(`/app/teams/${slug}`)
+  redirect(`/app/teams/${id}`)
 }
 
 export async function addMemberAction(
@@ -49,7 +48,6 @@ export async function addMemberAction(
   const user = await requireUser()
   const teamId = String(formData.get('teamId') ?? '')
   const email = String(formData.get('email') ?? '').trim()
-  const slug = String(formData.get('slug') ?? '')
   if (!teamId || !email) return { error: 'Enter an email address.' }
 
   try {
@@ -58,7 +56,7 @@ export async function addMemberAction(
     return { error: messageOf(error) }
   }
 
-  revalidatePath(`/app/teams/${slug}`)
+  revalidatePath(`/app/teams/${teamId}`)
   return { ok: `${email} can now see what this team shares.` }
 }
 
@@ -66,28 +64,26 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
   const user = await requireUser()
   const teamId = String(formData.get('teamId') ?? '')
   const userId = String(formData.get('userId') ?? '')
-  const slug = String(formData.get('slug') ?? '')
 
   try {
     await removeTeamMember(user.id, teamId, userId)
   } catch (error) {
     // The redirect sits outside the try: a thrown redirect is not a failure.
-    redirect(`/app/teams/${slug}?error=${encodeURIComponent(messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(messageOf(error))}`)
   }
 
-  revalidatePath(`/app/teams/${slug}`)
-  redirect(`/app/teams/${slug}?notice=removed`)
+  revalidatePath(`/app/teams/${teamId}`)
+  redirect(`/app/teams/${teamId}?notice=removed`)
 }
 
 export async function deleteTeamAction(formData: FormData): Promise<void> {
   const user = await requireUser()
   const teamId = String(formData.get('teamId') ?? '')
-  const slug = String(formData.get('slug') ?? '')
 
   try {
     await deleteTeam(user.id, teamId)
   } catch (error) {
-    redirect(`/app/teams/${slug}?error=${encodeURIComponent(messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(messageOf(error))}`)
   }
 
   revalidatePath('/app/teams')

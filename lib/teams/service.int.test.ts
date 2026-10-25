@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { adminPool, appPool } from '../db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '../db/seed'
+import { grantProject } from '../projects/access'
 import {
   addTeamMember,
   createTeam,
@@ -50,7 +51,7 @@ describe('teams', () => {
     expect(listed.map((t) => t.slug)).toEqual(['reading-notes'])
     expect(listed[0]?.memberCount).toBe(1)
 
-    const fetched = await getTeam(f.alice, 'reading-notes')
+    const fetched = await getTeam(f.alice, created.id)
     expect(fetched?.members.map((m) => m.role)).toEqual(['owner'])
   })
 
@@ -63,7 +64,7 @@ describe('teams', () => {
   it('hides a team from someone who is not in it', async () => {
     const team = await createTeam(f.alice, 'notes')
 
-    expect(await getTeam(f.bob, team.slug)).toBeNull()
+    expect(await getTeam(f.bob, team.id)).toBeNull()
     expect(await listTeams(f.bob)).toEqual([])
 
     await expect(addTeamMember(f.bob, team.id, 'carol@example.test')).rejects.toMatchObject({
@@ -88,7 +89,7 @@ describe('teams', () => {
       code: 'invalid_params',
     })
 
-    const fetched = await getTeam(f.alice, 'notes')
+    const fetched = await getTeam(f.alice, team.id)
     expect(fetched?.members).toHaveLength(2)
   })
 
@@ -101,7 +102,7 @@ describe('teams', () => {
     })
 
     await removeTeamMember(f.alice, team.id, f.bob)
-    const fetched = await getTeam(f.alice, 'notes')
+    const fetched = await getTeam(f.alice, team.id)
     expect(fetched?.members.map((m) => m.email)).toEqual(['alice@example.test'])
     expect(await auditCount('team.member_remove')).toBe(1)
   })
@@ -124,5 +125,30 @@ describe('teams', () => {
     const team = await createTeam(f.alice, 'notes')
     await expect(deleteTeam(f.bob, team.id)).rejects.toMatchObject({ code: 'forbidden' })
     expect(await listTeams(f.alice)).toHaveLength(1)
+  })
+
+  it('keeps two teams with the same name apart', async () => {
+    const alices = await createTeam(f.alice, 'platform')
+    await addTeamMember(f.alice, alices.id, 'carol@example.test')
+    const carols = await createTeam(f.carol, 'platform')
+
+    const seenByCarol = await getTeam(f.carol, carols.id)
+    expect(seenByCarol?.team.id).toBe(carols.id)
+    expect(seenByCarol?.team.role).toBe('owner')
+
+    const seenByAlice = await getTeam(f.alice, alices.id)
+    expect(seenByAlice?.team.id).toBe(alices.id)
+    expect(seenByAlice?.team.role).toBe('owner')
+  })
+
+  it('revokes grants on a project the team owner does not own', async () => {
+    const team = await createTeam(f.bob, 'shared-ops')
+    await addTeamMember(f.bob, team.id, 'alice@example.test')
+    await grantProject(f.alice, f.aliceProjectId, 'team', team.id, 'read')
+    expect(await grantCount(f.aliceProjectId)).toBe(1)
+
+    await deleteTeam(f.bob, team.id)
+
+    expect(await grantCount(f.aliceProjectId)).toBe(0)
   })
 })

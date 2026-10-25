@@ -30,6 +30,15 @@ Share with people, not accounts.
   only by `project_list`: `resolveProject` and `getProject` still matched
   person grants only, so every REST and MCP call for a team-shared project
   answered `404 project_not_found` while the project showed up in the list.
+- Two teams with the same name no longer collapse onto one page: team URLs
+  carry the team's id, so each owner and member reaches their own team.
+- Deleting a team also removes the shares it held on projects its owner does
+  not own. Those grant rows used to survive, invisible, while the app said
+  everything had been revoked.
+- The grant list is owner-only; a write grantee can no longer enumerate who
+  else a project is shared with.
+- Team actions surface only messages the service wrote, never a raw database
+  error.
 
 ## [0.7.0] - 2026-10-25
 

@@ -42,6 +42,11 @@ describe('project access', () => {
     await expect(listGrants(f.bob, f.aliceProjectId)).rejects.toMatchObject({ code: 'forbidden' })
   })
 
+  it('does not let a write grantee enumerate the other grantees either', async () => {
+    await grantProject(f.alice, f.aliceProjectId, 'user', f.bob, 'write')
+    await expect(listGrants(f.bob, f.aliceProjectId)).rejects.toMatchObject({ code: 'forbidden' })
+  })
+
   it('lets a write grant write but not manage grants', async () => {
     await grantProject(f.alice, f.aliceProjectId, 'user', f.bob, 'write')
 

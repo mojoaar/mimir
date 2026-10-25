@@ -28,6 +28,15 @@ function redactDetail(value: unknown): unknown {
 }
 
 /**
+ * The message must survive, or an operator cannot fix the failure; only the
+ * credential-shaped parts of it are masked.
+ */
+export function describeAuditFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error)
+  return message.replace(/\b\w{16,}\b/g, (word) => redact(word))
+}
+
+/**
  * Append one audit row. Never throws: losing an audit write must not fail the
  * request it was describing, but it must be visible in the log.
  */
@@ -56,6 +65,6 @@ export async function audit(entry: AuditEntry, tx?: PoolClient): Promise<void> {
     else if (entry.actorType === 'user' && entry.actorId) await withUser(entry.actorId, insert)
     else await withAdmin(insert)
   } catch (err) {
-    console.error(`audit write failed (${redact(String(err))})`)
+    console.error(`audit write failed (${describeAuditFailure(err)})`)
   }
 }

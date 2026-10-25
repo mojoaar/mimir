@@ -3,14 +3,15 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
-import { resolveProject } from './service'
+import { getProject, resolveProject, updateProjectSettings } from './service'
 
 let alice: string
 let bob: string
+let aliceProjectId: string
 
 beforeEach(async () => {
   await resetFixtures()
-  ;({ alice, bob } = await seedTwoUsersWithProjects())
+  ;({ alice, bob, aliceProjectId } = await seedTwoUsersWithProjects())
 })
 
 describe('resolveProject', () => {
@@ -36,5 +37,21 @@ describe('resolveProject', () => {
     )
 
     expect(rows[0]?.owner_user_id).toBe(bob)
+  })
+})
+
+describe('project settings', () => {
+  it('a write grantee cannot redirect the owner’s provider', async () => {
+    await seedGrant(aliceProjectId, bob, 'write')
+
+    await expect(
+      updateProjectSettings(bob, aliceProjectId, { llmProviderId: null }),
+    ).rejects.toMatchObject({ code: 'forbidden' })
+  })
+
+  it('the owner can toggle learning', async () => {
+    await updateProjectSettings(alice, aliceProjectId, { learningEnabled: true })
+
+    expect((await getProject(alice, 'alice-project'))?.learningEnabled).toBe(true)
   })
 })

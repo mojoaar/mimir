@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-10-25
+
+Every screen, in your language.
+
+### Added
+
+- A language menu in the app header: English, Danish and German. The choice is saved on the account, so the next
+  page is already in that language on its first paint, on any browser you sign in from.
+- The sign-in, memory, project, team, settings and admin screens are translated, and so are the messages forms
+  answer with. Anything that has not been translated yet falls back to English rather than showing a raw key.
+
+### Changed
+
+- The public pages keep their own addresses (`/`, `/da`, `/de`) so search engines can index each language; the
+  signed-in app uses one path and the saved preference instead.
+
 ## [0.10.1] - 2026-10-25
 
 Room to breathe.

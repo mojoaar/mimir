@@ -82,3 +82,13 @@ describe('the account page', () => {
     expect(html).toContain('sessions signed in')
   })
 })
+
+describe('the language section', () => {
+  it('explains the menu, the saved choice and the public pages', async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage())
+
+    expect(html).toContain('English, Danish and German')
+    expect(html).toContain('saved on the account')
+    expect(html).toContain('/da')
+  })
+})

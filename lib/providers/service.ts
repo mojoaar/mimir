@@ -138,7 +138,7 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
     action: 'provider.create',
     targetType: 'provider',
     targetId: row.id,
-    detail: { kind: row.kind, preset: row.preset, label: row.label, hasKey: row.api_key_enc !== null },
+    detail: { kind: row.kind, preset: row.preset, label: row.label, configured: row.api_key_enc !== null },
   })
 
   return toSummary(row)
@@ -227,17 +227,22 @@ export async function updateProvider(
  * caller learns nothing about whether it exists.
  */
 export async function deleteProvider(userId: string, id: string): Promise<void> {
-  const deleted = await withUser(userId, async (tx) => {
-    const { rowCount } = await tx.query('delete from providers where id = $1', [id])
-    return (rowCount ?? 0) > 0
+  const gone = await withUser(userId, async (tx) => {
+    // Read the identity before the row disappears: afterwards the id points at nothing.
+    const { rows } = await tx.query<{ kind: ProviderKind; preset: string; label: string }>(
+      'delete from providers where id = $1 returning kind, preset, label',
+      [id],
+    )
+    return rows[0] ?? null
   })
-  if (deleted) {
+  if (gone) {
     await audit({
       actorType: 'user',
       actorId: userId,
       action: 'provider.delete',
       targetType: 'provider',
       targetId: id,
+      detail: { kind: gone.kind, preset: gone.preset, label: gone.label },
     })
   }
 }

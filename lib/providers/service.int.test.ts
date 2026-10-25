@@ -1,6 +1,7 @@
 import { beforeAll, expect, test } from 'vitest'
 import { createProvider, deleteProvider, getProviderSecret, listProviders } from './service'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '../db/seed'
+import { adminPool } from '../db/pool'
 
 let fixtures: Fixtures
 
@@ -61,4 +62,22 @@ test('bob cannot read or delete alice’s provider', async () => {
   })
   await expect(deleteProvider(fixtures.bob, p.id)).resolves.toBeUndefined()
   expect((await listProviders(fixtures.alice, 'llm')).some((q) => q.id === p.id)).toBe(true)
+})
+
+test('the delete is recorded with what was deleted, not just its id', async () => {
+  const p = await createProvider({
+    userId: fixtures.alice,
+    kind: 'llm',
+    preset: 'deepseek',
+    label: 'gone',
+    model: 'm',
+  })
+  await deleteProvider(fixtures.alice, p.id)
+
+  const { rows } = await adminPool().query<{ detail: { label: string; preset: string } }>(
+    "select detail from audit_log where action = 'provider.delete' and target_id = $1",
+    [p.id],
+  )
+  expect(rows[0]?.detail.label).toBe('gone')
+  expect(rows[0]?.detail.preset).toBe('deepseek')
 })

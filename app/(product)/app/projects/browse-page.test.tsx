@@ -80,6 +80,14 @@ describe('project browser', () => {
     expect(html).toContain('History (1)')
   })
 
+  it('names the search box and the editor for a screen reader', async () => {
+    const html = renderToStaticMarkup(await page({ path: 'auth/rotation' }))
+    expect(html).toContain('for="memory-search"')
+    expect(html).toContain('for="memory-body"')
+    expect(html).toContain('Search this project')
+    expect(html).toContain('Memory body')
+  })
+
   it('asks the reader to choose something before a path is picked', async () => {
     const html = renderToStaticMarkup(await page({}))
     expect(html).toContain('Choose a memory')

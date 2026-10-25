@@ -20,6 +20,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/app/admin/backups" className="text-[var(--text-muted)] underline">
             Backups
           </Link>
+          <Link href="/app/admin/audit" className="text-[var(--text-muted)] underline">
+            Audit
+          </Link>
+          <Link href="/app/admin/settings/site" className="text-[var(--text-muted)] underline">
+            Site
+          </Link>
           <Link href="/app" className="ml-auto text-[var(--text-muted)] underline">
             Back to app
           </Link>

@@ -4,7 +4,7 @@ import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
 import { readMemory, writeMemory } from '@/lib/memory/service'
-import { grantProject, revokeGrant } from './access'
+import { grantProject, projectRole, revokeGrant } from './access'
 
 import {
   archiveProject,
@@ -211,5 +211,43 @@ describe('a team share reaches every read path', () => {
 
     const project = await getProject(carol, 'alice-project')
     expect(project?.role).toBe('write')
+  })
+})
+
+describe('one rank rule behind every path', () => {
+  it('gives the same role from projectRole, resolveProject, getProject and listProjects', async () => {
+    const makeTeam = async (name: string, member: string) => {
+      const { rows } = await adminPool().query<{ id: string }>(
+        'insert into teams (owner_user_id, name, slug) values ($1, $2, $2) returning id',
+        [alice, name],
+      )
+      const id = rows[0]!.id
+      await adminPool().query(
+        "insert into team_members (team_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'member')",
+        [id, alice, member],
+      )
+      return id
+    }
+
+    // Write must win over read, whatever order the teams were granted in.
+    const readers = await makeTeam('readers', carol)
+    const writers = await makeTeam('writers', carol)
+    await grantProject(alice, aliceProjectId, 'team', readers, 'read')
+    await grantProject(alice, aliceProjectId, 'team', writers, 'write')
+
+    expect(await projectRole(carol, aliceProjectId)).toBe('write')
+    expect((await resolveProject(carol, { project: 'alice-project' })).role).toBe('write')
+    expect((await getProject(carol, 'alice-project'))?.role).toBe('write')
+    expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)?.role).toBe('write')
+
+    await revokeGrant(alice, aliceProjectId, 'team', readers)
+    await revokeGrant(alice, aliceProjectId, 'team', writers)
+
+    expect(await projectRole(carol, aliceProjectId)).toBeNull()
+    await expect(resolveProject(carol, { project: 'alice-project' })).rejects.toMatchObject({
+      code: 'project_not_found',
+    })
+    expect(await getProject(carol, 'alice-project')).toBeNull()
+    expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)).toBeUndefined()
   })
 })

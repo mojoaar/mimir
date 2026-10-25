@@ -4,7 +4,7 @@ import { withUser } from '@/lib/db/tx'
 import { audit } from '@/lib/audit'
 import { slugify } from '@/lib/slug'
 
-import { forbidden, projectRole, requireProjectRole } from './access'
+import { forbidden, grantRankSql, projectRole, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
 
 export type ProjectRole = 'owner' | 'write' | 'read'
@@ -22,15 +22,7 @@ type AccessRow = {
   grant_rank: number | null
 }
 
-const GRANT_RANK = `(SELECT max(case g.role when 'write' then 2 else 1 end)
-                 FROM project_grants g
-                 LEFT JOIN team_members tm
-                        ON g.principal_type = 'team'
-                       AND tm.team_id = g.principal_id
-                       AND tm.user_id = $1
-                WHERE g.project_id = p.id
-                  AND ((g.principal_type = 'user' AND g.principal_id = $1)
-                       OR tm.user_id IS NOT NULL))`
+const GRANT_RANK = grantRankSql('$1')
 
 const ACCESSIBLE = `
   p.archived_at IS NULL
@@ -184,15 +176,7 @@ export async function listProjects(
               p.slug,
               p.name,
               p.owner_user_id,
-              (SELECT max(case g.role when 'write' then 2 else 1 end)
-                 FROM project_grants g
-                 LEFT JOIN team_members tm
-                        ON g.principal_type = 'team'
-                       AND tm.team_id = g.principal_id
-                       AND tm.user_id = $1
-                WHERE g.project_id = p.id
-                  AND ((g.principal_type = 'user' AND g.principal_id = $1)
-                       OR tm.user_id IS NOT NULL)) AS rank,
+              ${GRANT_RANK} AS rank,
               (p.archived_at IS NOT NULL) AS archived,
               (SELECT count(*)::int FROM memories m
                 WHERE m.project_id = p.id AND m.deleted_at IS NULL) AS memory_count

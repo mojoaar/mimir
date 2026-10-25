@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useRef } from 'react'
 
 /**
  * A native disclosure, so the menu works with a keyboard and without
@@ -19,8 +20,29 @@ export function UserMenu({
   signOutLabel: string
   signOut: (formData: FormData) => Promise<void>
 }) {
+  const menu = useRef<HTMLDetailsElement>(null)
+
+  useEffect(() => {
+    // A native <details> closes only when its summary is clicked again. People
+    // expect a menu to close when they click the page or press Escape.
+    function close(event: Event) {
+      const element = menu.current
+      if (!element?.open) return
+      if (event instanceof KeyboardEvent && event.key !== 'Escape') return
+      if (event instanceof PointerEvent && element.contains(event.target as Node)) return
+      element.open = false
+    }
+
+    document.addEventListener('pointerdown', close)
+    document.addEventListener('keydown', close)
+    return () => {
+      document.removeEventListener('pointerdown', close)
+      document.removeEventListener('keydown', close)
+    }
+  }, [])
+
   return (
-    <details className="relative">
+    <details ref={menu} className="relative">
       <summary className="flex cursor-pointer list-none items-center gap-1 text-[var(--text-muted)] hover:text-[var(--fg)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

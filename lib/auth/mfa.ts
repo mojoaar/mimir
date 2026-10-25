@@ -62,6 +62,27 @@ export async function beginEnrollment(userId: string): Promise<Enrollment> {
   return { secret: base32, uri: mfaUri(base32, email, siteName) }
 }
 
+/**
+ * Reads an unfinished enrolment without starting a new one, so a page that
+ * re-renders does not invalidate the QR the user is looking at.
+ */
+export async function pendingEnrollment(userId: string): Promise<Enrollment | null> {
+  const secret = await withAdmin(async (tx) => {
+    const { rows } = await tx.query<{ pending: Buffer | null; email: string }>(
+      'select totp_pending_enc as pending, email from users where id = $1',
+      [userId],
+    )
+    const row = rows[0]
+    if (!row?.pending) return null
+    return { secret: openSecret(row.pending), email: row.email }
+  })
+
+  if (!secret) return null
+
+  const { siteName } = await getSiteSettings()
+  return { secret: secret.secret, uri: mfaUri(secret.secret, secret.email, siteName) }
+}
+
 export async function confirmEnrollment(
   userId: string,
   code: string,

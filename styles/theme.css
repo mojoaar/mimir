@@ -1,0 +1,96 @@
+/* Semantic aliases. Components use these; only this file names a theme. */
+[data-theme="nordlys-dark"] {
+  --bg: var(--nordlys-background-base);
+  --fg: var(--nordlys-text-base);
+  --bg-raised: var(--nordlys-background-raised-base);
+  --bg-sunken: var(--nordlys-background-raised-high);
+  --text-muted: var(--nordlys-text-muted);
+  --border: var(--nordlys-border-base);
+  --accent: var(--nordlys-text-action-primary-base);
+  --accent-fg: var(--nordlys-background-base);
+  --danger: var(--nordlys-text-feedback-error-base);
+}
+
+[data-theme="nordlys-light"] {
+  --bg: var(--nordlys-background-base);
+  --fg: var(--nordlys-text-base);
+  --bg-raised: var(--nordlys-background-raised-base);
+  --bg-sunken: var(--nordlys-background-raised-high);
+  --text-muted: var(--nordlys-text-muted);
+  --border: var(--nordlys-border-base);
+  --accent: var(--nordlys-text-action-primary-base);
+  --accent-fg: var(--nordlys-background-base);
+  --danger: var(--nordlys-text-feedback-error-base);
+}
+
+[data-theme="fjord-dark"] {
+  --bg: var(--fjord-background-base);
+  --fg: var(--fjord-text-base);
+  --bg-raised: var(--fjord-background-raised-base);
+  --bg-sunken: var(--fjord-background-raised-high);
+  --text-muted: var(--fjord-text-muted);
+  --border: var(--fjord-border-base);
+  --accent: var(--fjord-text-action-primary-base);
+  --accent-fg: var(--fjord-background-base);
+  --danger: var(--fjord-text-feedback-error-base);
+}
+
+[data-theme="fjord-light"] {
+  --bg: var(--fjord-background-base);
+  --fg: var(--fjord-text-base);
+  --bg-raised: var(--fjord-background-raised-base);
+  --bg-sunken: var(--fjord-background-raised-high);
+  --text-muted: var(--fjord-text-muted);
+  --border: var(--fjord-border-base);
+  --accent: var(--fjord-text-action-primary-base);
+  --accent-fg: var(--fjord-background-base);
+  --danger: var(--fjord-text-feedback-error-base);
+}
+
+[data-theme="ravn-dark"] {
+  --bg: var(--ravn-background-base);
+  --fg: var(--ravn-text-base);
+  --bg-raised: var(--ravn-background-raised-base);
+  --bg-sunken: var(--ravn-background-raised-high);
+  --text-muted: var(--ravn-text-muted);
+  --border: var(--ravn-border-base);
+  --accent: var(--ravn-text-action-primary-base);
+  --accent-fg: var(--ravn-background-base);
+  --danger: var(--ravn-text-feedback-error-base);
+}
+
+[data-theme="ravn-light"] {
+  --bg: var(--ravn-background-base);
+  --fg: var(--ravn-text-base);
+  --bg-raised: var(--ravn-background-raised-base);
+  --bg-sunken: var(--ravn-background-raised-high);
+  --text-muted: var(--ravn-text-muted);
+  --border: var(--ravn-border-base);
+  --accent: var(--ravn-text-action-primary-base);
+  --accent-fg: var(--ravn-background-base);
+  --danger: var(--ravn-text-feedback-error-base);
+}
+
+[data-theme="skumring-dark"] {
+  --bg: var(--skumring-background-base);
+  --fg: var(--skumring-text-base);
+  --bg-raised: var(--skumring-background-raised-base);
+  --bg-sunken: var(--skumring-background-raised-high);
+  --text-muted: var(--skumring-text-muted);
+  --border: var(--skumring-border-base);
+  --accent: var(--skumring-text-action-primary-base);
+  --accent-fg: var(--skumring-background-base);
+  --danger: var(--skumring-text-feedback-error-base);
+}
+
+[data-theme="skumring-light"] {
+  --bg: var(--skumring-background-base);
+  --fg: var(--skumring-text-base);
+  --bg-raised: var(--skumring-background-raised-base);
+  --bg-sunken: var(--skumring-background-raised-high);
+  --text-muted: var(--skumring-text-muted);
+  --border: var(--skumring-border-base);
+  --accent: var(--skumring-text-action-primary-base);
+  --accent-fg: var(--skumring-background-base);
+  --danger: var(--skumring-text-feedback-error-base);
+}

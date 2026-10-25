@@ -4,10 +4,10 @@ import { audit } from '@/lib/audit';
 import { hashPassword } from '@/lib/auth/password';
 import { revokeAllSessions } from '@/lib/auth/session';
 import { sha256 } from '@/lib/crypto';
-import { withAdmin } from '@/lib/db/tx';
+import { withAdmin, withService } from '@/lib/db/tx';
 import { sendEmail } from '@/lib/email/client';
 import { inviteEmail, mfaResetEmail, resetEmail } from '@/lib/email/templates';
-import { getPublicUrl } from '@/lib/settings/site';
+import { getPublicUrl, getSiteSettings } from '@/lib/settings/site';
 
 export type TokenKind = 'invite' | 'password_reset' | 'mfa_reset';
 
@@ -95,6 +95,36 @@ export async function deliverToken(input: {
   }
 
   return { emailed: sent.ok, url };
+}
+
+/**
+ * Always resolves. An unknown or disabled address must look exactly like a
+ * known one from the outside, so the caller cannot be told which it was.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const address = email.trim().toLowerCase();
+  if (!address) return;
+
+  const user = await withService(async (client) => {
+    const result = await client.query<{ id: string; email: string }>(
+      `select id, email::text as email
+         from users
+        where lower(email::text) = $1 and status = 'active'
+        limit 1`,
+      [address],
+    );
+    return result.rows[0] ?? null;
+  });
+  if (!user) return;
+
+  const { siteName } = await getSiteSettings();
+  // Mint now, send later: the reply must not take longer for a real account than
+  // for an unknown one, so the HTTPS round trip to Resend stays off the response.
+  const minted = await mintToken(user.id, 'password_reset', null);
+  const template = resetEmail({ siteName, link: minted.url });
+  void sendEmail({ to: user.email, subject: template.subject, text: template.text }).then((sent) => {
+    if (!sent.ok) console.warn(`mimir: could not email password_reset link (${sent.reason})`);
+  });
 }
 
 export async function setPasswordWithToken(

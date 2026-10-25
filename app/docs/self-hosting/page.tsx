@@ -110,6 +110,14 @@ docker compose up -d`}</Code>
         user belongs to, under the role the team grants.
       </P>
 
+      <H2>Signing in and out</H2>
+      <P>
+        A user who forgets a password can ask for a link at <code>/forgot-password</code>: it is emailed when Resend
+        is configured, and otherwise the admin sends it from <strong>Admin → Users → Reset password</strong>. The page
+        answers the same way whether or not the address has an account, so it cannot be used to discover who has one.
+        A link lasts an hour, works once, and signing in with it ends every other session for that account.
+      </P>
+
       <H2>Health</H2>
       <P>
         <code>/health</code> and <code>/api/health</code> answer <code>{'{"status":"ok"}'}</code> anonymously and{' '}

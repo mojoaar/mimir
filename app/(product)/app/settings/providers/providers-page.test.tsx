@@ -29,7 +29,7 @@ describe('providers page', () => {
         model: 'deepseek-chat',
         dim: null,
         hasKey: true,
-        keyHint: '…alue',
+        keyHint: '********1234',
         isDefault: true,
         lastVerifiedAt: null,
         lastError: null,
@@ -39,7 +39,7 @@ describe('providers page', () => {
     const html = renderToStaticMarkup(await ProvidersPage())
 
     expect(html).toContain('work')
-    expect(html).toContain('…alue')
+    expect(html).toContain('********1234')
     expect(html).not.toContain('sk-')
   })
 })

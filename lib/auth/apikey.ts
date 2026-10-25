@@ -92,14 +92,15 @@ export async function resolveApiKey(token: string): Promise<AuthUser | null> {
   if (!row || row.status !== 'active') return null
 
   // Touching last_used_at on every MCP call would write on every request; once a
-  // minute is enough for the UI and keeps the hot path read-only.
-  await withService((tx) =>
+  // minute is enough for the UI and keeps the hot path read-only. Never awaited:
+  // a failed timestamp must not fail an authenticated call.
+  void withService((tx) =>
     tx.query(
       `update api_keys set last_used_at = now()
         where id = $1 and (last_used_at is null or last_used_at < now() - interval '${LAST_USED_INTERVAL}')`,
       [row.key_id],
     ),
-  )
+  ).catch(() => {})
 
   return {
     id: row.id,

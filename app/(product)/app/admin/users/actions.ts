@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/admin'
-import { audit } from '@/lib/audit'
+import { audit, describeAuditFailure } from '@/lib/audit'
 import { deliverToken } from '@/lib/auth/tokens'
 import { absoluteLink, sendEmail } from '@/lib/email/client'
 import { inviteEmail } from '@/lib/email/templates'
@@ -31,7 +31,7 @@ function messageOf(error: unknown): string {
   if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) throw error
   const code = (error as { code?: string }).code
   if (code && KNOWN.has(code)) return (error as Error).message
-  console.error('admin user action failed', (error as Error).message)
+  console.error('admin user action failed', describeAuditFailure(error))
   return GENERIC
 }
 

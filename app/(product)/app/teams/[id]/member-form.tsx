@@ -13,7 +13,6 @@ export function MemberForm({ teamId }: { teamId: string }) {
       className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] p-4"
     >
       <input type="hidden" name="teamId" value={teamId} />
-      <input type="hidden" name="teamId" value={teamId} />
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-medium">Add member</span>
         <input

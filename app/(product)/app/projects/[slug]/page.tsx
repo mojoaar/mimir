@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
 import { listDeletedMemories, readMemory, treeMemory } from '@/lib/memory/service'
@@ -11,6 +10,7 @@ import { deleteMemoryAction, restoreMemoryAction, restoreVersionAction } from '.
 import { MemoryEditor } from './editor'
 import { diffLines, MemoryHistory } from './history'
 import { MemoryTree } from './tree'
+import { Missing } from '../missing'
 
 export const instant = false
 
@@ -37,7 +37,7 @@ export default async function ProjectBrowser({
   const { slug } = await params
   const search = await searchParams
   const project = await getProject(user.id, slug)
-  if (!project) notFound()
+  if (!project) return <Missing what="project" />
 
   const query = first(search.q).trim()
   const showDeleted = first(search.deleted) === '1'
@@ -51,11 +51,11 @@ export default async function ProjectBrowser({
     try {
       memory = await readMemory(user.id, project.id, requested)
     } catch (error) {
-      // A bad path is a 404; anything else (database down) must not look like one.
+      // A bad path is a miss; anything else (database down) must not look like one.
       if ((error as { code?: string }).code !== 'invalid_path') throw error
-      notFound()
+      return <Missing what="memory" />
     }
-    if (!memory) notFound()
+    if (!memory) return <Missing what="memory" />
   }
 
   const [entries, deleted, hits, versions] = await Promise.all([

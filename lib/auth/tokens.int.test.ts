@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { adminPool } from '@/lib/db/pool';
 import { resetFixtures, seedTwoUsersWithProjects, TEST_PASSWORD, type Fixtures } from '@/lib/db/seed';
 import { createSession, resolveSession } from './session';
-import { consumeToken, mintToken, setPasswordWithToken } from './tokens';
+import { consumeToken, mintToken, requestPasswordReset, setPasswordWithToken } from './tokens';
 
 let f: Fixtures;
 
@@ -84,5 +84,40 @@ describe('tokens', () => {
     const row = await adminPool().query(`select password_hash from users where id = $1`, [f.alice]);
 
     expect(await verifyPassword(row.rows[0].password_hash, TEST_PASSWORD)).toBe(true);
+  });
+
+  describe('a forgotten password', () => {
+    async function tokensFor(userId: string): Promise<number> {
+      const result = await adminPool().query(
+        `select count(*)::int as n from tokens where user_id = $1 and kind = 'password_reset'`,
+        [userId],
+      );
+      return result.rows[0].n as number;
+    }
+
+    it('mints one link for an active account and says nothing else', async () => {
+      expect(await requestPasswordReset('alice@example.test')).toBeUndefined();
+      expect(await tokensFor(f.alice)).toBe(1);
+    });
+
+    it('mints nothing for an address without an active account', async () => {
+      await requestPasswordReset('nobody@example.test');
+      await requestPasswordReset('disabled@example.test');
+
+      expect(await tokensFor(f.alice)).toBe(0);
+      expect(await tokensFor(f.bob)).toBe(0);
+    });
+
+    it('leaves the earlier link dead when asked twice', async () => {
+      await requestPasswordReset('alice@example.test');
+      await requestPasswordReset('alice@example.test');
+
+      const live = await adminPool().query(
+        `select count(*)::int as n from tokens
+          where user_id = $1 and kind = 'password_reset' and used_at is null`,
+        [f.alice],
+      );
+      expect(live.rows[0].n).toBe(1);
+    });
   });
 });

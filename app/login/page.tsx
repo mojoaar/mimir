@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import Link from 'next/link'
 import { cancelMfaAction, loginAction, loginMfaAction } from './actions'
 import { isRequestAllowed } from '@/lib/http/allowlist'
 import { PRIVATE_ROBOTS } from '@/lib/seo'
@@ -123,6 +124,9 @@ export default async function LoginPage({
           >
             Sign in
           </button>
+          <Link href="/forgot-password" className="text-sm text-[var(--text-muted)] underline">
+            Forgot your password?
+          </Link>
         </form>
       )}
     </main>

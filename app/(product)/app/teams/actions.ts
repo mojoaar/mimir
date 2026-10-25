@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
-import { addTeamMember, createTeam, deleteTeam, removeTeamMember } from '@/lib/teams/service'
+import { addTeamMember, createTeam, deleteTeam, leaveTeam, removeTeamMember, renameTeam } from '@/lib/teams/service'
 
 export type ActionState = { ok?: string; error?: string }
 
@@ -88,4 +88,37 @@ export async function deleteTeamAction(formData: FormData): Promise<void> {
 
   revalidatePath('/app/teams')
   redirect('/app/teams?notice=deleted')
+}
+
+export async function leaveTeamAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const teamId = String(formData.get('teamId') ?? '')
+
+  try {
+    await leaveTeam(user.id, teamId)
+  } catch (error) {
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(messageOf(error))}`)
+  }
+
+  revalidatePath('/app/teams')
+  redirect('/app/teams?notice=left')
+}
+
+export async function renameTeamAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser()
+  const teamId = String(formData.get('teamId') ?? '')
+  const name = String(formData.get('name') ?? '').trim()
+  if (!name) return { error: 'A team needs a name.' }
+
+  try {
+    await renameTeam(user.id, teamId, name)
+  } catch (error) {
+    return { error: messageOf(error) }
+  }
+
+  revalidatePath(`/app/teams/${teamId}`)
+  return { ok: 'Renamed.' }
 }

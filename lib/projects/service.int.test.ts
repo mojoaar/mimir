@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
-import { readMemory, writeMemory } from '@/lib/memory/service'
-import { grantProject, revokeGrant } from './access'
+import { deleteMemory, readMemory, writeMemory } from '@/lib/memory/service'
+import { grantProject, projectRole, revokeGrant } from './access'
 
 import {
   archiveProject,
@@ -211,5 +211,66 @@ describe('a team share reaches every read path', () => {
 
     const project = await getProject(carol, 'alice-project')
     expect(project?.role).toBe('write')
+  })
+})
+
+describe('one rank rule behind every path', () => {
+  it('gives the same role from projectRole, resolveProject, getProject and listProjects', async () => {
+    const makeTeam = async (name: string, member: string) => {
+      const { rows } = await adminPool().query<{ id: string }>(
+        'insert into teams (owner_user_id, name, slug) values ($1, $2, $2) returning id',
+        [alice, name],
+      )
+      const id = rows[0]!.id
+      await adminPool().query(
+        "insert into team_members (team_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'member')",
+        [id, alice, member],
+      )
+      return id
+    }
+
+    // Write must win over read, whatever order the teams were granted in.
+    const readers = await makeTeam('readers', carol)
+    const writers = await makeTeam('writers', carol)
+    await grantProject(alice, aliceProjectId, 'team', readers, 'read')
+    await grantProject(alice, aliceProjectId, 'team', writers, 'write')
+
+    expect(await projectRole(carol, aliceProjectId)).toBe('write')
+    expect((await resolveProject(carol, { project: 'alice-project' })).role).toBe('write')
+    expect((await getProject(carol, 'alice-project'))?.role).toBe('write')
+    expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)?.role).toBe('write')
+
+    await revokeGrant(alice, aliceProjectId, 'team', readers)
+    await revokeGrant(alice, aliceProjectId, 'team', writers)
+
+    expect(await projectRole(carol, aliceProjectId)).toBeNull()
+    await expect(resolveProject(carol, { project: 'alice-project' })).rejects.toMatchObject({
+      code: 'project_not_found',
+    })
+    expect(await getProject(carol, 'alice-project')).toBeNull()
+    expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)).toBeUndefined()
+  })
+})
+
+describe('the memory count in a project list', () => {
+  it('counts live memories per project and ignores deleted ones', async () => {
+    await resetFixtures()
+    const f = await seedTwoUsersWithProjects()
+    const empty = await resolveProject(f.bob, { project: 'quiet', create: true })
+
+    await writeMemory({ userId: f.alice, projectId: f.aliceProjectId, path: 'a/one', body: 'one' })
+    await writeMemory({ userId: f.alice, projectId: f.aliceProjectId, path: 'a/two', body: 'two' })
+    await writeMemory({ userId: f.alice, projectId: f.aliceProjectId, path: 'a/gone', body: 'gone' })
+    await deleteMemory(f.alice, f.aliceProjectId, 'a/gone')
+    await writeMemory({ userId: f.bob, projectId: empty.id, path: 'only', body: 'only' })
+
+    const alices = await listProjects(f.alice)
+    expect(alices.find((p) => p.id === f.aliceProjectId)?.memoryCount).toBe(2)
+
+    const bobs = await listProjects(f.bob)
+    expect(bobs.find((p) => p.id === empty.id)?.memoryCount).toBe(1)
+
+    const idle = await resolveProject(f.bob, { project: 'idle', create: true })
+    expect((await listProjects(f.bob)).find((p) => p.id === idle.id)?.memoryCount).toBe(0)
   })
 })

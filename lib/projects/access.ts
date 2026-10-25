@@ -31,6 +31,27 @@ const RANK: Record<Exclude<ProjectRole, null>, number> = { read: 1, write: 2, ow
  * project" — deliberately the same answer, so a caller cannot probe for
  * someone else's slugs.
  */
+/**
+ * The one definition of "how much does this user get from the grants on this
+ * project": 2 for a write grant, 1 for read, null for none. Owners are handled
+ * by the caller, because a grant never makes anyone an owner.
+ *
+ * `userParam` is `$1` by default; `projectRole` binds the project first, so it
+ * passes `$2`. Everything else (resolveProject, getProject, listProjects) uses
+ * the default, which keeps one rule from drifting into three.
+ */
+export function grantRankSql(userParam = '$1'): string {
+  return `(select max(case g.role when 'write' then 2 else 1 end)
+             from project_grants g
+             left join team_members tm
+               on g.principal_type = 'team'
+              and tm.team_id = g.principal_id
+              and tm.user_id = ${userParam}
+            where g.project_id = p.id
+              and ((g.principal_type = 'user' and g.principal_id = ${userParam})
+                   or tm.user_id is not null))`
+}
+
 export async function projectRole(
   userId: string,
   projectId: string,
@@ -42,15 +63,7 @@ export async function projectRole(
       // id is refused the same way a read is. Only archive/restore pass
       // includeArchived, so they can still find the row they are changing.
       `select p.owner_user_id,
-              (select max(case g.role when 'write' then 2 else 1 end)
-                 from project_grants g
-                 left join team_members m
-                   on g.principal_type = 'team'
-                  and m.team_id = g.principal_id
-                  and m.user_id = $2
-                where g.project_id = p.id
-                  and ((g.principal_type = 'user' and g.principal_id = $2)
-                       or m.user_id is not null)) as rank
+              ${grantRankSql('$2')} as rank
          from projects p
         where p.id = $1 and ($3::boolean or p.archived_at is null)`,
       [projectId, userId, opts.includeArchived ?? false],

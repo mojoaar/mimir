@@ -15,7 +15,10 @@ function trustedList(trustedProxies: string[]): { block: BlockList; bare: Set<st
       else if (isIP(entry) === 6) block.addAddress(entry, 'ipv6')
       else {
         const [address, prefix] = entry.split('/')
-        if (address && prefix !== undefined) block.addSubnet(address, Number(prefix), 'ipv4')
+        const family = address ? isIP(address) : 0
+        if (address && prefix !== undefined && family !== 0) {
+          block.addSubnet(address, Number(prefix), family === 6 ? 'ipv6' : 'ipv4')
+        }
       }
     }
     blockLists.set(key, block)

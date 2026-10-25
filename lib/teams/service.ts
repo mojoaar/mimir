@@ -207,6 +207,77 @@ export async function removeTeamMember(
   })
 }
 
+export async function leaveTeam(userId: string, teamId: string): Promise<void> {
+  return withUser(userId, async (client) => {
+    // Lock the team row so two owners leaving at once cannot both succeed.
+    await client.query('select id from teams where id = $1 for update', [teamId])
+
+    const own = await client.query<{ role: TeamRole }>(
+      'select role from team_members where team_id = $1 and user_id = $2',
+      [teamId, userId],
+    )
+    const role = own.rows[0]?.role
+    if (!role) throw fail('not_found', 'you are not in this team')
+
+    if (role === 'owner') {
+      const owners = await client.query<{ n: string }>(
+        `select count(*)::text as n from team_members where team_id = $1 and role = 'owner'`,
+        [teamId],
+      )
+      if (Number(owners.rows[0]?.n ?? '0') <= 1) {
+        throw fail('invalid_params', 'a team needs an owner; hand the team over or delete it')
+      }
+    }
+
+    await client.query('delete from team_members where team_id = $1 and user_id = $2', [
+      teamId,
+      userId,
+    ])
+    await audit(
+      {
+        actorType: 'user',
+        actorId: userId,
+        action: 'team.member_leave',
+        targetType: 'team',
+        targetId: teamId,
+      },
+      client,
+    )
+  })
+}
+
+export async function renameTeam(
+  actorId: string,
+  teamId: string,
+  name: string,
+): Promise<{ name: string }> {
+  return withUser(actorId, async (client) => {
+    await requireTeamOwner(client, actorId, teamId)
+
+    const trimmed = name.trim()
+    if (!trimmed) throw fail('invalid_params', 'a team needs a name')
+    if (trimmed.length > 80) throw fail('invalid_params', 'a team name is at most 80 characters')
+
+    // The name only: the slug and the URL carry the team's identity.
+    const updated = await client.query('update teams set name = $2 where id = $1', [teamId, trimmed])
+  // The guard reads team_members; the update policy reads owner_user_id. Two owner
+  // rows can disagree, and then nothing is written — say so instead of "renamed".
+  if (updated.rowCount === 0) throw fail('forbidden', 'only a team owner can do that')
+    await audit(
+      {
+        actorType: 'user',
+        actorId,
+        action: 'team.rename',
+        targetType: 'team',
+        targetId: teamId,
+        detail: { name: trimmed },
+      },
+      client,
+    )
+    return { name: trimmed }
+  })
+}
+
 export async function deleteTeam(actorId: string, teamId: string): Promise<void> {
   return withUser(actorId, async (client) => {
     await requireTeamOwner(client, actorId, teamId)

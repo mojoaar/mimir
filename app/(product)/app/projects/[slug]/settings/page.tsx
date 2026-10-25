@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
 import { listGrants } from '@/lib/projects/access'
@@ -11,6 +10,7 @@ import { archiveProjectAction } from '../../actions'
 import { revokeProjectGrantAction } from './actions'
 import { GrantForm } from './grant-form'
 import { ProjectForm } from './project-form'
+import { Missing } from '../../missing'
 
 export const instant = false
 
@@ -25,7 +25,7 @@ export default async function ProjectSettingsPage({
   const { slug } = await params
   const { error } = await searchParams
   const project = await getProject(user.id, slug)
-  if (!project) notFound()
+  if (!project) return <Missing what="project" />
 
   // Only the owner may point a project at a provider: that spends the owner's key.
   const providers =

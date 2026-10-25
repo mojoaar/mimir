@@ -20,7 +20,8 @@ test('encrypts the key and never returns it', async () => {
     apiKey: 'sk-live-secret-value',
   })
   expect(created.hasKey).toBe(true)
-  expect(created.keyHint).toBe('…alue')
+  expect(created.keyHint).toMatch(/alue$/)
+  expect(created.keyHint).not.toContain('sk-live')
   expect(JSON.stringify(created)).not.toContain('sk-live-secret-value')
   const secret = await getProviderSecret(fixtures.alice, created.id)
   expect(secret.apiKey).toBe('sk-live-secret-value')
@@ -80,4 +81,67 @@ test('the delete is recorded with what was deleted, not just its id', async () =
   )
   expect(rows[0]?.detail.label).toBe('gone')
   expect(rows[0]?.detail.preset).toBe('deepseek')
+})
+
+test('refuses a base URL that points inside the network', async () => {
+  const count = async () => {
+    const result = await adminPool().query<{ n: number }>('select count(*)::int as n from providers')
+    return result.rows[0]?.n ?? 0
+  }
+  const before = await count()
+
+  await expect(
+    createProvider({
+      userId: fixtures.alice,
+      kind: 'llm',
+      preset: 'openai_compatible',
+      label: 'metadata',
+      baseUrl: 'http://169.254.169.254',
+      model: 'anything',
+    }),
+  ).rejects.toThrow(/inside the local network/)
+
+  expect(await count()).toBe(before)
+})
+
+test('never echoes a key shorter than the mask needs', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'llm',
+    preset: 'deepseek',
+    label: 'short',
+    model: 'deepseek-chat',
+    apiKey: 'abcd',
+  })
+
+  expect(created.keyHint).not.toContain('abcd')
+  expect(created.keyHint).not.toContain('bcd')
+})
+
+test('hides a short key completely rather than most of it', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'llm',
+    preset: 'deepseek',
+    label: 'six',
+    model: 'deepseek-chat',
+    apiKey: 'abcdef',
+  })
+
+  expect(created.keyHint).not.toContain('abcdef')
+  expect(created.keyHint).not.toContain('cdef')
+})
+
+test('keeps the last four characters and hides the rest', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'llm',
+    preset: 'deepseek',
+    label: 'long',
+    model: 'deepseek-chat',
+    apiKey: 'sk-abcdefgh1234',
+  })
+
+  expect(created.keyHint?.endsWith('1234')).toBe(true)
+  expect(created.keyHint).not.toContain('sk-abcdefgh')
 })

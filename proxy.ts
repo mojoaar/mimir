@@ -17,6 +17,7 @@ const PUBLIC_ROOTS = new Set([
   'mcp',
   'login',
   'set-password',
+  'forgot-password',
   'health',
   'sitemap.xml',
   'robots.txt',

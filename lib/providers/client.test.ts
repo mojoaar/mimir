@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 
+import pkg from '../../package.json'
 import { chatComplete, embed, type ProviderTarget } from './client'
 
 const target: ProviderTarget = {
@@ -25,7 +26,7 @@ test('posts to /v1/chat/completions and returns the message', async () => {
 test('an opencode go call identifies itself', async () => {
   const go = { ...target, preset: 'opencode_go' as const, baseUrl: 'https://opencode.ai/inference/go/openai' }
   const fake = (async (_url: string, init: RequestInit) => {
-    expect(init.headers).toMatchObject({ 'x-opencode-session': 'mimir-p1', 'user-agent': 'mimir/0.2.0' })
+    expect(init.headers).toMatchObject({ 'x-opencode-session': 'mimir-p1', 'user-agent': `mimir/${pkg.version}` })
     return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }))
   }) as unknown as typeof fetch
 

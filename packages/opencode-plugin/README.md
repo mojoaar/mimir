@@ -29,9 +29,8 @@ export MIMIR_REPO=github.com/you/your-repo   # optional; otherwise read from git
 | `mimir_digest` | Returns what this project already knows: paths, titles, and a summary of the newest memories. |
 | `mimir_remember` | Stores one durable fact at a path like `deploy/rollback`. Writing the same path again replaces it. |
 
-Ask the agent to call `mimir_digest` when a session starts. If you want that
-automatic, use the Claude Code style hook (`hooks/mimir-session-start.sh` in the
-Mimir repository) or put this in your `AGENTS.md`:
+Ask the agent to call `mimir_digest` when a session starts as a belt-and-braces
+fallback, and put this in your `AGENTS.md`:
 
 > Call `mimir_digest` before your first action. Store durable decisions with
 > `mimir_remember` as you make them.
@@ -39,12 +38,16 @@ Mimir repository) or put this in your `AGENTS.md`:
 Both tools fail soft: if Mimir is down or the variables are missing, the tool
 says so and the session carries on.
 
-## Why there is no automatic injection
+## The digest arrives on its own
 
-The OpenCode plugin API documents tool registration, not context injection. A
-hook that silently prepended text to every session would be guessing at an
-undocumented surface, so this package registers tools and leaves the trigger to
-the agent's instructions.
+The plugin also uses OpenCode's `experimental.chat.system.transform` hook to put
+the project's digest at the top of the system prompt before the first turn. It
+asks for 800 tokens with a 1.5 second timeout, and does nothing at all when Mimir
+is unreachable, slow, or unconfigured — a session never waits on memory.
+
+The hook is named experimental because that is how the plugin API marks it. If a
+future OpenCode release renames or drops it, the plugin keeps working and you
+lose only the automatic part; `mimir_digest` still answers.
 
 ## Import an existing project
 

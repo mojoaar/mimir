@@ -86,4 +86,46 @@ describe('a team page', () => {
     expect(html).not.toContain('Delete team')
     expect(html).not.toContain('Remove')
   })
+
+  it('lets a member leave, and only an owner rename', async () => {
+    mocks.detail = {
+      team: team({ role: 'member' }),
+      members: [
+        { userId: 'u1', email: 'alice@example.test', name: 'Alice', role: 'owner' },
+        { userId: 'u2', email: 'bob@example.test', name: 'Bob', role: 'member' },
+      ],
+    }
+    const asMember = renderToStaticMarkup(
+      await TeamDetailPage({ params, searchParams: Promise.resolve({}) }),
+    )
+
+    expect(asMember).toContain('Leave team')
+    expect(asMember).not.toContain('Rename')
+
+    mocks.detail = {
+      ...(mocks.detail as object),
+      team: team({ role: 'owner' }),
+      members: [
+        { userId: 'u1', email: 'alice@example.test', name: 'Alice', role: 'owner' },
+        { userId: 'u3', email: 'carol@example.test', name: 'Carol', role: 'owner' },
+        { userId: 'u2', email: 'bob@example.test', name: 'Bob', role: 'member' },
+      ],
+    }
+    const asOwner = renderToStaticMarkup(
+      await TeamDetailPage({ params, searchParams: Promise.resolve({}) }),
+    )
+
+    expect(asOwner).toContain('Rename')
+    expect(asOwner).toContain('Leave team')
+
+    mocks.detail = {
+      ...(mocks.detail as object),
+      members: [{ userId: 'u1', email: 'alice@example.test', name: 'Alice', role: 'owner' }],
+    }
+    const lastOwner = renderToStaticMarkup(
+      await TeamDetailPage({ params, searchParams: Promise.resolve({}) }),
+    )
+
+    expect(lastOwner).not.toContain('Leave team')
+  })
 })

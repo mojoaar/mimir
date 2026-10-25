@@ -7,8 +7,12 @@ const notFound = vi.hoisted(() => vi.fn(() => {
 
 vi.mock('next/navigation', () => ({ notFound }))
 vi.mock('@/lib/auth/context', () => ({ requireUser: async () => ({ id: 'u1', email: 'a@b.test' }) }))
+const state = vi.hoisted(() => ({
+  project: { id: 'p1', slug: 'demo', name: 'Demo', role: 'owner' } as { id: string; slug: string; name: string; role: string } | null,
+}))
+
 vi.mock('@/lib/projects/service', () => ({
-  getProject: async () => ({ id: 'p1', slug: 'demo', name: 'Demo', role: 'owner' }),
+  getProject: async () => state.project,
   listProjects: async () => [],
 }))
 vi.mock('@/lib/memory/service', () => ({
@@ -76,13 +80,34 @@ describe('project browser', () => {
     expect(html).toContain('History (1)')
   })
 
+  it('names the search box and the editor for a screen reader', async () => {
+    const html = renderToStaticMarkup(await page({ path: 'auth/rotation' }))
+    expect(html).toContain('for="memory-search"')
+    expect(html).toContain('for="memory-body"')
+    expect(html).toContain('Search this project')
+    expect(html).toContain('Memory body')
+  })
+
   it('asks the reader to choose something before a path is picked', async () => {
     const html = renderToStaticMarkup(await page({}))
     expect(html).toContain('Choose a memory')
   })
 
-  it('404s a path that is not stored', async () => {
-    await expect(page({ path: 'a/b' })).rejects.toThrow('NEXT_NOT_FOUND')
+  it('says there is nothing at a path that is not stored', async () => {
+    const html = renderToStaticMarkup(await page({ path: 'a/b' }))
+    expect(html).toContain('There is nothing here')
+    expect(html).toContain('Back to your projects')
+  })
+
+  it('says there is nothing when the project is missing', async () => {
+    const saved = state.project
+    state.project = null
+    try {
+      const html = renderToStaticMarkup(await page({}))
+      expect(html).toContain('There is nothing here')
+    } finally {
+      state.project = saved
+    }
   })
 
   it('survives a repeated query parameter instead of crashing on it', async () => {

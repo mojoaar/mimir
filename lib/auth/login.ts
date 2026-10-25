@@ -78,7 +78,7 @@ export async function authenticatePassword(
   meta: RequestMeta,
 ): Promise<PasswordResult> {
   const normalised = email.trim().toLowerCase()
-  if (!checkLoginRateLimit(meta.ip, normalised).allowed) {
+  if (!checkLoginRateLimit(normalised).allowed) {
     return fail('locked', { email: normalised, source: 'rate_limit' }, meta)
   }
 
@@ -111,7 +111,7 @@ export async function authenticatePassword(
   // learn whether an address is pending or disabled without knowing its
   // password at all.
   if (!passwordOk) {
-    recordLoginFailure(meta.ip, normalised)
+    recordLoginFailure(normalised)
     await withService((tx) =>
       tx.query(
         `update users
@@ -139,7 +139,7 @@ export async function authenticatePassword(
       [user.id],
     ),
   )
-  clearLoginRateLimit(meta.ip, normalised)
+  clearLoginRateLimit(normalised)
 
   return { ok: true, userId: user.id, mfaRequired: await mfaEnabled(user.id) }
 }

@@ -4,7 +4,7 @@ import { withUser } from '@/lib/db/tx'
 import { audit } from '@/lib/audit'
 import { slugify } from '@/lib/slug'
 
-import { forbidden, projectRole, requireProjectRole } from './access'
+import { forbidden, grantRankSql, projectRole, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
 
 export type ProjectRole = 'owner' | 'write' | 'read'
@@ -22,15 +22,7 @@ type AccessRow = {
   grant_rank: number | null
 }
 
-const GRANT_RANK = `(SELECT max(case g.role when 'write' then 2 else 1 end)
-                 FROM project_grants g
-                 LEFT JOIN team_members tm
-                        ON g.principal_type = 'team'
-                       AND tm.team_id = g.principal_id
-                       AND tm.user_id = $1
-                WHERE g.project_id = p.id
-                  AND ((g.principal_type = 'user' AND g.principal_id = $1)
-                       OR tm.user_id IS NOT NULL))`
+const GRANT_RANK = grantRankSql('$1')
 
 const ACCESSIBLE = `
   p.archived_at IS NULL
@@ -184,20 +176,13 @@ export async function listProjects(
               p.slug,
               p.name,
               p.owner_user_id,
-              (SELECT max(case g.role when 'write' then 2 else 1 end)
-                 FROM project_grants g
-                 LEFT JOIN team_members tm
-                        ON g.principal_type = 'team'
-                       AND tm.team_id = g.principal_id
-                       AND tm.user_id = $1
-                WHERE g.project_id = p.id
-                  AND ((g.principal_type = 'user' AND g.principal_id = $1)
-                       OR tm.user_id IS NOT NULL)) AS rank,
+              ${GRANT_RANK} AS rank,
               (p.archived_at IS NOT NULL) AS archived,
-              (SELECT count(*)::int FROM memories m
-                WHERE m.project_id = p.id AND m.deleted_at IS NULL) AS memory_count
+              count(m.id)::int AS memory_count
          FROM projects p
+         LEFT JOIN memories m ON m.project_id = p.id AND m.deleted_at IS NULL
         WHERE ($2::boolean OR p.archived_at IS NULL)
+        GROUP BY p.id, p.owner_user_id, p.slug, p.name, p.archived_at, p.updated_at
         ORDER BY p.updated_at DESC`,
       [userId, includeArchived],
     )
@@ -224,7 +209,8 @@ export type ProjectSettings = {
   name: string
   learningEnabled: boolean
   llmProviderId: string | null
-  role: ProjectRole
+  // null means RLS let the row through but no grant backs it: fail closed, never "read".
+  role: ProjectRole | null
 }
 
 /** One project by slug, with the caller's role. RLS hides what the caller cannot reach. */
@@ -255,7 +241,7 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
       name: row.name,
       learningEnabled: row.learning_enabled,
       llmProviderId: row.llm_provider_id,
-      role: row.is_owner ? 'owner' : (rankRole(row.rank) ?? 'read'),
+      role: row.is_owner ? 'owner' : (rankRole(row.rank)),
     }
   })
 }

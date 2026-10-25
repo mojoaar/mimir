@@ -5,6 +5,79 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-10-25
+
+Hardening: fewer ways to be surprised.
+
+### Security
+
+- A provider base URL that points inside your own network is refused when you
+  save it, naming the address. Loopback, private ranges and link-local
+  addresses (including the cloud metadata address) are rejected; the homelab
+  hostnames `host.docker.internal` and `ollama` still work, so a local model
+  keeps working.
+- Audit failure logs no longer echo a connection string. Passwords inside a
+  URL are masked, and a bare token is masked except its last four characters,
+  while table and constraint names stay readable — a log you can act on
+  instead of one you have to squint at.
+
+### Fixed
+
+- The login throttle is keyed on the account instead of on an address the
+  runtime cannot see. Five wrong passwords lock the account for fifteen
+  minutes no matter where they come from, and the database lock still holds
+  after a restart.
+- A provider key shorter than five characters is no longer shown in full in
+  the UI; short keys are masked completely.
+- IPv6 subnets are accepted in `MIMIR_TRUSTED_PROXIES`, so a v6-only proxy
+  network can be configured.
+- A project or memory that does not exist now says "There is nothing here"
+  instead of claiming a 404 the router cannot send once Next has started
+  streaming. Unknown addresses are still a real 404.
+- The provider user-agent reports the version actually running rather than
+  `mimir/0.2.0`.
+
+### Changed
+
+- A member can leave a team, and an owner can rename one. The last owner
+  cannot leave: hand the team over or delete it.
+- The OpenCode plugin adds the project digest to the system prompt when a
+  session starts, so the agent begins informed without being asked. It waits
+  at most 1.5 seconds and stays silent when Mimir is unreachable, slow or
+  unconfigured.
+- One rule now backs every access query, so a `write` grant from a team and
+  from a person can never be ranked differently by two code paths.
+- Listing projects is one query per page rather than one per project, and an
+  authenticated call no longer waits for its own last-used timestamp.
+
+### Added
+
+- A forgotten-password page. The answer is identical whether or not the
+  address has an account, and when email is not configured the page says so
+  rather than pretending to send.
+
+### Fixed (review pass)
+
+- The provider URL check now also catches the ways around it: a trailing dot
+  (`localhost.`), IPv4-mapped and NAT64 IPv6 addresses, and a public name that
+  resolves to a private address. Provider requests also refuse to follow a
+  redirect, so a public endpoint cannot bounce the server into the network.
+- The reset request is rate limited on its own budget (three per fifteen
+  minutes) and respects the IP allowlist. It used to mint a token on every
+  request and to fire before the allowlist check.
+- The reset answer no longer takes longer for a real account: the link is
+  minted and mailed without holding the reply, so timing cannot be used to ask
+  "does this address exist".
+- The session digest is fetched once per session instead of once per model
+  step, so a long session no longer pays a 1.5 s lookup and 800 tokens before
+  every dispatch.
+- A provider key of eight characters or fewer is now hidden whole.
+- A team rename reports failure when row-level security refuses the update
+  instead of claiming success.
+- An IPv6 address in `MIMIR_TRUSTED_PROXIES` no longer carries a wrong address
+  family into the peer check.
+- `getProject` no longer invents `read` when no grant backs the row.
+
 ## [0.8.0] - 2026-10-25
 
 Share with people, not accounts.

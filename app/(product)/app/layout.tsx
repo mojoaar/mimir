@@ -42,24 +42,28 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 text-sm">
-        <nav className="flex gap-4">
-          <Link href="/app">Projects</Link>
-          <Link href="/app/teams">Teams</Link>
-          <Link href="/app/settings">Settings</Link>
-          <Link href="/app/settings/providers">Providers</Link>
-        </nav>
-        <div className="flex items-center gap-3">
-          <span className="text-[var(--text-muted)]">{user.email}</span>
-          <ThemeSwitcher value={theme} />
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="text-[var(--text-muted)] underline hover:text-[var(--fg)]"
-            >
-              Sign out
-            </button>
-          </form>
+      <header className="mb-8 border-b border-[var(--border)]">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-4 px-4 py-3 text-sm sm:px-6">
+          <nav className="flex flex-wrap gap-4">
+            <Link href="/app">Projects</Link>
+            <Link href="/app/teams">Teams</Link>
+            <Link href="/app/settings">Settings</Link>
+            <Link href="/app/settings/providers">Providers</Link>
+            <Link href="/docs">Docs</Link>
+            {user.role === 'admin' ? <Link href="/app/admin">Admin</Link> : null}
+          </nav>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="text-[var(--text-muted)]">{user.email}</span>
+            <ThemeSwitcher value={theme} />
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="text-[var(--text-muted)] underline hover:text-[var(--fg)]"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
       {forced ? (

@@ -1,6 +1,6 @@
 import { audit } from '../audit'
 import { getConfig } from '../config'
-import { decrypt, deriveKey, encrypt } from '../crypto'
+import { decrypt, deriveKey, encrypt, redact } from '../crypto'
 import { withUser } from '../db/tx'
 import { checkProviderUrl } from './url'
 import { PRESETS, presetFor, type PresetId, type ProviderKind } from './presets'
@@ -127,7 +127,7 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
         baseUrl,
         input.model,
         apiKey ? encrypt(keyEncryptionKey(), apiKey) : null,
-        apiKey ? `…${apiKey.slice(-4)}` : null,
+        apiKey ? redact(apiKey) : null,
         dim,
         input.isDefault ?? false,
       ],
@@ -161,68 +161,6 @@ export async function listProviders(
     return rows
   })
   return rows.map(toSummary)
-}
-
-export async function updateProvider(
-  userId: string,
-  id: string,
-  patch: {
-    label?: string
-    baseUrl?: string
-    model?: string
-    apiKey?: string
-    dim?: number | null
-    isDefault?: boolean
-  },
-): Promise<ProviderSummary> {
-  const row = await withUser(userId, async (tx) => {
-    const current = await tx.query<Row>('select * from providers where id = $1', [id])
-    const existing = current.rows[0]
-    if (!existing) throw notFound()
-
-    if (patch.isDefault) {
-      await tx.query(
-        'update providers set is_default = false where user_id = $1 and kind = $2 and is_default and id <> $3',
-        [userId, existing.kind, id],
-      )
-    }
-
-    const apiKey = patch.apiKey?.trim() ? patch.apiKey.trim() : null
-    const { rows } = await tx.query<Row>(
-      `update providers set
-         label = coalesce($2, label),
-         base_url = coalesce($3, base_url),
-         model = coalesce($4, model),
-         api_key_enc = coalesce($5, api_key_enc),
-         api_key_hint = coalesce($6, api_key_hint),
-         dim = coalesce($7, dim),
-         is_default = coalesce($8, is_default)
-       where id = $1
-       returning *`,
-      [
-        id,
-        patch.label ?? null,
-        patch.baseUrl?.replace(/\/+$/, '') ?? null,
-        patch.model ?? null,
-        apiKey ? encrypt(keyEncryptionKey(), apiKey) : null,
-        apiKey ? `…${apiKey.slice(-4)}` : null,
-        patch.dim ?? null,
-        patch.isDefault ?? null,
-      ],
-    )
-    return rows[0] as Row
-  })
-
-  await audit({
-    actorType: 'user',
-    actorId: userId,
-    action: 'provider.update',
-    targetType: 'provider',
-    targetId: id,
-    detail: { preset: row.preset, kind: row.kind, label: row.label },
-  })
-
-  return toSummary(row)
 }
 
 /**

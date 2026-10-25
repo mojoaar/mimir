@@ -1,4 +1,5 @@
 import type { PresetId } from './presets'
+import pkg from '../../package.json'
 
 export type ProviderTarget = {
   id: string
@@ -33,7 +34,7 @@ function headersFor(target: ProviderTarget): Record<string, string> {
   // OpenCode's terms ask clients to name themselves and keep a stable session id.
   if (IDENTIFYING_PRESETS.includes(target.preset)) {
     headers['x-opencode-session'] = `mimir-${target.id}`
-    headers['user-agent'] = 'mimir/0.2.0'
+    headers['user-agent'] = `mimir/${pkg.version}`
   }
   return headers
 }

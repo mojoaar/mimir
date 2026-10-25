@@ -20,7 +20,8 @@ test('encrypts the key and never returns it', async () => {
     apiKey: 'sk-live-secret-value',
   })
   expect(created.hasKey).toBe(true)
-  expect(created.keyHint).toBe('…alue')
+  expect(created.keyHint).toMatch(/alue$/)
+  expect(created.keyHint).not.toContain('sk-live')
   expect(JSON.stringify(created)).not.toContain('sk-live-secret-value')
   const secret = await getProviderSecret(fixtures.alice, created.id)
   expect(secret.apiKey).toBe('sk-live-secret-value')
@@ -101,4 +102,32 @@ test('refuses a base URL that points inside the network', async () => {
   ).rejects.toThrow(/inside the local network/)
 
   expect(await count()).toBe(before)
+})
+
+test('never echoes a key shorter than the mask needs', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'llm',
+    preset: 'deepseek',
+    label: 'short',
+    model: 'deepseek-chat',
+    apiKey: 'abcd',
+  })
+
+  expect(created.keyHint).not.toContain('abcd')
+  expect(created.keyHint).not.toContain('bcd')
+})
+
+test('keeps the last four characters and hides the rest', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'llm',
+    preset: 'deepseek',
+    label: 'long',
+    model: 'deepseek-chat',
+    apiKey: 'sk-abcdefgh1234',
+  })
+
+  expect(created.keyHint?.endsWith('1234')).toBe(true)
+  expect(created.keyHint).not.toContain('sk-abcdefgh')
 })

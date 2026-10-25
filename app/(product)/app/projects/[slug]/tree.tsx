@@ -2,12 +2,15 @@ import Link from 'next/link'
 
 import type { TreeEntry } from '@/lib/memory/service'
 
+type Labels = { live: string; deleted: string; empty: string; label: string }
+
 type Props = {
   slug: string
   entries: TreeEntry[]
   active?: string
   deletedCount: number
   showDeleted: boolean
+  labels: Labels
 }
 
 function group(entries: TreeEntry[]): { dir: string; rows: TreeEntry[] }[] {
@@ -20,11 +23,18 @@ function group(entries: TreeEntry[]): { dir: string; rows: TreeEntry[] }[] {
   return [...groups].map(([dir, rows]) => ({ dir, rows }))
 }
 
-export function MemoryTree({ slug, entries, active, deletedCount, showDeleted }: Props) {
+export function MemoryTree({
+  slug,
+  entries,
+  active,
+  deletedCount,
+  showDeleted,
+  labels,
+}: Props) {
   const base = `/app/projects/${slug}`
 
   return (
-    <nav aria-label="Memory" className="flex flex-col gap-4">
+    <nav aria-label={labels.label} className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2 text-sm">
         <Link
           href={base}
@@ -34,7 +44,7 @@ export function MemoryTree({ slug, entries, active, deletedCount, showDeleted }:
               : 'border-[var(--accent)] text-[var(--fg)]'
           }`}
         >
-          Live
+          {labels.live}
         </Link>
         <Link
           href={`${base}?deleted=1`}
@@ -44,12 +54,13 @@ export function MemoryTree({ slug, entries, active, deletedCount, showDeleted }:
               : 'border-[var(--border)] text-[var(--text-muted)]'
           }`}
         >
-          Deleted{deletedCount > 0 ? ` (${deletedCount})` : ''}
+          {labels.deleted}
+          {deletedCount > 0 ? ` (${deletedCount})` : ''}
         </Link>
       </div>
 
       {entries.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">Nothing stored yet.</p>
+        <p className="text-sm text-[var(--text-muted)]">{labels.empty}</p>
       ) : (
         group(entries).map(({ dir, rows }) => (
           <section key={dir || '/'} className="flex flex-col gap-1">

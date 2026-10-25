@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { requireUser } from '@/lib/auth/context'
 import { listProjects } from '@/lib/projects/service'
 import { restoreProjectAction } from './projects/actions'
+import { translator } from '@/lib/i18n/request'
 
 export default async function DashboardPage({
   searchParams,
@@ -10,6 +11,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ notice?: string; error?: string }>
 }) {
   const user = await requireUser()
+  const t = await translator()
   const { notice, error } = await searchParams
   const all = await listProjects(user.id, true)
   const projects = all.filter((project) => !project.archived)
@@ -37,7 +39,7 @@ export default async function DashboardPage({
 
       {projects.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">
-          No projects yet. Agents create one the first time they write a memory.
+          {t('app.dashboard.noProjects')}
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
@@ -54,8 +56,10 @@ export default async function DashboardPage({
                   {project.name}
                 </Link>
                 <span className="text-xs text-[var(--text-muted)]">
-                  {project.role ?? 'read'} · {project.memoryCount}{' '}
-                  {project.memoryCount === 1 ? 'memory' : 'memories'}
+                  {project.role ?? 'read'} ·{' '}
+                  {project.memoryCount === 1
+                    ? t('app.dashboard.oneMemory', { count: project.memoryCount })
+                    : t('app.dashboard.manyMemories', { count: project.memoryCount })}
                 </span>
               </div>
               <p className="mt-1 text-xs text-[var(--text-muted)]">{project.slug}</p>
@@ -66,7 +70,9 @@ export default async function DashboardPage({
 
       {archived.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-[var(--text-muted)]">Archived</h2>
+          <h2 className="text-sm font-semibold text-[var(--text-muted)]">
+            {t('app.dashboard.archived')}
+          </h2>
           <ul className="flex flex-col gap-3">
             {archived.map((project) => (
               <li
@@ -76,7 +82,7 @@ export default async function DashboardPage({
                 <div>
                   <p className="font-medium">{project.name}</p>
                   <p className="text-xs text-[var(--text-muted)]">
-                    {project.slug} · hidden from every list and API call
+                    {project.slug} · {t('app.dashboard.hidden')}
                   </p>
                 </div>
                 {project.role === 'owner' ? (
@@ -86,7 +92,7 @@ export default async function DashboardPage({
                       type="submit"
                       className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-sunken)]"
                     >
-                      Restore
+                      {t('app.dashboard.restore')}
                     </button>
                   </form>
                 ) : null}

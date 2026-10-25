@@ -28,18 +28,32 @@ const versions: VersionSummary[] = [
 
 const noop = () => {}
 
-function render(overrides: Partial<Parameters<typeof MemoryHistory>[0]> = {}) {
+type PanelProps = Omit<Parameters<typeof MemoryHistory>[0], 'labels'>
+
+function render(overrides: Partial<PanelProps> = {}) {
+  const props: PanelProps = {
+    slug: 'mimir',
+    projectId: 'p1',
+    path: 'auth/rotation',
+    versions,
+    canWrite: true,
+    selected: null,
+    diff: null,
+    restore: noop,
+    ...overrides,
+  }
+
   return renderToStaticMarkup(
     <MemoryHistory
-      slug="mimir"
-      projectId="p1"
-      path="auth/rotation"
-      versions={versions}
-      canWrite
-      selected={null}
-      diff={null}
-      restore={noop}
-      {...overrides}
+      {...props}
+      labels={{
+        title: `History (${props.versions.length})`,
+        back: 'Back to memory',
+        empty: 'Nothing yet. The next edit keeps this body.',
+        replaced: `Replaced ${props.selected?.updatedAt.toISOString() ?? ''} — changes from that body to what is live now.`,
+        restore: 'Restore this version',
+        kept: 'The current body is kept in history.',
+      }}
     />,
   )
 }

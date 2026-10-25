@@ -2,6 +2,14 @@
 
 import { useActionState } from 'react'
 
+export type Labels = {
+  body: string
+  save: string
+  saving: string
+  summary: string
+  learningOff: string
+}
+
 import { saveMemoryAction, type ActionState } from './actions'
 
 const EMPTY: ActionState = {}
@@ -13,6 +21,7 @@ export function MemoryEditor({
   title,
   body,
   learning,
+  labels,
 }: {
   slug: string
   projectId: string
@@ -20,6 +29,7 @@ export function MemoryEditor({
   title: string
   body: string
   learning: boolean
+  labels: Labels
 }) {
   const [state, action, pending] = useActionState(saveMemoryAction, EMPTY)
 
@@ -31,7 +41,7 @@ export function MemoryEditor({
       {/* Keeping the title keeps a human edit from renaming what the model wrote. */}
       <input type="hidden" name="title" value={title} />
       <label htmlFor="memory-body" className="sr-only">
-        Memory body
+        {labels.body}
       </label>
       <textarea
         id="memory-body"
@@ -47,12 +57,12 @@ export function MemoryEditor({
           disabled={pending}
           className="rounded bg-[var(--accent)] px-3 py-2 text-sm text-[var(--accent-fg)] disabled:opacity-60"
         >
-          {pending ? 'Saving…' : 'Save'}
+          {pending ? labels.saving : labels.save}
         </button>
         <span className="text-xs text-[var(--text-muted)]">
           {learning
-            ? 'Saving clears the summary until the model rewrites it.'
-            : 'Learning is off for this project, so the summary stays empty until you turn it on.'}
+            ? labels.summary
+            : labels.learningOff}
         </span>
         {state.ok ? <span className="text-sm text-[var(--text-muted)]">{state.ok}</span> : null}
         {state.error ? <span className="text-sm text-[var(--danger)]">{state.error}</span> : null}

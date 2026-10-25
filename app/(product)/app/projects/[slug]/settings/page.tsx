@@ -11,6 +11,7 @@ import { revokeProjectGrantAction } from './actions'
 import { GrantForm } from './grant-form'
 import { ProjectForm } from './project-form'
 import { Missing } from '../../missing'
+import { translator } from '@/lib/i18n/request'
 
 export const instant = false
 
@@ -22,10 +23,11 @@ export default async function ProjectSettingsPage({
   searchParams: Promise<{ error?: string }>
 }) {
   const user = await requireUser()
+  const t = await translator()
   const { slug } = await params
   const { error } = await searchParams
   const project = await getProject(user.id, slug)
-  if (!project) return <Missing what="project" />
+  if (!project) return <Missing kind="project" t={t} />
 
   // Only the owner may point a project at a provider: that spends the owner's key.
   const providers =

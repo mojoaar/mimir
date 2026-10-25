@@ -7,16 +7,17 @@ import { audit, describeAuditFailure } from '@/lib/audit'
 import { requireUser } from '@/lib/auth/context'
 import { deleteMemory, restoreMemory, writeMemory } from '@/lib/memory/service'
 import { restoreVersion } from '@/lib/memory/versions'
+import { translator } from '@/lib/i18n/request'
 
 export type ActionState = { ok?: string; error?: string }
 
 const KNOWN = new Set(['invalid_path', 'invalid_params', 'body_too_large', 'forbidden', 'not_found'])
 
-function messageOf(error: unknown): string {
+function messageOf(error: unknown, generic: string): string {
   const code = (error as { code?: string }).code ?? ''
   if (KNOWN.has(code)) return (error as Error).message
   console.error('memory action failed', describeAuditFailure(error))
-  return 'That did not work. Try again.'
+  return generic
 }
 
 function field(formData: FormData, name: string): string {
@@ -43,9 +44,11 @@ export async function saveMemoryAction(_prev: ActionState, formData: FormData): 
       detail: { via: 'web' },
     })
     revalidatePath(`/app/projects/${slug}`)
-    return { ok: 'Saved.' }
+    const t = await translator()
+    return { ok: t('app.browse.saved') }
   } catch (error) {
-    return { error: messageOf(error) }
+    const t = await translator()
+    return { error: messageOf(error, t('app.error.generic')) }
   }
 }
 
@@ -108,8 +111,11 @@ export async function restoreVersionAction(formData: FormData): Promise<void> {
   const result = await restoreVersion(user.id, projectId, versionId)
   revalidatePath(`/app/projects/${slug}`)
 
+  const t = await translator()
   if (!result.restored) {
-    redirect(`/app/projects/${slug}?path=${encodeURIComponent(path)}&history=1&error=That%20version%20is%20gone.`)
+    redirect(
+      `/app/projects/${slug}?path=${encodeURIComponent(path)}&history=1&error=${encodeURIComponent(t('app.browse.versionGone'))}`,
+    )
   }
 
   await audit({
@@ -121,6 +127,6 @@ export async function restoreVersionAction(formData: FormData): Promise<void> {
     detail: { via: 'web', versionId },
   })
   redirect(
-    `/app/projects/${slug}?path=${encodeURIComponent(result.path)}&history=1&notice=Restored.%20The%20previous%20body%20is%20in%20history.`,
+    `/app/projects/${slug}?path=${encodeURIComponent(result.path)}&history=1&notice=${encodeURIComponent(t('app.browse.restored'))}`,
   )
 }

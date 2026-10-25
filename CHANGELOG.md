@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-10-25
+
+Your account, your control.
+
+### Added
+
+- **Settings → Profile** (`/app/settings/profile`): edit your own name and
+  email address, and change your password without leaving the app. An email
+  change asks for your current password and refuses one already in use.
+- A sessions list on the same page: every device signed in to your account,
+  with its address and browser, so you can revoke one device or sign out
+  everywhere else.
+
+### Changed
+
+- A password change signs out every other device and keeps the one making the
+  change. The same is true of the reset link, as before.
+
 ## [0.9.0] - 2026-10-25
 
 Hardening: fewer ways to be surprised.

@@ -72,3 +72,13 @@ describe('the sharing section', () => {
     expect(html).toContain('never the owner')
   })
 })
+
+describe('the account page', () => {
+  it('explains the profile, the password and the sessions', async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage())
+
+    expect(html).toContain('Settings → Profile')
+    expect(html).toContain('password change')
+    expect(html).toContain('sessions signed in')
+  })
+})

@@ -110,6 +110,20 @@ docker compose up -d`}</Code>
         user belongs to, under the role the team grants.
       </P>
 
+      <H2>Your account</H2>
+      <P>
+        <strong>Settings → Profile</strong> (<code>/app/settings/profile</code>) is where a user changes their own name,
+        email address and password. Changing the email asks for the current password and refuses an address that is
+        already in use; the address is also how you sign in, so the next sign-in uses the new one. A password change
+        signs out every other device and keeps the one making the change.
+      </P>
+      <P>
+        The same page lists the sessions signed in to the account, with the address and device each one came from, and
+        lets a user revoke one device or sign out everywhere else. Revocation takes effect on that device&apos;s next
+        request. An admin can still reset a password or MFA from <strong>Admin → Users</strong>; nobody can edit another
+        user&apos;s profile from here.
+      </P>
+
       <H2>Signing in and out</H2>
       <P>
         A user who forgets a password can ask for a link at <code>/forgot-password</code>: it is emailed when Resend

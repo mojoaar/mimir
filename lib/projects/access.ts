@@ -84,7 +84,7 @@ export async function listGrants(
   actorUserId: string,
   projectId: string,
 ): Promise<{ userId: string; email: string; role: 'read' | 'write' }[]> {
-  await requireProjectRole(actorUserId, projectId, 'read')
+  await requireProjectRole(actorUserId, projectId, 'write')
   return withUser(actorUserId, async (tx) => {
     const { rows } = await tx.query<{ user_id: string; email: string; role: 'read' | 'write' }>(
       `select g.principal_id as user_id, u.email, g.role

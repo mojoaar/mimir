@@ -27,6 +27,24 @@ describe('authenticate', () => {
     expect(await authenticate(fx.email, 'correct-password', meta)).toEqual({ ok: false, reason: 'locked' })
   })
 
+  it('spends as long on an unknown email as on a wrong password', async () => {
+    // Warm the argon2 path so the first measurement is not dominated by
+    // module initialisation.
+    await authenticate(fx.email, 'wrong-password', meta)
+
+    const unknownStart = performance.now()
+    await authenticate('nobody@example.test', 'wrong-password', meta)
+    const unknown = performance.now() - unknownStart
+
+    const wrongStart = performance.now()
+    await authenticate(fx.email, 'wrong-password', meta)
+    const wrong = performance.now() - wrongStart
+
+    // Both paths must pay one argon2 verify. A returning-early branch is an
+    // account enumerator, so the unknown path may not be markedly faster.
+    expect(unknown).toBeGreaterThan(wrong * 0.5)
+  })
+
   it('audits both success and failure', async () => {
     await authenticate(fx.email, 'wrong', meta)
     await authenticate(fx.email, 'correct-password', meta)

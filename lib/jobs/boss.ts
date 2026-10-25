@@ -15,13 +15,26 @@ const JOB_NAMES = Object.keys(POLICIES) as JobName[]
 
 type Handler = (data: Record<string, unknown>) => Promise<void>
 
-const workers = new Map<JobName, Handler>()
+type JobState = {
+  boss: PgBoss | null
+  starting: Promise<void> | null
+  workers: Map<JobName, Handler>
+}
 
-let boss: PgBoss | null = null
-let starting: Promise<void> | null = null
+// Next bundles the instrumentation hook and the route handlers separately, so
+// module scope here is not shared with the code that enqueues jobs. Keying the
+// state on globalThis is what makes one started queue visible to every bundle
+// in the process. `Symbol.for` reaches the same key from any module instance.
+const STATE = Symbol.for('mimir.jobs.state')
+
+function state(): JobState {
+  const global = globalThis as typeof globalThis & { [STATE]?: JobState }
+  global[STATE] ??= { boss: null, starting: null, workers: new Map() }
+  return global[STATE]
+}
 
 export function registerWorker(name: JobName, handler: Handler): void {
-  workers.set(name, handler)
+  state().workers.set(name, handler)
 }
 
 /**
@@ -32,10 +45,11 @@ export function registerWorker(name: JobName, handler: Handler): void {
  * own schema, and the runtime role has no DDL.
  */
 export async function startJobs(): Promise<void> {
-  if (boss) return
-  if (starting) return starting
+  const jobs = state()
+  if (jobs.boss) return
+  if (jobs.starting) return jobs.starting
 
-  starting = (async () => {
+  jobs.starting = (async () => {
     const instance = new PgBoss({
       connectionString: getConfig().databaseAdminUrl,
       max: 3,
@@ -49,38 +63,40 @@ export async function startJobs(): Promise<void> {
     for (const name of JOB_NAMES) {
       await instance.createQueue(name, { policy: POLICIES[name] })
     }
-    for (const [name, handler] of workers) {
+    for (const [name, handler] of jobs.workers) {
       // pg-boss hands the worker an array of jobs; we process one at a time.
       await instance.work(name, async ([job]) => {
         await handler((job?.data ?? {}) as Record<string, unknown>)
       })
     }
 
-    boss = instance
+    jobs.boss = instance
     process.once('SIGTERM', () => void stopJobs())
     process.once('SIGINT', () => void stopJobs())
   })()
 
   try {
-    await starting
+    await jobs.starting
   } finally {
-    starting = null
+    jobs.starting = null
   }
 }
 
 export async function stopJobs(): Promise<void> {
-  const instance = boss
-  boss = null
+  const jobs = state()
+  const instance = jobs.boss
+  jobs.boss = null
   if (instance) await instance.stop()
 }
 
 export function getBoss(): PgBoss {
-  if (!boss) {
+  const jobs = state()
+  if (!jobs.boss) {
     const error = new Error('jobs_not_started') as Error & { code: string }
     error.code = 'jobs_not_started'
     throw error
   }
-  return boss
+  return jobs.boss
 }
 
 /** Returns null when the job was throttled away or the queue is not running. */
@@ -89,8 +105,9 @@ export async function sendJob(
   data: Record<string, unknown>,
   options: { startAfter?: number; singletonKey?: string } = {},
 ): Promise<string | null> {
-  if (!boss) return null
-  return boss.send(name, data, {
+  const jobs = state()
+  if (!jobs.boss) return null
+  return jobs.boss.send(name, data, {
     startAfter: options.startAfter,
     singletonKey: options.singletonKey,
   })

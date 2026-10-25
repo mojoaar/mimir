@@ -13,11 +13,14 @@ export type ClientDeps = { fetch?: typeof fetch; timeoutMs?: number }
 export class ProviderError extends Error {
   readonly code = 'provider_error'
   readonly status?: number
+  /** Lets a caller tell "the provider is broken" from "this one reply was useless". */
+  readonly detail?: 'empty_completion'
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, detail?: 'empty_completion') {
     super(message)
     this.name = 'ProviderError'
     this.status = status
+    this.detail = detail
   }
 }
 
@@ -57,7 +60,9 @@ export async function chatComplete(
     choices?: { message?: { content?: string } }[]
   }
   const content = json.choices?.[0]?.message?.content
-  if (typeof content !== 'string' || content === '') throw new ProviderError('empty completion')
+  if (typeof content !== 'string' || content === '') {
+    throw new ProviderError('empty completion', undefined, 'empty_completion')
+  }
   return content
 }
 

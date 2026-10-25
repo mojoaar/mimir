@@ -1,7 +1,8 @@
-import { chatComplete } from '@/lib/providers/client'
+import { chatComplete, type ProviderError } from '@/lib/providers/client'
 import { resolveExtractionProvider } from '@/lib/providers/resolve'
 import { withAdmin } from '@/lib/db/tx'
 import { registerWorker } from './boss'
+import { EXTRACT_TIMEOUT_MS } from './constants'
 
 const SYSTEM = `You write compact metadata for a software engineering memory store. Reply with JSON only, no prose and no code fences: {"title": string, "summary": string}. "title" is one imperative line of at most 80 characters naming what the memory states. "summary" is one or two sentences, at most 300 characters, stating the fact so it can be understood without the body.`
 
@@ -31,7 +32,10 @@ export function parseExtraction(reply: string): { title: string; summary: string
     return null
   }
   if (typeof parsed !== 'object' || parsed === null) return null
-  const record = parsed as Record<string, unknown>
+  // Models do not always honour the lower-case keys the prompt asks for.
+  const record = Object.fromEntries(
+    Object.entries(parsed as Record<string, unknown>).map(([key, value]) => [key.toLowerCase(), value]),
+  )
   const title = text(record.title)
   const summary = text(record.summary)
   if (!title || !summary) return null
@@ -70,11 +74,22 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
   for (const row of rows) {
     let reply: string
     try {
-      reply = await chatComplete(provider, [
-        { role: 'system', content: SYSTEM },
-        { role: 'user', content: `path: ${row.path}\n\n${row.body.slice(0, BODY_LIMIT)}` },
-      ])
+      reply = await chatComplete(
+        provider,
+        [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: `path: ${row.path}\n\n${row.body.slice(0, BODY_LIMIT)}` },
+        ],
+        { timeoutMs: EXTRACT_TIMEOUT_MS },
+      )
     } catch (error) {
+      // A thinking model can spend its whole budget reasoning and reply with
+      // nothing. That is one useless row, not a broken provider, so the batch
+      // carries on instead of stalling behind it forever.
+      if ((error as ProviderError).detail === 'empty_completion') {
+        console.error('extract skipped: the model returned no answer')
+        continue
+      }
       // The provider is down or refusing: stop, and the rest stay pending.
       console.error(`extract stopped (${(error as Error).message})`)
       break

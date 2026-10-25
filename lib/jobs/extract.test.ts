@@ -23,4 +23,9 @@ describe('parseExtraction', () => {
     expect(parsed?.title).toHaveLength(120)
     expect(parsed?.summary).toHaveLength(400)
   })
+
+  it('accepts capitalised keys', () => {
+    const parsed = parseExtraction(JSON.stringify({ Title: 'Compose binds to loopback', Summary: 'Only the proxy reaches it.' }))
+    expect(parsed).toEqual({ title: 'Compose binds to loopback', summary: 'Only the proxy reaches it.' })
+  })
 })

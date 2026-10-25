@@ -24,7 +24,9 @@ export async function resolveExtractionProvider(projectId: string): Promise<Prov
     ? await ownedTarget(ownerId, project.llm_provider_id)
     : await defaultTarget(ownerId)
 
-  return target?.apiKey ? target : null
+  // A key is not required: a local model behind Ollama has none, and the
+  // client only sends Authorization when there is one.
+  return target
 }
 
 async function ownedTarget(userId: string, providerId: string): Promise<ProviderTarget | null> {

@@ -64,3 +64,22 @@ test('an extraction provider is never taken from another user', async () => {
 
   expect(await resolveExtractionProvider(project.id)).toBeNull()
 })
+
+// Ollama and other local models take no API key, and they are the default way
+// to run Mimir in a homelab. Requiring a key here would silently disable
+// extraction on exactly the setup the README recommends.
+test('a local provider with no key still extracts', async () => {
+  const project = await resolveProject(fixtures.carol, { repo: 'github.com/carol/local', create: true })
+  await createProvider({
+    userId: fixtures.carol,
+    kind: 'llm',
+    preset: 'ollama',
+    label: 'local',
+    model: 'qwen3.5:9b',
+    isDefault: true,
+  })
+
+  const target = await resolveExtractionProvider(project.id)
+
+  expect(target).toMatchObject({ preset: 'ollama', model: 'qwen3.5:9b', apiKey: null })
+})

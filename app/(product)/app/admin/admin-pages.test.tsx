@@ -73,12 +73,23 @@ vi.mock('@/lib/jobs/boss', () => ({
   rescheduleBackups: async () => {},
 }))
 
+import AdminLayout from './layout'
 import AdminOverviewPage from './page'
 import AuditPage from './audit/page'
 import BackupsPage from './backups/page'
 import SiteSettingsPage from './settings/site/page'
 
 const nothing = Promise.resolve({})
+
+describe('the admin nav', () => {
+  it('offers every destination as a button', async () => {
+    const html = renderToStaticMarkup(await AdminLayout({ children: <p>body</p> }))
+
+    expect(html).toContain('href="/app/admin/users"')
+    expect(html).toContain('href="/app/admin/audit"')
+    expect(html).toContain('rounded-md border border-[var(--border)]')
+  })
+})
 
 describe('the admin screens', () => {
   it('shows the overview in English', async () => {

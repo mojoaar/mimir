@@ -37,10 +37,11 @@ export function parseArgs(argv: string[]): IngestArgs {
       continue
     }
     if (token.startsWith('--')) {
-      const [rawName, inline] = token.slice(2).split('=', 2)
-      const name = rawName ?? ''
+      const body = token.slice(2)
+      const equals = body.indexOf('=')
+      const name = equals === -1 ? body : body.slice(0, equals)
       if (!VALUE_FLAGS.has(name)) throw new Error(`unknown flag --${name}`)
-      const value = inline ?? argv[++i]
+      const value = equals === -1 ? argv[++i] : body.slice(equals + 1)
       if (value === undefined || value.startsWith('--')) throw new Error(`--${name} needs a value`)
       if (name === 'project') args.project = value
       if (name === 'url') args.url = value

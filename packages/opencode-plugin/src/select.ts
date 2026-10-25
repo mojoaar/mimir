@@ -47,11 +47,18 @@ const CONFIG_FILES = new Set([
 
 const PROSE = /\.(md|mdx)$/i
 const ROOT_PROSE = /^(readme|changelog|contributing|license)/i
-const MAX_ENTRIES = 10_000
+// A guard against a symlinked home directory, not a product limit: a real
+// repository of 250 000 files is still walked, and hitting the cap is reported.
+const MAX_ENTRIES = 250_000
 
 export type WalkEntry = { path: string; bytes: number }
-export type WalkResult = { files: WalkEntry[]; skipped: { path: string; reason: string }[] }
-export type WalkOptions = { all?: boolean; maxFileBytes?: number }
+export type WalkResult = {
+  files: WalkEntry[]
+  skipped: { path: string; reason: string }[]
+  /** True when the walk stopped early, so the caller must not report success. */
+  truncated: boolean
+}
+export type WalkOptions = { all?: boolean; maxFileBytes?: number; maxEntries?: number }
 
 function depth(path: string): number {
   return path.split('/').length - 1
@@ -67,14 +74,19 @@ function wanted(path: string): boolean {
 
 export async function selectFiles(root: string, options: WalkOptions = {}): Promise<WalkResult> {
   const maxFileBytes = options.maxFileBytes ?? 262_144
+  const maxEntries = options.maxEntries ?? MAX_ENTRIES
   const files: WalkEntry[] = []
   const skipped: { path: string; reason: string }[] = []
   let seen = 0
+  let truncated = false
 
   async function walk(relative: string): Promise<void> {
     const entries = await readdir(join(root, relative), { withFileTypes: true })
     for (const entry of entries) {
-      if (++seen > MAX_ENTRIES) return
+      if (++seen > maxEntries) {
+        truncated = true
+        return
+      }
       const path = relative ? `${relative}/${entry.name}` : entry.name
       if (entry.isDirectory()) {
         if (IGNORED_DIRS.has(entry.name)) continue
@@ -97,5 +109,5 @@ export async function selectFiles(root: string, options: WalkOptions = {}): Prom
   }
 
   await walk('')
-  return { files, skipped }
+  return { files, skipped, truncated }
 }

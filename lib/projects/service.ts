@@ -73,7 +73,7 @@ export async function resolveProject(
         // A named project is how a folder that is not a repository gets one:
         // there is no repo key to derive it from, and the caller already chose
         // the name. A lookup-only caller still gets the not-found error.
-        if (opts.create === false) throw new ProjectNotFoundError(opts.project)
+        if (opts.create !== true) throw new ProjectNotFoundError(opts.project)
         return createProject(userId, repoKey, client, opts.project)
       }
       return { id: row.id, slug: row.slug, role: toRole(row) }
@@ -94,7 +94,9 @@ export async function resolveProject(
       if (row) return { id: row.id, slug: row.slug, role: toRole(row) }
     }
 
-    if (opts.create === false) throw new ProjectNotFoundError(opts.project ?? opts.repo ?? 'project')
+    // Only a caller that says `create: true` may create: a typo'd slug on a
+    // read must be a 404, not a new empty project.
+    if (opts.create !== true) throw new ProjectNotFoundError(opts.project ?? opts.repo ?? 'project')
 
     return createProject(userId, repoKey, client)
   })
@@ -146,11 +148,13 @@ async function createProject(
       await client.query('RELEASE SAVEPOINT create_project')
     } catch (error) {
       // Two clients created the same repo at once: adopt the winner.
-      if ((error as { code?: string }).code !== '23505' || !repoKey) throw error
+      if ((error as { code?: string }).code !== '23505') throw error
       await client.query('ROLLBACK TO SAVEPOINT create_project')
+      // A named project has no repo key, so match it by the slug that collided;
+      // otherwise an archived project would silently fork into `name-2`.
       const existing = await client.query<{ id: string; slug: string }>(
-        'SELECT id, slug FROM projects WHERE owner_user_id = $1 AND repo_key = $2',
-        [userId, repoKey],
+        'SELECT id, slug FROM projects WHERE owner_user_id = $1 AND (repo_key = $2 OR slug = $3)',
+        [userId, repoKey, slug],
       )
       const row = existing.rows[0]
       if (row) return { id: row.id, slug: row.slug, role: 'owner' }

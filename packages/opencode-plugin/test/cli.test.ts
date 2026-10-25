@@ -4,13 +4,21 @@ import { join } from 'node:path'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  calls: [] as { name: string; args: Record<string, unknown>; options?: { timeoutMs?: number } }[],
+  calls: [] as {
+    name: string
+    args: Record<string, unknown>
+    options?: { timeoutMs?: number; url?: string; token?: string }
+  }[],
   reply: { ok: true, result: { written: 0 } } as unknown,
   repo: null as string | null,
 }))
 
 vi.mock('../src/client.js', () => ({
-  callTool: async (name: string, args: Record<string, unknown>, options?: { timeoutMs?: number }) => {
+  callTool: async (
+    name: string,
+    args: Record<string, unknown>,
+    options?: { timeoutMs?: number; url?: string; token?: string },
+  ) => {
     mocks.calls.push({ name, args, options })
     return mocks.reply
   },
@@ -150,6 +158,55 @@ describe('mimir ingest', () => {
     expect(err.join('\n')).toContain('docs/big.md')
     const sent = mocks.calls.flatMap((call) => (call.args.files as { path: string }[]).map((f) => f.path))
     expect(sent).not.toContain('docs/big.md')
+  })
+
+
+  it('refuses a folder that is neither a repository nor named', async () => {
+    mocks.repo = null
+
+    const code = await runIngest(
+      { command: 'ingest', path: '.', all: false, dryRun: false, help: false },
+      io(),
+    )
+
+    expect(code).toBe(2)
+    expect(err.join('\n')).toContain('not a git repository')
+    expect(mocks.calls).toHaveLength(0)
+  })
+
+  it('sends the url and token it was given', async () => {
+    await runIngest(
+      {
+        command: 'ingest',
+        path: '.',
+        project: 'p',
+        url: 'http://127.0.0.1:3101',
+        token: 'mimir_test',
+        all: false,
+        dryRun: false,
+        help: false,
+      },
+      io(),
+    )
+
+    expect(mocks.calls[0]?.options?.url).toBe('http://127.0.0.1:3101')
+    expect(mocks.calls[0]?.options?.token).toBe('mimir_test')
+  })
+
+  it('skips a file that is only too large once decoded', async () => {
+    // 200 KiB of 0xff decodes to 200 K replacement characters, which is 600 KB.
+    await put('docs/latin1.md', Buffer.alloc(200 * 1024, 0xff) as unknown as string)
+
+    const code = await runIngest(
+      { command: 'ingest', path: '.', project: 'p', all: false, dryRun: false, help: false },
+      io(),
+    )
+
+    expect(code).toBe(1)
+    expect(err.join('\n')).toContain('docs/latin1.md')
+    const sent = mocks.calls.flatMap((call) => (call.args.files as { path: string }[]).map((f) => f.path))
+    expect(sent).not.toContain('docs/latin1.md')
+    expect(sent).toContain('docs/a.md')
   })
 
   it('prints usage for --help without touching the disk', async () => {

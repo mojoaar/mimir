@@ -87,3 +87,11 @@ describe('selectFiles', () => {
     expect(entry?.bytes).toBeGreaterThan(0)
   })
 })
+
+describe('a walk that cannot finish', () => {
+  it('says so instead of reporting a partial list as complete', async () => {
+    const result = await selectFiles(root, { maxEntries: 3 })
+
+    expect(result.truncated).toBe(true)
+  })
+})

@@ -7,6 +7,7 @@ import { POST as ingestRoute } from '@/app/api/v1/projects/[slug]/ingest/route'
 import { GET as readMemoryGet } from '@/app/api/v1/projects/[slug]/memory/[...path]/route'
 import { GET as listVersionsRoute } from '@/app/api/v1/projects/[slug]/versions/route'
 import { POST as restoreVersionRoute } from '@/app/api/v1/projects/[slug]/versions/[id]/restore/route'
+import { GET as treeRoute } from '@/app/api/v1/projects/[slug]/tree/route'
 import { sha256 } from '@/lib/crypto'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
@@ -190,5 +191,19 @@ describe('memory history over the rest api', () => {
     )
     expect(other.status).toBe(404)
     expect((await other.json()).code).toBe('not_found')
+  })
+
+  // A read must not have the side effect of creating the project it names.
+  it('answers 404 for an unknown project instead of creating one', async () => {
+    const missing = await treeRoute(
+      req('/api/v1/projects/no-such-project/tree'),
+      { params: Promise.resolve({ slug: 'no-such-project', path: [] }) },
+    )
+
+    expect(missing.status).toBe(404)
+    const { rows } = await adminPool().query<{ count: string }>(
+      `select count(*) from projects where slug = 'no-such-project'`,
+    )
+    expect(rows[0]?.count).toBe('0')
   })
 })

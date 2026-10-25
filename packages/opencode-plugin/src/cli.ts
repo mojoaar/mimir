@@ -11,20 +11,26 @@ const USAGE = `mimir ingest — load a project's documentation into Mimir
 
   mimir ingest [path] [options]
 
-  --project <name>  name the project yourself (required for a folder that is
-                    not a git repository, or to keep two folders apart)
-  --url <url>       Mimir base URL (default: MIRIM_URL)
+  --project <name>  name the project yourself. Required for a folder that is
+                    not a git repository; also keeps two folders apart.
+  --url <url>       Mimir base URL (default: MIMIR_URL)
   --token <token>   API key (default: MIMIR_TOKEN)
   --all             import every text file, not just documentation
   --dry-run         print what would be sent and send nothing
 
-Imports land under import/ in the project, where memory_search finds them.`
+A git checkout imports into the project your agents already write to. Imports
+land under import/, where memory_search finds them.`
+
+const MAX_BODY_BYTES = 262_144
 
 export type IngestIo = {
   out: (line: string) => void
   err: (line: string) => void
   cwd: string
 }
+
+type Prepared = { path: string; body: string; bytes: number }
+type Skip = { path: string; reason: string }
 
 async function isDirectory(path: string): Promise<boolean> {
   try {
@@ -51,16 +57,46 @@ export async function runIngest(args: IngestArgs, io: IngestIo): Promise<number>
   }
 
   const repo = args.project ? null : detectRepo(root)
-  const key = args.project ? { project: args.project } : repo ? { repo } : { project: basename(root) }
-  const label = args.project ?? repo ?? basename(root)
+  if (!args.project && !repo) {
+    // Falling back to the folder name would merge two different `docs/` folders
+    // into one project and let the second silently overwrite the first.
+    io.err(`not a git repository: pass --project <name> to name this folder's project`)
+    return 2
+  }
 
-  const { files, skipped } = await selectFiles(root, { all: args.all })
-  const batches = batchFiles(files)
-  const totalBytes = files.reduce((sum, file) => sum + file.bytes, 0)
+  const key = args.project ? { project: args.project } : { repo: repo as string }
+  const label = args.project ?? (repo as string)
+
+  const walk = await selectFiles(root, { all: args.all })
+  const skipped: Skip[] = [...walk.skipped]
+
+  // Read before deciding: the server caps the decoded body, and a Latin-1 file
+  // can pass the byte check on disk and still exceed it once decoded.
+  const prepared: Prepared[] = []
+  for (const file of walk.files) {
+    try {
+      const body = await readFile(join(root, file.path), 'utf8')
+      const bytes = Buffer.byteLength(body, 'utf8')
+      if (bytes > MAX_BODY_BYTES) {
+        skipped.push({ path: file.path, reason: `too large (${bytes} bytes)` })
+        continue
+      }
+      prepared.push({ path: file.path, body, bytes })
+    } catch (error) {
+      skipped.push({ path: file.path, reason: (error as Error).message })
+    }
+  }
+
+  const batches = batchFiles(prepared)
+  const totalBytes = prepared.reduce((sum, file) => sum + file.bytes, 0)
 
   if (args.dryRun) {
-    io.out(`would import ${files.length} files (${totalBytes} bytes) into ${label} as import/<path>`)
+    io.out(`would import ${prepared.length} files (${totalBytes} bytes) into ${label} as import/<path>`)
     for (const file of skipped) io.err(`skipped ${file.path}: ${file.reason}`)
+    if (walk.truncated) {
+      io.err(`the folder tree was larger than the walk limit; the list above is incomplete`)
+      return 1
+    }
     return 0
   }
 
@@ -68,20 +104,14 @@ export async function runIngest(args: IngestArgs, io: IngestIo): Promise<number>
   let failed = 0
 
   for (const [index, batch] of batches.entries()) {
-    const payload: { path: string; body: string }[] = []
-    for (const file of batch.files) {
-      try {
-        payload.push({ path: file.path, body: await readFile(join(root, file.path), 'utf8') })
-      } catch (error) {
-        skipped.push({ path: file.path, reason: (error as Error).message })
-      }
-    }
-    if (payload.length === 0) continue
-
     const result = await callTool(
       'memory_ingest',
-      { ...key, path_prefix: 'import', files: payload },
-      { timeoutMs: 60_000 },
+      {
+        ...key,
+        path_prefix: 'import',
+        files: batch.files.map((file) => ({ path: file.path, body: file.body })),
+      },
+      { url: args.url, token: args.token, timeoutMs: 60_000 },
     )
     if (!result.ok) {
       failed++
@@ -89,16 +119,19 @@ export async function runIngest(args: IngestArgs, io: IngestIo): Promise<number>
       continue
     }
 
-    const outcome = result.result as { written?: number; skipped?: string[] }
-    imported += outcome.written ?? payload.length
-    for (const path of outcome.skipped ?? []) {
-      skipped.push({ path, reason: 'refused by the server' })
+    const outcome = result.result as { written?: number; skipped?: Skip[] }
+    imported += outcome.written ?? batch.files.length
+    for (const entry of outcome.skipped ?? []) {
+      skipped.push({ path: entry.path, reason: entry.reason })
     }
   }
 
   for (const file of skipped) io.err(`skipped ${file.path}: ${file.reason}`)
   io.out(`imported ${imported} files, skipped ${skipped.length}`)
-  return failed > 0 || skipped.length > 0 ? 1 : 0
+  if (walk.truncated) {
+    io.err(`the folder tree was larger than the walk limit; not everything was considered`)
+  }
+  return failed > 0 || skipped.length > 0 || walk.truncated ? 1 : 0
 }
 
 export async function main(argv: string[]): Promise<void> {
@@ -116,8 +149,4 @@ export async function main(argv: string[]): Promise<void> {
     err: (line) => console.error(line),
     cwd: process.cwd(),
   })
-}
-
-if (process.argv[1]?.endsWith('cli.js')) {
-  void main(process.argv.slice(2))
 }

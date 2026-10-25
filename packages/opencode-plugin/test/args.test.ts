@@ -41,3 +41,11 @@ describe('parseArgs', () => {
     expect(() => parseArgs(['ingest', '--project'])).toThrow('--project needs a value')
   })
 })
+
+describe('values that contain an equals sign', () => {
+  it('keeps everything after the first =', () => {
+    const args = parseArgs(['ingest', '--url=http://h/?a=b&c=d'])
+
+    expect(args.url).toBe('http://h/?a=b&c=d')
+  })
+})

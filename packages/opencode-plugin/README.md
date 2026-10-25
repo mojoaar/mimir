@@ -53,8 +53,8 @@ npx @mojoaar/opencode-mimir ingest .
 ```
 
 Walks the folder and loads its **documentation and configuration** — READMEs,
-`docs/`, markdown, compose files, `package.json` — into a project called
-`import/`. Source code is skipped by default; the agent already has it.
+`docs/`, markdown, compose files, `package.json` — under the `import/` path
+prefix. Source code is skipped by default; the agent already has it.
 
 | Flag | What it does |
 |---|---|

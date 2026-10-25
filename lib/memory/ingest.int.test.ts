@@ -35,7 +35,8 @@ describe('ingestFiles', () => {
     })
 
     expect(result.written).toBe(2)
-    expect(result.skipped).toEqual(['../etc/passwd'])
+    expect(result.skipped.map((s) => s.path)).toEqual(['../etc/passwd'])
+    expect(result.skipped[0]?.reason).toContain('invalid_path')
     expect(await readMemory(f.alice, f.aliceProjectId, 'import/ok/one')).not.toBeNull()
   })
 

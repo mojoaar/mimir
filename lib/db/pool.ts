@@ -1,13 +1,26 @@
 import { Pool } from 'pg'
-import { getConfig } from '@/lib/config'
+import { getConfig } from '../config'
 
-const config = getConfig()
+// Pools are created on first use, not at import: `next build` collects page
+// metadata with no environment, so reading config here would fail the build.
+let app: Pool | null = null
+let admin: Pool | null = null
 
-export const appPool = new Pool({ connectionString: config.databaseUrl, max: 10 })
+/** Runtime pool: connects as mimir_app, subject to RLS. */
+export function appPool(): Pool {
+  app ??= new Pool({ connectionString: getConfig().databaseUrl, max: 10 })
+  return app
+}
 
-// Owner connection: migrations and pg_dump only. Never used to answer a request.
-export const adminPool = new Pool({ connectionString: config.databaseAdminUrl, max: 4 })
+/** Owner pool: migrations, pg_dump and auth lookups that cannot be tenant-scoped. */
+export function adminPool(): Pool {
+  admin ??= new Pool({ connectionString: getConfig().databaseAdminUrl, max: 4 })
+  return admin
+}
 
 export async function closePools(): Promise<void> {
-  await Promise.all([appPool.end(), adminPool.end()])
+  const open = [app, admin].filter((p): p is Pool => p !== null)
+  await Promise.all(open.map((p) => p.end()))
+  app = null
+  admin = null
 }

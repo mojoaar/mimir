@@ -34,7 +34,7 @@ describe('withUser', () => {
       await tx.query("insert into projects (owner_user_id, name, slug) values ($1,'x','x')", [fx.alice])
       throw new Error('boom')
     })).rejects.toThrow('boom')
-    const { rows } = await adminPool.query("select 1 from projects where slug = 'x'")
+    const { rows } = await adminPool().query("select 1 from projects where slug = 'x'")
     expect(rows).toHaveLength(0)
   })
 })

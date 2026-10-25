@@ -18,7 +18,7 @@ describe('audit', () => {
       action: 'provider.update',
       detail: { api_key: 'sk-live-abcdef123456' },
     })
-    const { rows } = await adminPool.query(
+    const { rows } = await adminPool().query(
       "select detail from audit_log where action = 'provider.update'",
     )
     expect(rows).toHaveLength(1)
@@ -29,8 +29,8 @@ describe('audit', () => {
     // The trigger is FOR EACH ROW, so it only fires when a row matches:
     // an empty table would let the update succeed and prove nothing.
     await audit({ actorType: 'system', actorId: null, action: 'backup.run' })
-    await expect(adminPool.query("update audit_log set action = 'x'")).rejects.toThrow(/append-only/)
-    await expect(adminPool.query('delete from audit_log')).rejects.toThrow(/append-only/)
+    await expect(adminPool().query("update audit_log set action = 'x'")).rejects.toThrow(/append-only/)
+    await expect(adminPool().query('delete from audit_log')).rejects.toThrow(/append-only/)
   })
 
   it('does not throw when the insert fails', async () => {

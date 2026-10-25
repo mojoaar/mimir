@@ -50,7 +50,7 @@ describe('memory service', () => {
 
   it('strips the summary when a body is rewritten', async () => {
     await writeMemory({ userId: f.alice, projectId, path: 'a/d', body: 'one' })
-    await adminPool.query("update memories set summary = 'stale' where path = 'a/d'")
+    await adminPool().query("update memories set summary = 'stale' where path = 'a/d'")
     await writeMemory({ userId: f.alice, projectId, path: 'a/d', body: 'two' })
     expect((await readMemory(f.alice, projectId, 'a/d'))!.summary).toBeNull()
   })
@@ -60,7 +60,7 @@ describe('memory service', () => {
       writeMemory({ userId: f.alice, projectId, path: 'race/x', body: 'one' }),
       writeMemory({ userId: f.alice, projectId, path: 'race/x', body: 'two' }),
     ])
-    const { rows } = await adminPool.query("select body from memories where path = 'race/x'")
+    const { rows } = await adminPool().query("select body from memories where path = 'race/x'")
     expect(rows).toHaveLength(1)
     expect(['one', 'two']).toContain(rows[0].body)
   })

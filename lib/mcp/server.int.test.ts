@@ -66,13 +66,13 @@ describe('mcp server', () => {
 
   it('audits one row per call', async () => {
     await handleRpc(call('memory_tree', { repo: 'github.com/a/b' }), alice, meta)
-    const { rows } = await adminPool.query("SELECT action FROM audit_log WHERE action LIKE 'memory.%'")
+    const { rows } = await adminPool().query("SELECT action FROM audit_log WHERE action LIKE 'memory.%'")
     expect(rows).toHaveLength(1)
     expect(rows[0].action).toBe('memory.read')
   })
 
   it("does not reveal whether a path exists in someone else's project", async () => {
-    const { rows } = await adminPool.query<{ slug: string }>(
+    const { rows } = await adminPool().query<{ slug: string }>(
       'SELECT slug FROM projects WHERE owner_user_id = $1',
       [f.bob],
     )

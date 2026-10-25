@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.github
+.superpowers
+docs
+coverage
+*.log
+*.dump
+*.enc
+.env
+.env.local

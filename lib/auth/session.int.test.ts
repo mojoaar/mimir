@@ -21,14 +21,14 @@ describe('sessions', () => {
 
   it('stores only the hash of the cookie value', async () => {
     const { cookieValue } = await createSession(userId, {})
-    const { rows } = await adminPool.query('select token_hash from sessions')
+    const { rows } = await adminPool().query('select token_hash from sessions')
     expect(rows).toHaveLength(1)
     expect(rows[0].token_hash).not.toEqual(cookieValue)
   })
 
   it('does not resolve an expired session', async () => {
     const { cookieValue } = await createSession(userId, {})
-    await adminPool.query("update sessions set expires_at = now() - interval '1 second'")
+    await adminPool().query("update sessions set expires_at = now() - interval '1 second'")
     expect(await resolveSession(cookieValue)).toBeNull()
   })
 
@@ -40,7 +40,7 @@ describe('sessions', () => {
 
   it('does not resolve a session for a disabled user', async () => {
     const { cookieValue } = await createSession(userId, {})
-    await adminPool.query("update users set status = 'disabled' where id = $1", [userId])
+    await adminPool().query("update users set status = 'disabled' where id = $1", [userId])
     expect(await resolveSession(cookieValue)).toBeNull()
   })
 

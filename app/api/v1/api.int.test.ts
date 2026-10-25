@@ -28,12 +28,12 @@ function params(extra: { path?: string[] } = {}) {
 beforeAll(async () => {
   await resetFixtures()
   fixtures = await seedTwoUsersWithProjects()
-  const { rows } = await adminPool.query<{ slug: string }>('select slug from projects where id = $1', [
+  const { rows } = await adminPool().query<{ slug: string }>('select slug from projects where id = $1', [
     fixtures.aliceProjectId,
   ])
   slug = rows[0]!.slug
 
-  await adminPool.query(
+  await adminPool().query(
     `insert into api_keys (user_id, name, prefix, key_hash) values ($1, 'int-test', $2, $3)`,
     [fixtures.alice, 'mimir_test-toke', sha256(TOKEN)],
   )

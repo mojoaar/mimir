@@ -31,15 +31,15 @@ export function withUser<T>(
   userId: string,
   fn: (tx: PoolClient) => Promise<T>,
 ): Promise<T> {
-  return inTransaction(appPool, userId, fn)
+  return inTransaction(appPool(), userId, fn)
 }
 
 /** Owner connection: migrations and maintenance. RLS does not apply. */
 export function withAdmin<T>(fn: (tx: PoolClient) => Promise<T>): Promise<T> {
-  return inTransaction(adminPool, null, fn)
+  return inTransaction(adminPool(), null, fn)
 }
 
 /** App connection with no tenant set, for auth lookups by token hash. */
 export function withService<T>(fn: (tx: PoolClient) => Promise<T>): Promise<T> {
-  return inTransaction(appPool, null, fn)
+  return inTransaction(appPool(), null, fn)
 }

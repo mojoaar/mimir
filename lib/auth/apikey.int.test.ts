@@ -27,7 +27,7 @@ describe('api keys', () => {
 
   it('rejects a key belonging to a disabled user', async () => {
     const k = await createApiKey(f.bob, 'laptop')
-    await adminPool.query("update users set status = 'disabled' where id = $1", [f.bob])
+    await adminPool().query("update users set status = 'disabled' where id = $1", [f.bob])
     expect(await resolveApiKey(k.token)).toBeNull()
   })
 

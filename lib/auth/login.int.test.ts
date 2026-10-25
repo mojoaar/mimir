@@ -30,7 +30,7 @@ describe('authenticate', () => {
   it('audits both success and failure', async () => {
     await authenticate(fx.email, 'wrong', meta)
     await authenticate(fx.email, 'correct-password', meta)
-    const { rows } = await adminPool.query('select action from audit_log order by id')
+    const { rows } = await adminPool().query('select action from audit_log order by id')
     expect(rows.map((r) => r.action)).toEqual(['auth.failed', 'auth.login'])
   })
 })

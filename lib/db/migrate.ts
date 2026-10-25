@@ -8,7 +8,7 @@ const MIGRATIONS_DIR = path.join(process.cwd(), 'lib/db/migrations')
 const LOCK_NAME = 'mimir_migrations'
 
 export async function runMigrations(): Promise<{ applied: string[] }> {
-  const client = await adminPool.connect()
+  const client = await adminPool().connect()
   let locked = false
   try {
     await client.query('select pg_advisory_lock(hashtext($1))', [LOCK_NAME])

@@ -13,14 +13,14 @@ beforeEach(async () => {
 describe('ensureBootstrapAdmin', () => {
   it('creates the admin on an empty install', async () => {
     await ensureBootstrapAdmin({ ...cfg, adminEmail: 'a@b.c', adminPassword: 'hunter2hunter2' })
-    const { rows } = await adminPool.query('select role, status from users')
+    const { rows } = await adminPool().query('select role, status from users')
     expect(rows).toEqual([{ role: 'admin', status: 'active' }])
   })
 
   it('never touches an existing user', async () => {
     await ensureBootstrapAdmin({ ...cfg, adminEmail: 'a@b.c', adminPassword: 'hunter2hunter2' })
     await ensureBootstrapAdmin({ ...cfg, adminEmail: 'other@b.c', adminPassword: 'different-password' })
-    const { rows } = await adminPool.query('select email from users')
+    const { rows } = await adminPool().query('select email from users')
     expect(rows).toEqual([{ email: 'a@b.c' }])
   })
 

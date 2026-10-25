@@ -27,7 +27,7 @@ async function passwordHash(): Promise<string> {
 
 /** Truncate every data table, so a test starts from a known empty state. */
 export async function resetFixtures(): Promise<void> {
-  await adminPool.query(`
+  await adminPool().query(`
     truncate users, projects, project_grants, memories, sessions, api_keys,
              providers, tokens, audit_log, backup_runs, settings
     restart identity cascade
@@ -53,7 +53,7 @@ export async function seedTwoUsersWithProjects(): Promise<Fixtures> {
   ]
   const hash = await passwordHash()
   for (const [id, email, name, role] of people) {
-    await adminPool.query(
+    await adminPool().query(
       `insert into users (id, email, name, password_hash, status, role)
        values ($1, $2, $3, $4, 'active', $5)`,
       [id, email, name, hash, role],
@@ -65,7 +65,7 @@ export async function seedTwoUsersWithProjects(): Promise<Fixtures> {
     ['pending@example.test', 'pending'],
     ['disabled@example.test', 'disabled'],
   ] as const) {
-    await adminPool.query(
+    await adminPool().query(
       `insert into users (email, name, password_hash, status, role)
        values ($1, $2, $3, $4, 'user')`,
       [email, status, hash, status],
@@ -73,11 +73,11 @@ export async function seedTwoUsersWithProjects(): Promise<Fixtures> {
   }
 
   const aliceProjectId = randomUUID()
-  await adminPool.query(
+  await adminPool().query(
     `insert into projects (id, owner_user_id, name, slug) values ($1, $2, 'Alice Project', 'alice-project')`,
     [aliceProjectId, alice],
   )
-  await adminPool.query(
+  await adminPool().query(
     `insert into projects (owner_user_id, name, slug) values ($1, 'Bob Project', 'bob-project')`,
     [bob],
   )
@@ -101,7 +101,7 @@ export async function seedGrant(
   userId: string,
   role: 'read' | 'write',
 ): Promise<void> {
-  await adminPool.query(
+  await adminPool().query(
     `insert into project_grants (project_id, principal_type, principal_id, role)
      values ($1, 'user', $2, $3)
      on conflict (project_id, principal_type, principal_id) do update set role = excluded.role`,

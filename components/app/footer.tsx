@@ -17,7 +17,7 @@ export default function AppFooter({ wide = false }: { wide?: boolean }) {
           wide ? 'max-w-6xl' : 'max-w-3xl'
         }`}
       >
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">
           <span>Crafted with ❤️ &amp; 🤖 by Morten Johansen</span>
           <span aria-hidden="true">·</span>
           <a

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- A wrong URL now gets a real 404 and a page worth reading: Mimir looked, and
+  found nothing. The theme cookie decides the colours, and the joke is stable
+  per path, so a broken link is at least a consistent one.
+
 ## [0.5.0] - 2026-10-26
 
 Seeing what the agents wrote.

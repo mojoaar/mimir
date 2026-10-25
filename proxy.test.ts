@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { proxy } from './proxy'
 
-const SENTINEL = '/api/__missing'
+const SENTINEL = '/api/not-found'
 const SESSION = '__Host-mimir_session'
 
 function get(pathname: string, withSession = false): NextRequest {

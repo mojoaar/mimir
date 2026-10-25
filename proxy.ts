@@ -4,9 +4,11 @@ import { agentById } from './lib/docs/agents'
 import { LOCALE_COOKIE, LOCALES, localeFromPath } from './lib/i18n/locales'
 
 // Next 16 streams a dynamic route's shell before notFound() resolves, so an
-// unknown [locale] or [agent] answers 200 with a not-found body. A path under
-// /api with no route handler is a real 404, so unknown paths are rewritten there.
-const SENTINEL = '/api/__missing'
+// unknown [locale] or [agent] answers 200 with a not-found body. A route
+// handler can set its own status, so unknown paths are rewritten to this one,
+// which answers 404 with the thematic page. The folder name must not start with
+// an underscore: Next treats `_name` as a private folder and does not route it.
+const SENTINEL = '/api/not-found'
 
 const PUBLIC_ROOTS = new Set([
   'docs',

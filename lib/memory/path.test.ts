@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { InvalidPath, MAX_PATH_LENGTH, normalisePath } from './path'
+import { BodyTooLarge, InvalidPath, MAX_BODY_BYTES, MAX_PATH_LENGTH, normalisePath } from './path'
 
 describe('normalisePath', () => {
   it.each([
@@ -49,6 +49,10 @@ describe('normalisePath', () => {
     } catch (error) {
       expect(error).toMatchObject({ code: 'invalid_path' })
     }
+  })
+
+  it('does not label a size error as a path error', () => {
+    expect(new BodyTooLarge(MAX_BODY_BYTES + 1).message).toMatch(/^body_too_large:/)
   })
 
   it('accepts a path exactly at the limit', () => {

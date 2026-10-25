@@ -1,3 +1,6 @@
+export const MEMORY_KINDS = ['note', 'fact', 'decision', 'gotcha', 'snippet'] as const
+export type MemoryKind = (typeof MEMORY_KINDS)[number]
+
 export type MemoryRow = {
   id: string
   path: string

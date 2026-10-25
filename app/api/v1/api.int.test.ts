@@ -54,6 +54,25 @@ describe('rest api', () => {
     expect((await read.json()).body).toBe('hello')
   })
 
+  it('rejects an empty body and an unknown kind like mcp does', async () => {
+    const empty = await writeMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/x/empty`, { method: 'PUT', body: { body: '' } }),
+      params({ path: ['x', 'empty'] }),
+    )
+    expect(empty.status).toBe(400)
+    expect((await empty.json()).code).toBe('invalid_params')
+
+    const kind = await writeMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/x/kind`, {
+        method: 'PUT',
+        body: { body: 'text', kind: 'nonsense' },
+      }),
+      params({ path: ['x', 'kind'] }),
+    )
+    expect(kind.status).toBe(400)
+    expect((await kind.json()).code).toBe('invalid_params')
+  })
+
   it('writes exactly one audit row per rest call', async () => {
     await writeMemoryRoute(
       req(`/api/v1/projects/${slug}/memory/notes/audited`, { method: 'PUT', body: { body: 'traced' } }),

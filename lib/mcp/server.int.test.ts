@@ -34,6 +34,15 @@ beforeEach(async () => {
 })
 
 describe('mcp server', () => {
+  it('rejects an unknown kind with the documented code', async () => {
+    const reply = (await handleRpc(
+      call('memory_write', { path: 'x', body: 'text', kind: 'nonsense' }),
+      alice,
+      meta,
+    )) as any
+    expect(reply.error.data.code).toBe('invalid_params')
+  })
+
   it('answers initialize and lists seven tools', async () => {
     const init = (await handleRpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }, alice, meta)) as any
     expect(init.result.serverInfo.name).toBe('mimir')

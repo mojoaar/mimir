@@ -1,6 +1,7 @@
 import type { AuthUser } from '@/lib/auth/types'
 import type { RequestMeta } from '@/lib/auth/login'
 import { resolveProject, listProjects } from '@/lib/projects/service'
+import { MEMORY_KINDS } from '@/lib/memory/types'
 import {
   writeMemory,
   readMemory,
@@ -156,7 +157,7 @@ const TOOLS: ToolDef[] = [
         path: { type: 'string', description: 'e.g. auth/jwt/refresh-rotation' },
         body: { type: 'string', maxLength: 262144 },
         title: { type: 'string', description: 'One line. Defaults to the first line of the body.' },
-        kind: { type: 'string', enum: ['note', 'fact', 'decision', 'gotcha', 'snippet'] },
+        kind: { type: 'string', enum: MEMORY_KINDS },
       },
       required: ['path', 'body'],
     },

@@ -1,6 +1,7 @@
 import { withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
 import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
+import { MEMORY_KINDS } from './types'
 import type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
 
 export type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
@@ -23,6 +24,10 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   const path = normalisePath(input.path)
   const size = Buffer.byteLength(input.body, 'utf8')
   if (size > MAX_BODY_BYTES) throw new BodyTooLarge(size)
+  if (input.body.trim() === '') throw new InvalidInput('body must not be empty')
+  if (input.kind && !(MEMORY_KINDS as readonly string[]).includes(input.kind)) {
+    throw new InvalidInput(`kind must be one of ${MEMORY_KINDS.join(', ')}`)
+  }
   // Postgres rejects a NUL byte with 22021, which would reach the caller as a
   // raw driver error. Refuse it here so agents get the documented code.
   if (input.body.includes('\u0000') || (input.title ?? '').includes('\u0000')) {

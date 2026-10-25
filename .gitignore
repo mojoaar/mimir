@@ -50,3 +50,6 @@ next-env.d.ts
 
 packages/opencode-plugin/dist/
 packages/*/node_modules/
+
+# local workspace: ledgers, scratch scripts, demo tokens
+.superpowers/

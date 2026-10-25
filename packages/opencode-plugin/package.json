@@ -1,6 +1,6 @@
 {
   "name": "@mojoaar/opencode-mimir",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Mimir long-term memory for OpenCode sessions",
   "type": "module",
   "main": "dist/index.js",

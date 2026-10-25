@@ -34,6 +34,7 @@ function redactDetail(value: unknown): unknown {
  * underscores, so `memories_project_id_path_key` stays readable.
  */
 const CREDENTIAL_PAIR = /\b(password|passwd|token|key|secret|bearer|authorization)(\s*[=:]\s*)(\S+)/gi
+const URL_CREDENTIAL = /(\/\/[^:/\s@]+:)([^@/\s]+)(@)/g
 const LONG_TOKEN = /\b[A-Za-z0-9_-]{20,}\b/g
 const SQL_IDENTIFIER = /^[a-z0-9_]+$/
 
@@ -43,6 +44,9 @@ export function describeAuditFailure(error: unknown): string {
   if (!message) return 'unknown error'
 
   return message
+    .replace(URL_CREDENTIAL, (_match, head: string, password: string, tail: string) =>
+      `${head}${redact(password)}${tail}`,
+    )
     .replace(CREDENTIAL_PAIR, (_match, name: string, separator: string, value: string) =>
       `${name}${separator}${redact(value)}`,
     )

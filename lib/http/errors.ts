@@ -1,3 +1,5 @@
+import { describeAuditFailure } from '@/lib/audit'
+
 export class Unauthorized extends Error {
   readonly code = 'unauthorized' as const
   constructor(message = 'missing or invalid API key') {
@@ -31,7 +33,7 @@ export function toResponse(error: unknown): Response {
   const message = error instanceof Error ? error.message : 'internal error'
 
   if (status === undefined) {
-    console.error('unhandled api error', error)
+    console.error(`unhandled api error: ${describeAuditFailure(error)}`)
     return Response.json({ error: 'internal error' }, { status: 500 })
   }
 

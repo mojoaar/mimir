@@ -52,3 +52,13 @@ describe('describeAuditFailure', () => {
     expect(describeAuditFailure(undefined)).toBe('unknown error')
   })
 })
+
+describe('a connection string in a failure', () => {
+  it('masks the password but keeps the host and message', () => {
+    const text = describeAuditFailure(new Error('connect ECONNREFUSED postgres://mimir_app:hunter2@db:5432'))
+
+    expect(text).toContain('ECONNREFUSED')
+    expect(text).toContain('db:5432')
+    expect(text).not.toContain('hunter2')
+  })
+})

@@ -11,6 +11,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <header className="border-b border-[var(--border)] bg-[var(--bg-raised)]">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-4 px-4 py-3 text-sm sm:px-6">
           <span className="font-medium">Admin</span>
+          <Link href="/app/admin/users" className="text-[var(--text-muted)] underline">
+            Users
+          </Link>
           <Link href="/app/admin/settings" className="text-[var(--text-muted)] underline">
             Embeddings
           </Link>

@@ -2,6 +2,7 @@ import { audit } from '../audit'
 import { getConfig } from '../config'
 import { decrypt, deriveKey, encrypt } from '../crypto'
 import { withUser } from '../db/tx'
+import { checkProviderUrl } from './url'
 import { PRESETS, presetFor, type PresetId, type ProviderKind } from './presets'
 
 export type { ProviderKind } from './presets'
@@ -101,6 +102,8 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
   if (!preset.kinds.includes(input.kind)) {
     throw invalid(`${input.preset} does not provide ${input.kind}`)
   }
+  const urlCheck = checkProviderUrl(baseUrl)
+  if (!urlCheck.ok) throw invalid(urlCheck.reason)
   const dim = input.kind === 'embedding' ? (input.dim ?? preset.defaultDim ?? null) : null
   const apiKey = input.apiKey?.trim() ? input.apiKey.trim() : null
 

@@ -81,3 +81,24 @@ test('the delete is recorded with what was deleted, not just its id', async () =
   expect(rows[0]?.detail.label).toBe('gone')
   expect(rows[0]?.detail.preset).toBe('deepseek')
 })
+
+test('refuses a base URL that points inside the network', async () => {
+  const count = async () => {
+    const result = await adminPool().query<{ n: number }>('select count(*)::int as n from providers')
+    return result.rows[0]?.n ?? 0
+  }
+  const before = await count()
+
+  await expect(
+    createProvider({
+      userId: fixtures.alice,
+      kind: 'llm',
+      preset: 'openai_compatible',
+      label: 'metadata',
+      baseUrl: 'http://169.254.169.254',
+      model: 'anything',
+    }),
+  ).rejects.toThrow(/inside the local network/)
+
+  expect(await count()).toBe(before)
+})

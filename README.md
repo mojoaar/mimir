@@ -10,9 +10,9 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.4.0` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, and now ships a localised landing page, a docs site with a config per agent, repository ingest and an OpenCode plugin.
+`0.5.0` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, repository ingest and an OpenCode plugin, and lets you read, edit, delete and restore every memory in the browser.
 
-Not yet: a memory browser, Teams, and memory versioning. See the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
+Not yet: Teams, and memory versioning. See the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
 
 ## Documentation
 

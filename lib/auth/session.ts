@@ -4,7 +4,7 @@ import { sha256 } from '../crypto'
 import { withService } from '../db/tx'
 import type { AuthUser } from './types'
 
-export const SESSION_COOKIE = '__Host-mimir_session'
+export { SESSION_COOKIE } from './cookie-name'
 const TTL_DAYS = 30
 const TOUCH_INTERVAL_SECONDS = 60
 

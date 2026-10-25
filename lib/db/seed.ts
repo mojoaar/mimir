@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { hashPassword } from '../auth/password'
 import { adminPool } from './pool'
 
 export type Fixtures = {
@@ -7,6 +8,21 @@ export type Fixtures = {
   carol: string
   admin: string
   aliceProjectId: string
+  email: string
+  correctPassword: string
+  pendingEmail: string
+  disabledEmail: string
+}
+
+export const TEST_PASSWORD = 'correct-password'
+
+let cachedHash: string | null = null
+
+// argon2 is deliberately slow; hashing four users per reset would dominate the
+// suite, and every seeded user shares one password anyway.
+async function passwordHash(): Promise<string> {
+  if (!cachedHash) cachedHash = await hashPassword(TEST_PASSWORD)
+  return cachedHash
 }
 
 /** Truncate every data table, so a test starts from a known empty state. */
@@ -35,10 +51,24 @@ export async function seedTwoUsersWithProjects(): Promise<Fixtures> {
     [carol, 'carol@example.test', 'Carol', 'user'],
     [admin, 'admin@example.test', 'Admin', 'admin'],
   ]
+  const hash = await passwordHash()
   for (const [id, email, name, role] of people) {
     await adminPool.query(
-      `insert into users (id, email, name, status, role) values ($1, $2, $3, 'active', $4)`,
-      [id, email, name, role],
+      `insert into users (id, email, name, password_hash, status, role)
+       values ($1, $2, $3, $4, 'active', $5)`,
+      [id, email, name, hash, role],
+    )
+  }
+
+  // Two accounts that exist but may not sign in, for the login state machine.
+  for (const [email, status] of [
+    ['pending@example.test', 'pending'],
+    ['disabled@example.test', 'disabled'],
+  ] as const) {
+    await adminPool.query(
+      `insert into users (email, name, password_hash, status, role)
+       values ($1, $2, $3, $4, 'user')`,
+      [email, status, hash, status],
     )
   }
 
@@ -52,7 +82,17 @@ export async function seedTwoUsersWithProjects(): Promise<Fixtures> {
     [bob],
   )
 
-  return { alice, bob, carol, admin, aliceProjectId }
+  return {
+    alice,
+    bob,
+    carol,
+    admin,
+    aliceProjectId,
+    email: 'alice@example.test',
+    correctPassword: TEST_PASSWORD,
+    pendingEmail: 'pending@example.test',
+    disabledEmail: 'disabled@example.test',
+  }
 }
 
 /** A grant seeded without going through the access service. */

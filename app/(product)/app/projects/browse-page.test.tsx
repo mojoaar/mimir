@@ -32,6 +32,21 @@ vi.mock('@/lib/memory/service', () => ({
   readMissing: null,
 }))
 vi.mock('@/lib/memory/search', () => ({ searchMemories: async () => [] }))
+vi.mock('@/lib/memory/versions', () => ({
+  listVersions: async () => [
+    {
+      id: '9',
+      path: 'auth/rotation',
+      title: 'Rotate tokens',
+      kind: 'note',
+      source: 'agent',
+      updatedAt: new Date(0),
+      createdAt: new Date(0),
+      bytes: 20,
+    },
+  ],
+  getVersion: async () => null,
+}))
 
 import ProjectBrowser from './[slug]/page'
 
@@ -46,6 +61,7 @@ describe('project browser', () => {
     expect(html).toContain('Rotate tokens')
     expect(html).toContain('Rotate every 30 days.')
     expect(html).toContain('?path=auth%2Fcookies')
+    expect(html).toContain('History (1)')
   })
 
   it('asks the reader to choose something before a path is picked', async () => {

@@ -5,10 +5,12 @@ import { requireUser } from '@/lib/auth/context'
 import { listDeletedMemories, readMemory, treeMemory } from '@/lib/memory/service'
 import { InvalidPath } from '@/lib/memory/path'
 import { searchMemories } from '@/lib/memory/search'
+import { getVersion, listVersions } from '@/lib/memory/versions'
 import { getProject } from '@/lib/projects/service'
 
-import { deleteMemoryAction, restoreMemoryAction } from './actions'
+import { deleteMemoryAction, restoreMemoryAction, restoreVersionAction } from './actions'
 import { MemoryEditor } from './editor'
+import { diffLines, MemoryHistory } from './history'
 import { MemoryTree } from './tree'
 
 export const instant = false
@@ -18,7 +20,7 @@ const BODY_DISPLAY_LIMIT = 200_000
 // A repeated parameter arrives as a string array; treat every occurrence as the
 // first one rather than crashing on `.trim`.
 type Param = string | string[] | undefined
-type Search = { path?: Param; q?: Param; deleted?: Param }
+type Search = { path?: Param; q?: Param; deleted?: Param; history?: Param; version?: Param; notice?: Param; error?: Param }
 
 const first = (value: Param): string => (Array.isArray(value) ? (value[0] ?? '') : (value ?? ''))
 
@@ -40,7 +42,10 @@ export default async function ProjectBrowser({
 
   const query = first(search.q).trim()
   const showDeleted = first(search.deleted) === '1'
+  const showHistory = first(search.history) === '1'
   const requested = first(search.path)
+  const notice = first(search.notice)
+  const failure = first(search.error)
 
   let memory = null
   if (requested) {
@@ -54,11 +59,16 @@ export default async function ProjectBrowser({
     if (!memory) notFound()
   }
 
-  const [entries, deleted, hits] = await Promise.all([
+  const [entries, deleted, hits, versions] = await Promise.all([
     treeMemory(user.id, project.id, '', TREE_DEPTH),
     listDeletedMemories(user.id, project.id),
     query ? searchMemories({ userId: user.id, projectId: project.id, query, limit: 50 }) : Promise.resolve([]),
+    memory ? listVersions(user.id, project.id, memory.path) : Promise.resolve([]),
   ])
+
+  const versionId = first(search.version)
+  const selectedVersion = versionId ? await getVersion(user.id, project.id, versionId) : null
+  const diff = selectedVersion && memory ? diffLines(selectedVersion.body, memory.body) : null
 
   const base = `/app/projects/${slug}`
   const canWrite = project.role === 'owner' || project.role === 'write'
@@ -73,6 +83,9 @@ export default async function ProjectBrowser({
           Settings
         </Link>
       </div>
+
+      {notice ? <p className="text-sm text-[var(--accent)]">{notice}</p> : null}
+      {failure ? <p className="text-sm text-[var(--danger)]">{failure}</p> : null}
 
       <header className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight">{project.name}</h1>
@@ -123,8 +136,16 @@ export default async function ProjectBrowser({
               ) : (
                 <p className="text-sm text-[var(--text-muted)]">No summary yet.</p>
               )}
-              <p className="text-xs text-[var(--text-muted)]">
-                {memory.kind} · updated {memory.updatedAt.toISOString()}
+              <p className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
+                <span>
+                  {memory.kind} · updated {memory.updatedAt.toISOString()}
+                </span>
+                <Link
+                  href={`${base}?path=${encodeURIComponent(memory.path)}&history=1`}
+                  className="underline"
+                >
+                  History ({versions.length})
+                </Link>
               </p>
               {canWrite ? (
                 <>
@@ -161,6 +182,18 @@ export default async function ProjectBrowser({
                   <p className="text-xs text-[var(--text-muted)]">You have read access to this project.</p>
                 </>
               )}
+              {showHistory ? (
+                <MemoryHistory
+                  slug={slug}
+                  projectId={project.id}
+                  path={memory.path}
+                  versions={versions}
+                  canWrite={canWrite}
+                  selected={selectedVersion}
+                  diff={diff}
+                  restore={restoreVersionAction}
+                />
+              ) : null}
             </article>
           ) : (
             <p className="text-sm text-[var(--text-muted)]">Choose a memory, or search.</p>

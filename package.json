@@ -15,6 +15,7 @@
   "dependencies": {
     "@node-rs/argon2": "^2.2.2",
     "aws4fetch": "^1.0.20",
+    "diff": "^9.0.0",
     "next": "16.4.3",
     "otpauth": "^9.5.2",
     "pg": "^8.23.1",

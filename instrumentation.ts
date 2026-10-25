@@ -18,6 +18,7 @@ export async function register() {
   // only the workers that exist. The comment below names the modules as they
   // land, because a static import of a file that does not exist yet breaks the build.
   await import('./lib/jobs/backfill')
+  await import('./lib/jobs/extract')
   const { startJobs } = await import('./lib/jobs/boss')
   await startJobs()
 

@@ -1,4 +1,6 @@
+import { headers } from 'next/headers'
 import { cancelMfaAction, loginAction, loginMfaAction } from './actions'
+import { isRequestAllowed } from '@/lib/http/allowlist'
 
 const MESSAGES: Record<string, string> = {
   invalid: 'Invalid email or password.',
@@ -23,6 +25,20 @@ export default async function LoginPage({
 }) {
   const { error, step } = await searchParams
   const message = error ? (MESSAGES[error] ?? 'Sign in failed.') : null
+
+  if (!(await isRequestAllowed({ headers: await headers() }))) {
+    return (
+      <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 px-6 py-16">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Not available here</h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            This address is not allowed to reach Mimir. Ask the administrator which networks
+            are permitted.
+          </p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 px-6 py-16">

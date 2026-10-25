@@ -12,6 +12,7 @@ import {
 } from '@/lib/auth/mfa-ticket'
 import { getConfig } from '@/lib/config'
 import { clientIp } from '@/lib/http/ip'
+import { isRequestAllowed } from '@/lib/http/allowlist'
 
 async function meta() {
   const requestHeaders = await headers()
@@ -23,7 +24,13 @@ async function meta() {
   }
 }
 
+/** A blocked address must not even be offered a password form. */
+async function blocked(): Promise<boolean> {
+  return !(await isRequestAllowed({ headers: await headers() }))
+}
+
 export async function loginAction(formData: FormData): Promise<void> {
+  if (await blocked()) redirect('/login?error=blocked')
   const email = String(formData.get('email') ?? '')
   const password = String(formData.get('password') ?? '')
   const request = await meta()
@@ -46,6 +53,7 @@ export async function loginAction(formData: FormData): Promise<void> {
 }
 
 export async function loginMfaAction(formData: FormData): Promise<void> {
+  if (await blocked()) redirect('/login?error=blocked')
   const code = String(formData.get('code') ?? '')
   const store = await cookies()
   const userId = readTicket(store.get(MFA_TICKET_COOKIE)?.value ?? '')

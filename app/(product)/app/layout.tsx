@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { requireUser } from '@/lib/auth/context'
+import { isRequestAllowed } from '@/lib/http/allowlist'
 import { mfaEnabled } from '@/lib/auth/mfa'
 import { getConfig } from '@/lib/config'
 import { getRequireMfa } from '@/lib/settings/security'
@@ -23,6 +24,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     (await getRequireMfa()) &&
     !(await mfaEnabled(user.id)) &&
     user.email.toLowerCase() !== getConfig().adminEmail?.toLowerCase()
+
+  // A valid session from a network that has since been disallowed stops here,
+  // not at the next login.
+  if (!(await isRequestAllowed({ headers: await headers() }))) {
+    return (
+      <section className="mx-auto flex max-w-md flex-col gap-3 py-16">
+        <h1 className="text-xl font-semibold tracking-tight">Not available here</h1>
+        <p className="text-sm text-[var(--text-muted)]">
+          This address is not allowed to reach Mimir. Ask the administrator which networks
+          are permitted.
+        </p>
+      </section>
+    )
+  }
 
   return (
     <>

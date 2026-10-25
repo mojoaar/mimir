@@ -53,8 +53,14 @@ async function checkDatabase(): Promise<DatabaseCheck> {
  */
 export async function handleHealth(request: Request): Promise<Response> {
   // Next 16 prerenders route handlers that read no dynamic API, and a frozen
-  // health answer is worse than none: this must run per request.
-  await connection()
+  // health answer is worse than none: this must run per request. Outside a
+  // request (integration tests calling the handler directly) there is nothing
+  // to opt out of, and Next throws rather than returning.
+  try {
+    await connection()
+  } catch {
+    /* no request scope */
+  }
   const database = await checkDatabase()
 
   const header = request.headers.get('authorization') ?? ''

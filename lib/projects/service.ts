@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg'
 
 import { withUser } from '@/lib/db/tx'
 import { audit } from '@/lib/audit'
+import { slugify } from '@/lib/slug'
 
 import { forbidden, projectRole, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
@@ -18,32 +19,27 @@ type AccessRow = {
   id: string
   slug: string
   is_owner: boolean
-  grant_role: string | null
+  grant_rank: number | null
 }
+
+const GRANT_RANK = `(SELECT max(case g.role when 'write' then 2 else 1 end)
+                 FROM project_grants g
+                 LEFT JOIN team_members tm
+                        ON g.principal_type = 'team'
+                       AND tm.team_id = g.principal_id
+                       AND tm.user_id = $1
+                WHERE g.project_id = p.id
+                  AND ((g.principal_type = 'user' AND g.principal_id = $1)
+                       OR tm.user_id IS NOT NULL))`
 
 const ACCESSIBLE = `
   p.archived_at IS NULL
-  AND (
-    p.owner_user_id = $1
-    OR EXISTS (
-      SELECT 1 FROM project_grants g
-      WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1
-    )
-  )
+  AND (p.owner_user_id = $1 OR ${GRANT_RANK} IS NOT NULL)
 `
 
 function toRole(row: AccessRow): ProjectRole {
   if (row.is_owner) return 'owner'
-  return row.grant_role === 'write' ? 'write' : 'read'
-}
-
-/** A name a human typed, turned into the slug the URL carries. */
-function slugify(name: string): string {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return slug || 'project'
+  return row.grant_rank === 2 ? 'write' : 'read'
 }
 
 /**
@@ -61,8 +57,7 @@ export async function resolveProject(
     if (opts.project) {
       const found = await client.query<AccessRow>(
         `SELECT p.id, p.slug, (p.owner_user_id = $1) AS is_owner,
-                (SELECT g.role::text FROM project_grants g
-                  WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1) AS grant_role
+                ${GRANT_RANK} AS grant_rank
            FROM projects p
           WHERE ${ACCESSIBLE} AND p.slug = $2
           LIMIT 1`,
@@ -82,8 +77,7 @@ export async function resolveProject(
     if (repoKey) {
       const found = await client.query<AccessRow>(
         `SELECT p.id, p.slug, (p.owner_user_id = $1) AS is_owner,
-                (SELECT g.role::text FROM project_grants g
-                  WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1) AS grant_role
+                ${GRANT_RANK} AS grant_rank
            FROM projects p
           WHERE ${ACCESSIBLE} AND p.repo_key = $2
           ORDER BY (p.owner_user_id = $1) DESC, p.updated_at DESC
@@ -182,7 +176,7 @@ export async function listProjects(
       slug: string
       name: string
       owner_user_id: string
-      grant_role: ProjectRole | null
+      rank: number | null
       memory_count: number
       archived: boolean
     }>(
@@ -190,15 +184,19 @@ export async function listProjects(
               p.slug,
               p.name,
               p.owner_user_id,
-              g.role AS grant_role,
+              (SELECT max(case g.role when 'write' then 2 else 1 end)
+                 FROM project_grants g
+                 LEFT JOIN team_members tm
+                        ON g.principal_type = 'team'
+                       AND tm.team_id = g.principal_id
+                       AND tm.user_id = $1
+                WHERE g.project_id = p.id
+                  AND ((g.principal_type = 'user' AND g.principal_id = $1)
+                       OR tm.user_id IS NOT NULL)) AS rank,
               (p.archived_at IS NOT NULL) AS archived,
               (SELECT count(*)::int FROM memories m
                 WHERE m.project_id = p.id AND m.deleted_at IS NULL) AS memory_count
          FROM projects p
-         LEFT JOIN project_grants g
-                ON g.project_id = p.id
-               AND g.principal_type = 'user'
-               AND g.principal_id = $1
         WHERE ($2::boolean OR p.archived_at IS NULL)
         ORDER BY p.updated_at DESC`,
       [userId, includeArchived],
@@ -207,11 +205,17 @@ export async function listProjects(
       id: row.id,
       slug: row.slug,
       name: row.name,
-      role: row.owner_user_id === userId ? 'owner' : row.grant_role,
+      role: row.owner_user_id === userId ? 'owner' : rankRole(row.rank),
       memoryCount: row.memory_count,
       archived: row.archived,
     }))
   })
+}
+
+function rankRole(rank: number | null): 'write' | 'read' | null {
+  if (rank === 2) return 'write'
+  if (rank === 1) return 'read'
+  return null
 }
 
 export type ProjectSettings = {
@@ -233,12 +237,11 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
       learning_enabled: boolean
       llm_provider_id: string | null
       is_owner: boolean
-      grant_role: ProjectRole | null
+      rank: number | null
     }>(
       `SELECT p.id, p.slug, p.name, p.learning_enabled, p.llm_provider_id,
               (p.owner_user_id = $1) AS is_owner,
-              (SELECT g.role::text FROM project_grants g
-                WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1) AS grant_role
+              ${GRANT_RANK} AS rank
          FROM projects p
         WHERE p.archived_at IS NULL AND p.slug = $2
         LIMIT 1`,
@@ -252,7 +255,7 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
       name: row.name,
       learningEnabled: row.learning_enabled,
       llmProviderId: row.llm_provider_id,
-      role: row.is_owner ? 'owner' : (row.grant_role ?? 'read'),
+      role: row.is_owner ? 'owner' : (rankRole(row.rank) ?? 'read'),
     }
   })
 }

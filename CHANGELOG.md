@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-10-25
+
+Share with people, not accounts.
+
+### Added
+
+- Teams: a group of accounts with one owner and any number of members,
+  created and managed at **Teams** in the app. Membership is checked from the
+  database on every request, so removing someone ends their access
+  immediately rather than when a session expires.
+- A project can be shared with a person or with a team at `read` or
+  `read and write`, from **Settings → Sharing**. A share is never ownership:
+  only the owner can rename, archive, delete or re-share a project or change
+  its settings.
+- `project_list` and `GET /api/v1/projects` include projects shared with a
+  team the caller belongs to, under the role the team grants.
+- Deleting a team removes the shares it held; the projects themselves and
+  their memories are untouched.
+
+### Fixed
+
+- A project shared with a team is now reachable by slug and by repo key, not
+  only by `project_list`: `resolveProject` and `getProject` still matched
+  person grants only, so every REST and MCP call for a team-shared project
+  answered `404 project_not_found` while the project showed up in the list.
+- Two teams with the same name no longer collapse onto one page: team URLs
+  carry the team's id, so each owner and member reaches their own team.
+- Deleting a team also removes the shares it held on projects its owner does
+  not own. Those grant rows used to survive, invisible, while the app said
+  everything had been revoked.
+- The grant list is owner-only; a write grantee can no longer enumerate who
+  else a project is shared with.
+- Team actions surface only messages the service wrote, never a raw database
+  error.
+
 ## [0.7.0] - 2026-10-25
 
 Bring your own project.

@@ -62,3 +62,13 @@ describe('the import page', () => {
     expect(html).toContain('--project')
   })
 })
+
+describe('the sharing section', () => {
+  it('explains teams and what they can do', async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage())
+
+    expect(html).toContain('team')
+    expect(html).toContain('share')
+    expect(html).toContain('never the owner')
+  })
+})

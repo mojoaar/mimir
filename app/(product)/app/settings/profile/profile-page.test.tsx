@@ -13,12 +13,16 @@ const mocks = vi.hoisted(() => ({
   sessions: [] as unknown[],
   profileCalls: [] as Record<string, unknown>[],
   passwordCalls: 0,
+  locale: 'en',
 }))
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => ({ value: 'cookie-1' }) }),
 }))
-vi.mock('@/lib/auth/context', () => ({ requireUser: async () => mocks.user }))
+vi.mock('@/lib/auth/context', () => ({
+  requireUser: async () => mocks.user,
+  getCurrentUser: async () => ({ ...mocks.user, locale: mocks.locale }),
+}))
 vi.mock('@/lib/auth/session', () => ({ sessionIdFor: async () => 's1' }))
 vi.mock('@/lib/auth/cookie-name', () => ({ SESSION_COOKIE: 'mimir_session' }))
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
@@ -44,6 +48,21 @@ async function render() {
 }
 
 describe('the profile page', () => {
+  it('speaks the language saved on the account', async () => {
+    mocks.locale = 'da'
+    mocks.sessions = [current]
+
+    try {
+      const html = await render()
+
+      expect(html).toContain('Din profil')
+      expect(html).toContain('Skift adgangskode')
+      expect(html).toContain('Denne session')
+    } finally {
+      mocks.locale = 'en'
+    }
+  })
+
   it('shows the name and email in an editable form', async () => {
     mocks.sessions = []
 

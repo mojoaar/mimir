@@ -7,9 +7,11 @@ import { getConfig } from '@/lib/config'
 import { getRequireMfa } from '@/lib/settings/security'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 import { ThemeSwitcher } from '@/app/theme-switcher'
+import { LanguageSwitcher } from '@/app/language-switcher'
 import AppFooter from '@/components/app/footer'
 import { Enrolment } from './settings/mfa/enrolment'
-import { signOutAction } from './actions'
+import { setLocaleAction, signOutAction } from './actions'
+import { getRequestLocale, translator } from '@/lib/i18n/request'
 
 export const instant = false
 
@@ -17,6 +19,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // The real session check. Middleware only sees that a cookie exists.
   const user = await requireUser()
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
+  const t = await translator()
+  const locale = await getRequestLocale()
 
   // The layout cannot see the pathname, so under require_mfa the whole app is
   // replaced by the enrolment form until the user is enrolled. The bootstrap
@@ -32,11 +36,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!(await isRequestAllowed({ headers: await headers() }))) {
     return (
       <section className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 py-16 sm:px-6">
-        <h1 className="text-xl font-semibold tracking-tight">Not available here</h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          This address is not allowed to reach Mimir. Ask the administrator which networks
-          are permitted.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight">{t('app.layout.blocked')}</h1>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.layout.blockedBody')}</p>
       </section>
     )
   }
@@ -46,22 +47,29 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="mb-8 border-b border-[var(--border)]">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-4 px-4 py-3 text-sm sm:px-6">
           <nav className="flex flex-wrap gap-4">
-            <Link href="/app">Projects</Link>
-            <Link href="/app/teams">Teams</Link>
-            <Link href="/app/settings">Settings</Link>
-            <Link href="/app/settings/providers">Providers</Link>
-            <Link href="/docs">Docs</Link>
-            {user.role === 'admin' ? <Link href="/app/admin">Admin</Link> : null}
+            <Link href="/app">{t('app.nav.projects')}</Link>
+            <Link href="/app/teams">{t('app.nav.teams')}</Link>
+            <Link href="/app/settings">{t('app.nav.settings')}</Link>
+            <Link href="/app/settings/providers">{t('app.nav.providers')}</Link>
+            <Link href="/docs">{t('app.nav.docs')}</Link>
+            {user.role === 'admin' ? (
+              <Link href="/app/admin">{t('app.nav.admin')}</Link>
+            ) : null}
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden text-[var(--text-muted)] sm:inline">{user.email}</span>
+            <LanguageSwitcher
+              value={locale}
+              label={t('app.language.label')}
+              action={setLocaleAction}
+            />
             <ThemeSwitcher value={theme} />
             <form action={signOutAction}>
               <button
                 type="submit"
                 className="text-[var(--text-muted)] underline hover:text-[var(--fg)]"
               >
-                Sign out
+                {t('app.nav.signOut')}
               </button>
             </form>
           </div>
@@ -70,9 +78,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {forced ? (
         <section className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-8 sm:px-6">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Two-factor is required</h1>
+            <h1 className="text-xl font-semibold tracking-tight">
+              {t('app.layout.mfaRequired')}
+            </h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              This install requires an authenticator app before the app can be used.
+              {t('app.layout.mfaRequiredBody')}
             </p>
           </div>
           <Enrolment userId={user.id} />

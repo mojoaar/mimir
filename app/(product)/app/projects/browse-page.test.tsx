@@ -6,8 +6,12 @@ const notFound = vi.hoisted(() => vi.fn(() => {
 }))
 
 vi.mock('next/navigation', () => ({ notFound }))
-vi.mock('@/lib/auth/context', () => ({ requireUser: async () => ({ id: 'u1', email: 'a@b.test' }) }))
+vi.mock('@/lib/auth/context', () => ({
+  requireUser: async () => ({ id: 'u1', email: 'a@b.test', locale: state.locale }),
+  getCurrentUser: async () => ({ id: 'u1', email: 'a@b.test', locale: state.locale }),
+}))
 const state = vi.hoisted(() => ({
+  locale: 'en',
   project: { id: 'p1', slug: 'demo', name: 'Demo', role: 'owner' } as { id: string; slug: string; name: string; role: string } | null,
 }))
 
@@ -121,5 +125,21 @@ describe('project browser', () => {
     )
 
     expect(html).not.toContain('FOREIGN BODY')
+  })
+
+  it('speaks the language saved on the account', async () => {
+    state.locale = 'da'
+    const html = renderToStaticMarkup(
+      await ProjectBrowser({
+        params: Promise.resolve({ slug: 'demo' }),
+        searchParams: Promise.resolve({ path: 'auth/rotation' }),
+      }),
+    )
+    state.locale = 'en'
+
+    expect(html).toContain('← Projekter')
+    expect(html).toContain('Ingen resumé endnu.')
+    expect(html).toContain('Historik (1)')
+    expect(html).toContain('Kan gendannes i 30 dage.')
   })
 })

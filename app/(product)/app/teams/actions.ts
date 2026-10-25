@@ -4,21 +4,16 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
+import { translator } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 import { addTeamMember, createTeam, deleteTeam, leaveTeam, removeTeamMember, renameTeam } from '@/lib/teams/service'
 
 export type ActionState = { ok?: string; error?: string }
 
 const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
 
-function messageOf(error: unknown): string {
-  const code = (error as { code?: string }).code ?? ''
-  const message = (error as Error).message ?? ''
-  // Only our own service errors are written for a person. A driver error
-  // carries a SQLSTATE in `code` and text nobody should read.
-  if (!KNOWN.has(code) || !message || message.includes('\n') || message.length > 200) {
-    return 'That did not work. Try again.'
-  }
-  return message
+async function messageOf(error: unknown): Promise<string> {
+  return actionMessage(error, await translator())
 }
 
 export async function createTeamAction(
@@ -26,15 +21,16 @@ export async function createTeamAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser()
+  const t = await translator()
   const name = String(formData.get('name') ?? '').trim()
-  if (!name) return { error: 'A team needs a name.' }
+  if (!name) return { error: t('app.teams.needName') }
 
   let id: string
   try {
     const team = await createTeam(user.id, name)
     id = team.id
   } catch (error) {
-    return { error: messageOf(error) }
+    return { error: await messageOf(error) }
   }
 
   revalidatePath('/app/teams')
@@ -46,18 +42,19 @@ export async function addMemberAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser()
+  const t = await translator()
   const teamId = String(formData.get('teamId') ?? '')
   const email = String(formData.get('email') ?? '').trim()
-  if (!teamId || !email) return { error: 'Enter an email address.' }
+  if (!teamId || !email) return { error: t('app.teams.needEmail') }
 
   try {
     await addTeamMember(user.id, teamId, email)
   } catch (error) {
-    return { error: messageOf(error) }
+    return { error: await messageOf(error) }
   }
 
   revalidatePath(`/app/teams/${teamId}`)
-  return { ok: `${email} can now see what this team shares.` }
+  return { ok: t('app.teams.added', { email }) }
 }
 
 export async function removeMemberAction(formData: FormData): Promise<void> {
@@ -69,7 +66,7 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
     await removeTeamMember(user.id, teamId, userId)
   } catch (error) {
     // The redirect sits outside the try: a thrown redirect is not a failure.
-    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(await messageOf(error))}`)
   }
 
   revalidatePath(`/app/teams/${teamId}`)
@@ -83,7 +80,7 @@ export async function deleteTeamAction(formData: FormData): Promise<void> {
   try {
     await deleteTeam(user.id, teamId)
   } catch (error) {
-    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(await messageOf(error))}`)
   }
 
   revalidatePath('/app/teams')
@@ -97,7 +94,7 @@ export async function leaveTeamAction(formData: FormData): Promise<void> {
   try {
     await leaveTeam(user.id, teamId)
   } catch (error) {
-    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(await messageOf(error))}`)
   }
 
   revalidatePath('/app/teams')
@@ -109,16 +106,17 @@ export async function renameTeamAction(
   formData: FormData,
 ): Promise<ActionState> {
   const user = await requireUser()
+  const t = await translator()
   const teamId = String(formData.get('teamId') ?? '')
   const name = String(formData.get('name') ?? '').trim()
-  if (!name) return { error: 'A team needs a name.' }
+  if (!name) return { error: t('app.teams.needName') }
 
   try {
     await renameTeam(user.id, teamId, name)
   } catch (error) {
-    return { error: messageOf(error) }
+    return { error: await messageOf(error) }
   }
 
   revalidatePath(`/app/teams/${teamId}`)
-  return { ok: 'Renamed.' }
+  return { ok: t('app.teams.renamed') }
 }

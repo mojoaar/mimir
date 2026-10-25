@@ -3,7 +3,17 @@
 import { useActionState } from 'react'
 import { resendInviteAction, type ActionState } from './actions'
 
-export function InviteForm({ userId, email }: { userId: string; email: string }) {
+export type InviteFormLabels = { submit: string; pending: string }
+
+export function InviteForm({
+  userId,
+  email,
+  labels,
+}: {
+  userId: string
+  email: string
+  labels: InviteFormLabels
+}) {
   const [state, submit, pending] = useActionState<ActionState, FormData>(resendInviteAction, {})
 
   return (
@@ -16,7 +26,7 @@ export function InviteForm({ userId, email }: { userId: string; email: string })
           disabled={pending}
           className="rounded border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-60"
         >
-          {pending ? 'Sending…' : 'Resend invite'}
+          {pending ? labels.pending : labels.submit}
         </button>
       </form>
 

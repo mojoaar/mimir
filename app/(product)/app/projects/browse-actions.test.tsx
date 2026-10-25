@@ -13,7 +13,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({ redirect: mocks.redirect }))
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
 vi.mock('@/lib/auth/context', () => ({ requireUser: async () => ({ id: 'u1' }) }))
-vi.mock('@/lib/audit', () => ({ audit: mocks.audit }))
+vi.mock('@/lib/audit', () => ({
+  describeAuditFailure: (error: unknown) => (error instanceof Error ? error.message : 'unknown'), audit: mocks.audit }))
 vi.mock('@/lib/memory/service', () => ({
   writeMemory: mocks.writeMemory,
   deleteMemory: mocks.deleteMemory,
@@ -45,7 +46,7 @@ describe('browser actions', () => {
   it('returns the service message for a rejected body instead of a 500', async () => {
     mocks.writeMemory.mockRejectedValueOnce(Object.assign(new Error('body_too_large: 300000'), { code: 'body_too_large' }))
     const state = await saveMemoryAction({}, form({ projectId: 'p1', slug: 'demo', path: 'a/b', body: 'x' }))
-    expect(state).toEqual({ error: 'body_too_large: 300000' })
+    expect(state).toEqual({ error: 'That is larger than this server accepts.' })
   })
 
   it('deletes, audits and lands on the bin', async () => {

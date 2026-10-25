@@ -11,20 +11,36 @@ type Key = {
   revoked: boolean
 }
 
+export type KeyFormLabels = {
+  name: string
+  placeholder: string
+  create: string
+  creating: string
+  copyNow: string
+}
+
+export type KeyListLabels = {
+  empty: string
+  revoked: string
+  neverUsed: string
+  lastUsed: string
+  revoke: string
+}
+
 const initial: CreateKeyState = {}
 
-export function KeyForm() {
+export function KeyForm({ labels }: { labels: KeyFormLabels }) {
   const [state, action, pending] = useActionState(createKeyAction, initial)
 
   return (
     <div className="space-y-4">
       <form action={action} className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-end">
         <label className="flex flex-col gap-1 text-sm">
-          <span>Name</span>
+          <span>{labels.name}</span>
           <input
             name="name"
             required
-            placeholder="laptop"
+            placeholder={labels.placeholder}
             className="rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[var(--fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           />
         </label>
@@ -33,7 +49,7 @@ export function KeyForm() {
           disabled={pending}
           className="rounded bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-50"
         >
-          {pending ? 'Creating…' : 'Create key'}
+          {pending ? labels.creating : labels.create}
         </button>
       </form>
 
@@ -41,7 +57,7 @@ export function KeyForm() {
 
       {state.token && (
         <div className="rounded border border-[var(--accent)] p-3 text-sm">
-          <p className="mb-2 font-medium">Copy this now — it is not shown again.</p>
+          <p className="mb-2 font-medium">{labels.copyNow}</p>
           <code className="block break-all rounded bg-[var(--bg-sunken)] p-2">{state.token}</code>
         </div>
       )}
@@ -49,9 +65,9 @@ export function KeyForm() {
   )
 }
 
-export function KeyList({ keys }: { keys: Key[] }) {
+export function KeyList({ keys, labels }: { keys: Key[]; labels: KeyListLabels }) {
   if (keys.length === 0) {
-    return <p className="text-sm text-[var(--text-muted)]">No keys yet. Your agents need one to reach /mcp.</p>
+    return <p className="text-sm text-[var(--text-muted)]">{labels.empty}</p>
   }
 
   return (
@@ -61,17 +77,22 @@ export function KeyList({ keys }: { keys: Key[] }) {
           <div>
             <span className="font-medium">{k.name}</span>{' '}
             <code className="text-[var(--text-muted)]">{k.prefix}…</code>
-            {k.revoked && <span className="ml-2 text-[var(--danger)]">revoked</span>}
+            {k.revoked && <span className="ml-2 text-[var(--danger)]">{labels.revoked}</span>}
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[var(--text-muted)]">
-              {k.lastUsedAt ? `last used ${new Date(k.lastUsedAt).toLocaleDateString()}` : 'never used'}
+              {k.lastUsedAt
+                ? labels.lastUsed.replace(
+                    '{date}',
+                    new Date(k.lastUsedAt).toLocaleDateString(),
+                  )
+                : labels.neverUsed}
             </span>
             {!k.revoked && (
               <form action={revokeKeyAction}>
                 <input type="hidden" name="id" value={k.id} />
                 <button type="submit" className="text-[var(--danger)] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
-                  revoke
+                  {labels.revoke}
                 </button>
               </form>
             )}

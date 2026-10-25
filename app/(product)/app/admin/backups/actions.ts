@@ -9,6 +9,8 @@ import {
   setS3Credentials,
   setWebDavCredentials,
 } from '@/lib/settings/backup-settings'
+import { translator } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 
 type Target = 's3' | 'webdav'
 
@@ -23,6 +25,7 @@ function back(params: string): never {
 
 export async function saveBackupSettingsAction(formData: FormData): Promise<void> {
   const user = await requireAdmin()
+  const t = await translator()
   const target = text(formData, 'target')
 
   try {
@@ -91,15 +94,15 @@ export async function saveBackupSettingsAction(formData: FormData): Promise<void
       detail: { target, enabled: text(formData, 'enabled') === 'on' },
     })
   } catch (thrown) {
-    const message = (thrown instanceof Error ? thrown : new Error(String(thrown))).message
-    back(`error=${encodeURIComponent(message)}`)
+    back(`error=${encodeURIComponent(actionMessage(thrown, t))}`)
   }
 
-  back('notice=Backup%20settings%20saved.')
+  back(`notice=${encodeURIComponent(t('app.admin.backups.saved'))}`)
 }
 
 export async function runBackupAction(): Promise<void> {
   const user = await requireAdmin()
+  const t = await translator()
   const id = await sendJob('backup', {})
   await audit({
     actorType: 'user',
@@ -110,8 +113,8 @@ export async function runBackupAction(): Promise<void> {
   })
   back(
     id
-      ? 'notice=Backup%20queued.'
-      : `error=${encodeURIComponent('The job queue is not running.')}`,
+      ? `notice=${encodeURIComponent(t('app.admin.backups.queued'))}`
+      : `error=${encodeURIComponent(t('app.admin.backups.queueDown'))}`,
   )
 }
 

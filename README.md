@@ -10,7 +10,8 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.10.1` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, an import command that walks a repository or a plain folder, and lets you read, edit, delete and restore every memory in the browser, with the last twenty versions of each kept and diffable. Projects can be shared with a person or with a team, at read or write, without ever making anyone else the owner, and each user can edit their own name, email and password and sign out their other devices.
+`0.11.0` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, an import command that walks a repository or a plain folder, and lets you read, edit, delete and restore every memory in the browser, with the last twenty versions of each kept and diffable. Projects can be shared with a person or with a team, at read or write, without ever making anyone else the owner, each user can edit their own name, email and password and sign out their other devices, and the whole app is
+available in English, Danish and German with the choice saved on the account.
 
 Everything in the [design](docs/superpowers/specs/2026-10-25-mimir-design.md) has now shipped.
 

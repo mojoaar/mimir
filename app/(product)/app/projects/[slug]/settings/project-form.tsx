@@ -6,6 +6,17 @@ import { saveProjectSettingsAction, type ProjectFormState } from './actions'
 
 type Provider = { id: string; label: string; model: string }
 
+export type ProjectFormLabels = {
+  learnTitle: string
+  learnOn: string
+  learnOff: string
+  llm: string
+  ownerDefault: string
+  llmHint: string
+  save: string
+  saving: string
+}
+
 export function ProjectForm({
   projectId,
   slug,
@@ -13,6 +24,7 @@ export function ProjectForm({
   learningEnabled,
   llmProviderId,
   providers,
+  labels,
 }: {
   projectId: string
   slug: string
@@ -20,6 +32,7 @@ export function ProjectForm({
   learningEnabled: boolean
   llmProviderId: string | null
   providers: Provider[]
+  labels: ProjectFormLabels
 }) {
   const [state, action, pending] = useActionState<ProjectFormState, FormData>(
     saveProjectSettingsAction,
@@ -44,24 +57,22 @@ export function ProjectForm({
           className="mt-0.5"
         />
         <span className="text-sm">
-          <span className="font-medium">Learn from this project</span>
+          <span className="font-medium">{labels.learnTitle}</span>
           <span className="mt-1 block text-[var(--text-muted)]">
-            {isOwner
-              ? 'Let Mimir write a one-line title and a short summary for each memory using your language model.'
-              : 'Only the project owner can change this.'}
+            {isOwner ? labels.learnOn : labels.learnOff}
           </span>
         </span>
       </label>
 
       {isOwner ? (
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Language model</span>
+          <span className="font-medium">{labels.llm}</span>
           <select
             name="llmProviderId"
             defaultValue={llmProviderId ?? ''}
             className="rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1.5"
           >
-            <option value="">Owner default</option>
+            <option value="">{labels.ownerDefault}</option>
             {providers.map((provider) => (
               <option key={provider.id} value={provider.id}>
                 {provider.label} · {provider.model}
@@ -69,7 +80,7 @@ export function ProjectForm({
             ))}
           </select>
           <span className="text-[var(--text-muted)]">
-            Extraction spends this provider&apos;s key, so only the owner can change it.
+            {labels.llmHint}
           </span>
         </label>
       ) : null}
@@ -80,7 +91,7 @@ export function ProjectForm({
           disabled={pending}
           className="rounded bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-[var(--accent-fg)] disabled:opacity-60"
         >
-          {pending ? 'Saving…' : 'Save'}
+          {pending ? labels.saving : labels.save}
         </button>
         {state.error ? (
           <span className="text-sm text-[var(--danger)]">{state.error}</span>

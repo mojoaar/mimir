@@ -17,6 +17,7 @@ type SessionRow = {
   role: 'admin' | 'user'
   status: 'pending' | 'active' | 'disabled'
   totp_secret_enc: Buffer | null
+  locale: string
   last_seen_stale: boolean
 }
 
@@ -28,6 +29,7 @@ function toAuthUser(row: SessionRow): AuthUser {
     role: row.role,
     status: row.status,
     mfaEnabled: row.totp_secret_enc !== null,
+    locale: row.locale,
   }
 }
 
@@ -54,7 +56,7 @@ export async function resolveSession(cookieValue: string): Promise<AuthUser | nu
 
   return withService(async (tx) => {
     const { rows } = await tx.query<SessionRow>(
-      `select s.id, s.user_id, u.email, u.name, u.role, u.status, u.totp_secret_enc,
+      `select s.id, s.user_id, u.email, u.name, u.role, u.status, u.totp_secret_enc, u.locale,
               s.last_seen_at < now() - ($2 || ' seconds')::interval as last_seen_stale
          from sessions s
          join users u on u.id = s.user_id

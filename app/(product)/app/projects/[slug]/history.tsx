@@ -3,6 +3,15 @@ import Link from 'next/link'
 
 import type { VersionSummary } from '@/lib/memory/versions'
 
+export type Labels = {
+  title: string
+  back: string
+  empty: string
+  replaced: string
+  restore: string
+  kept: string
+}
+
 export type DiffLine = { kind: 'same' | 'add' | 'remove'; text: string }
 
 /**
@@ -31,6 +40,7 @@ export function MemoryHistory({
   selected,
   diff,
   restore,
+  labels,
 }: {
   slug: string
   projectId: string
@@ -41,21 +51,22 @@ export function MemoryHistory({
   diff: DiffLine[] | null
   /** Passed in so the panel stays renderable without the server-action module. */
   restore: (formData: FormData) => void | Promise<void>
+  labels: Labels
 }) {
   const base = `/app/projects/${slug}?path=${encodeURIComponent(path)}&history=1`
 
   return (
     <section className="flex flex-col gap-3 rounded border border-[var(--border)] p-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold">History ({versions.length})</h3>
+        <h3 className="text-sm font-semibold">{labels.title}</h3>
         <Link href={`/app/projects/${slug}?path=${encodeURIComponent(path)}`} className="text-xs underline">
-          Back to memory
+          {labels.back}
         </Link>
       </div>
 
       {versions.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">
-          Nothing yet. The next edit keeps this body.
+          {labels.empty}
         </p>
       ) : (
         <ul className="flex flex-col gap-1">
@@ -85,7 +96,7 @@ export function MemoryHistory({
       {selected && diff ? (
         <div className="flex flex-col gap-2">
           <p className="text-xs text-[var(--text-muted)]">
-            Replaced {selected.updatedAt.toISOString()} — changes from that body to what is live now.
+            {labels.replaced}
           </p>
           <pre className="max-h-[40vh] overflow-auto whitespace-pre-wrap break-words rounded border border-[var(--border)] bg-[var(--bg-raised)] p-2 text-xs">
             {diff.map((line, index) => (
@@ -114,10 +125,10 @@ export function MemoryHistory({
                 type="submit"
                 className="rounded border border-[var(--border)] px-3 py-1 text-sm text-[var(--fg)]"
               >
-                Restore this version
+                {labels.restore}
               </button>
               <span className="text-xs text-[var(--text-muted)]">
-                The current body is kept in history.
+                {labels.kept}
               </span>
             </form>
           ) : null}

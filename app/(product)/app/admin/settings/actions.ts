@@ -7,14 +7,16 @@ import { sendJob } from '@/lib/jobs/boss'
 import { getProviderSecret, recordVerification } from '@/lib/providers/service'
 import { verifyProvider } from '@/lib/providers/verify'
 import { EMBEDDING_DIM, setEmbeddingConfig } from '@/lib/settings/embedding'
+import { translator, type Translate } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 
 export type EmbeddingFormState = { ok?: string; error?: string }
 
 const KNOWN = new Set(['invalid_params', 'not_found', 'provider_error'])
 
-function message(error: unknown): string {
-  const code = (error as { code?: string }).code
-  return code && KNOWN.has(code) ? String((error as Error).message) : 'Could not save the embedding model.'
+function message(error: unknown, t: Translate): string {
+  const mapped = actionMessage(error, t)
+  return mapped === t('app.error.generic') ? t('app.admin.embeddings.saveFailed') : mapped
 }
 
 export async function saveEmbeddingAction(
@@ -22,36 +24,40 @@ export async function saveEmbeddingAction(
   formData: FormData,
 ): Promise<EmbeddingFormState> {
   const user = await requireAdmin()
+  const t = await translator()
 
   const providerId = String(formData.get('providerId') ?? '')
   const model = String(formData.get('model') ?? '').trim()
-  if (!providerId || !model) return { error: 'Choose a provider and a model.' }
+  if (!providerId || !model) return { error: t('app.admin.embeddings.chooseBoth') }
 
   try {
     // The probe decides the dimension: the column has one size, and a form
     // field the operator can type into would only let them lie to it.
     const secret = await getProviderSecret(user.id, providerId)
     if (secret.kind !== 'embedding') {
-      return { error: 'That provider is not an embedding provider.' }
+      return { error: t('app.admin.embeddings.notEmbedding') }
     }
 
     const probe = await verifyProvider(user.id, providerId, { model })
-    if (!probe.ok) return { error: `The provider did not answer: ${probe.error}` }
+    if (!probe.ok) return { error: t('app.admin.embeddings.probeFailed', { error: probe.error }) }
 
-    if (probe.dim !== EMBEDDING_DIM) {
-      return {
-        error: `the embedding column holds ${EMBEDDING_DIM} dimensions; ${probe.dim} would need a migration`,
-      }
+    const dim = probe.dim
+    if (dim === undefined) {
+      return { error: t('app.admin.embeddings.probeFailed', { error: t('app.admin.embeddings.noDim') }) }
     }
 
-    await setEmbeddingConfig({ providerId, model, dim: probe.dim }, user.id)
+    if (dim !== EMBEDDING_DIM) {
+      return { error: t('app.admin.embeddings.wrongDims', { expected: EMBEDDING_DIM, actual: dim }) }
+    }
+
+    await setEmbeddingConfig({ providerId, model, dim }, user.id)
     await recordVerification(user.id, providerId, null)
     // Rows written before this moment have no vector; embed them in the background.
     await sendJob('backfill', {})
     revalidatePath('/app/admin/settings')
-    return { ok: `Embeddings now use ${model} (${probe.dim} dimensions).` }
+    return { ok: t('app.admin.embeddings.saved', { model, count: dim }) }
   } catch (error) {
-    return { error: message(error) }
+    return { error: message(error, t) }
   }
 }
 
@@ -62,16 +68,17 @@ export async function reembedAction(
   formData: FormData,
 ): Promise<ReembedFormState> {
   const user = await requireAdmin()
+  const t = await translator()
 
   if (String(formData.get('confirm') ?? '') !== 'reembed') {
-    return { error: 'Type reembed to confirm.' }
+    return { error: t('app.admin.embeddings.needConfirm') }
   }
 
   // Queued, not run inline: a large install embeds for minutes and the request
   // must not hold that long. runReembed reports nothing back, so the audit row
   // records the request rather than a total it cannot know yet.
   const jobId = await sendJob('reembed', { confirm: true })
-  if (!jobId) return { error: 'The job queue is not running.' }
+  if (!jobId) return { error: t('app.admin.backups.queueDown') }
 
   await audit({
     actorType: 'user',
@@ -83,5 +90,5 @@ export async function reembedAction(
   })
 
   revalidatePath('/app/admin/settings')
-  return { ok: 'Re-embedding queued. Every memory keeps its text while the vectors rebuild.' }
+  return { ok: t('app.admin.embeddings.queued') }
 }

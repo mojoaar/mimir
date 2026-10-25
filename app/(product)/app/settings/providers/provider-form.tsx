@@ -8,10 +8,28 @@ const initial: ProviderFormState = {}
 
 const PRESET_IDS = Object.keys(PRESETS) as PresetId[]
 
+export type ProviderFormLabels = {
+  provider: string
+  kind: string
+  kindLlm: string
+  kindEmbedding: string
+  label: string
+  labelPlaceholder: string
+  model: string
+  baseUrl: string
+  baseUrlHint: string
+  apiKey: string
+  apiKeyHint: string
+  makeDefault: string
+  save: string
+  saving: string
+  saved: string
+}
+
 const field =
   'rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[var(--fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]'
 
-export function ProviderForm() {
+export function ProviderForm({ labels }: { labels: ProviderFormLabels }) {
   const [state, action, pending] = useActionState(createProviderAction, initial)
   const [presetId, setPresetId] = useState<PresetId>('deepseek')
   const [model, setModel] = useState(PRESETS.deepseek.defaultModel)
@@ -27,7 +45,7 @@ export function ProviderForm() {
     <form action={action} className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm">
-          <span>Provider</span>
+          <span>{labels.provider}</span>
           <select
             name="preset"
             value={presetId}
@@ -43,20 +61,20 @@ export function ProviderForm() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span>Used for</span>
+          <span>{labels.kind}</span>
           <select name="kind" defaultValue="llm" className={field}>
-            <option value="llm">Language models</option>
-            <option value="embedding">Embeddings</option>
+            <option value="llm">{labels.kindLlm}</option>
+            <option value="embedding">{labels.kindEmbedding}</option>
           </select>
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span>Label</span>
-          <input name="label" required placeholder="work" className={field} />
+          <span>{labels.label}</span>
+          <input name="label" required placeholder={labels.labelPlaceholder} className={field} />
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          <span>Model</span>
+          <span>{labels.model}</span>
           <input
             name="model"
             value={model}
@@ -66,30 +84,26 @@ export function ProviderForm() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span>Base URL</span>
+          <span>{labels.baseUrl}</span>
           <input
             name="baseUrl"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
             className={field}
           />
-          <span className="text-xs text-[var(--text-muted)]">
-            Everything before <code>/v1</code>. Mimir appends the endpoint itself.
-          </span>
+          <span className="text-xs text-[var(--text-muted)]">{labels.baseUrlHint}</span>
         </label>
 
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span>API key</span>
+          <span>{labels.apiKey}</span>
           <input name="apiKey" type="password" autoComplete="off" className={field} />
-          <span className="text-xs text-[var(--text-muted)]">
-            Encrypted at rest and never shown again. Leave blank for a local model.
-          </span>
+          <span className="text-xs text-[var(--text-muted)]">{labels.apiKeyHint}</span>
         </label>
       </div>
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="isDefault" />
-        <span>Use as the default for this type</span>
+        <span>{labels.makeDefault}</span>
       </label>
 
       <button
@@ -97,11 +111,11 @@ export function ProviderForm() {
         disabled={pending}
         className="rounded bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-50"
       >
-        {pending ? 'Saving…' : 'Save provider'}
+        {pending ? labels.saving : labels.save}
       </button>
 
       {state.error && <p className="text-sm text-[var(--danger)]">{state.error}</p>}
-      {state.ok && <p className="text-sm text-[var(--text-muted)]">Saved.</p>}
+      {state.ok && <p className="text-sm text-[var(--text-muted)]">{labels.saved}</p>}
     </form>
   )
 }

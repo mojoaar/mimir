@@ -8,22 +8,19 @@ import { requireUser } from '@/lib/auth/context'
 import { grantProject, revokeGrant, type PrincipalType } from '@/lib/projects/access'
 import { updateProjectSettings } from '@/lib/projects/service'
 import { findActiveUserIdByEmail } from '@/lib/users/lookup'
+import { translator } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 
 export type ProjectFormState = { ok?: string; error?: string }
-
-const KNOWN: Record<string, string> = {
-  forbidden: 'Only the project owner can change that.',
-  invalid_params: 'That setting is not valid.',
-  not_found: 'That project no longer exists.',
-}
 
 export async function saveProjectSettingsAction(
   _prev: ProjectFormState,
   formData: FormData,
 ): Promise<ProjectFormState> {
   const user = await requireUser()
+  const t = await translator()
   const projectId = String(formData.get('projectId') ?? '')
-  if (!projectId) return { error: 'Missing project.' }
+  if (!projectId) return { error: t('app.error.generic') }
 
   const learningEnabled = formData.get('learningEnabled') === 'on'
   const rawProvider = String(formData.get('llmProviderId') ?? '')
@@ -35,8 +32,7 @@ export async function saveProjectSettingsAction(
   try {
     await updateProjectSettings(user.id, projectId, patch)
   } catch (error) {
-    const code = (error as { code?: string }).code ?? ''
-    return { error: KNOWN[code] ?? 'Could not save the project settings.' }
+    return { error: actionMessage(error, t) }
   }
 
   await audit({
@@ -62,9 +58,10 @@ export async function grantProjectAction(
   formData: FormData,
 ): Promise<ProjectFormState> {
   const user = await requireUser()
+  const t = await translator()
   const projectId = String(formData.get('projectId') ?? '')
   const slug = String(formData.get('slug') ?? '')
-  if (!projectId) return { error: 'Missing project.' }
+  if (!projectId) return { error: t('app.error.generic') }
 
   const principalType: PrincipalType =
     formData.get('principalType') === 'team' ? 'team' : 'user'
@@ -75,17 +72,16 @@ export async function grantProjectAction(
     const email = String(formData.get('email') ?? '').trim()
     if (!email) return { error: 'Enter the email address of a person.' }
     const found = await findActiveUserIdByEmail(email)
-    if (!found) return { error: `nobody with an active account uses ${email}` }
+    if (!found) return { error: t('app.projectSettings.noSuchPerson', { email }) }
     principalId = found
   } else if (!principalId) {
-    return { error: 'Choose a team.' }
+    return { error: t('app.projectSettings.chooseTeam') }
   }
 
   try {
     await grantProject(user.id, projectId, principalType, principalId, role)
   } catch (error) {
-    const code = (error as { code?: string }).code ?? ''
-    return { error: KNOWN[code] ?? 'Could not share the project.' }
+    return { error: actionMessage(error, t) }
   }
 
   await audit({
@@ -98,26 +94,29 @@ export async function grantProjectAction(
   })
   revalidatePath(`/app/projects/${slug}/settings`)
 
-  return { ok: principalType === 'team' ? 'Shared with the team.' : 'Shared.' }
+  return { ok: t(principalType === 'team' ? 'app.projectSettings.sharedTeam' : 'app.projectSettings.shared') }
 }
 
 /** Takes one grant away. Access ends on the grantee's next request. */
 export async function revokeProjectGrantAction(formData: FormData): Promise<void> {
   const user = await requireUser()
+  const t = await translator()
   const projectId = String(formData.get('projectId') ?? '')
   const slug = String(formData.get('slug') ?? '')
   const principalId = String(formData.get('principalId') ?? '')
   const principalType: PrincipalType =
     formData.get('principalType') === 'team' ? 'team' : 'user'
 
-  if (!projectId || !principalId) redirect(`/app/projects/${slug}/settings?error=Missing grant.`)
+  if (!projectId || !principalId) {
+    redirect(`/app/projects/${slug}/settings?error=${encodeURIComponent(t('app.error.generic'))}`)
+  }
 
   try {
     await revokeGrant(user.id, projectId, principalType, principalId)
   } catch (error) {
-    const code = (error as { code?: string }).code ?? ''
-    const message = KNOWN[code] ?? 'Could not revoke that.'
-    redirect(`/app/projects/${slug}/settings?error=${encodeURIComponent(message)}`)
+    redirect(
+      `/app/projects/${slug}/settings?error=${encodeURIComponent(actionMessage(error, t))}`,
+    )
   }
 
   await audit({

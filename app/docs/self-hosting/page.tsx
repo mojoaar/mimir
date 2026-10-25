@@ -124,6 +124,18 @@ docker compose up -d`}</Code>
         user&apos;s profile from here.
       </P>
 
+      <H2>Language</H2>
+      <P>
+        The signed-in app is available in English, Danish and German. The language menu sits in the header, next to the
+        theme switcher, and the choice is saved on the account: the next page is already in that language on its first
+        paint, on any browser you sign in from. A visitor who is not signed in gets the language their browser asks
+        for, falling back to English.
+      </P>
+      <P>
+        The public pages are separate: <code>/</code> is English, <code>/da</code> Danish and <code>/de</code> German,
+        each with its own address so a search engine can index them. These docs are English only.
+      </P>
+
       <H2>Signing in and out</H2>
       <P>
         A user who forgets a password can ask for a link at <code>/forgot-password</code>: it is emailed when Resend

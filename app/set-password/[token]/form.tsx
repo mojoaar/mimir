@@ -6,14 +6,16 @@ import { setPasswordAction, type PasswordState } from './actions';
 
 const initial: PasswordState = {};
 
-export function PasswordForm({ token }: { token: string }) {
+export type PasswordLabels = { label: string; submit: string; pending: string };
+
+export function PasswordForm({ token, labels }: { token: string; labels: PasswordLabels }) {
   const [state, action, pending] = useActionState(setPasswordAction, initial);
 
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="token" value={token} />
       <label className="flex flex-col gap-1 text-sm">
-        <span>New password</span>
+        <span>{labels.label}</span>
         <input
           type="password"
           name="password"
@@ -33,7 +35,7 @@ export function PasswordForm({ token }: { token: string }) {
         disabled={pending}
         className="rounded bg-[var(--accent)] px-4 py-2 font-medium text-[var(--accent-fg)] disabled:opacity-60"
       >
-        {pending ? 'Saving…' : 'Save password'}
+        {pending ? labels.pending : labels.submit}
       </button>
     </form>
   );

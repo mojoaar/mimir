@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
+import { translator } from '@/lib/i18n/request'
 import { getTeam } from '@/lib/teams/service'
 
 import { deleteTeamAction, leaveTeamAction, removeMemberAction } from '../actions'
@@ -18,6 +19,7 @@ export default async function TeamDetailPage({
   searchParams: Promise<{ error?: string; notice?: string }>
 }) {
   const user = await requireUser()
+  const t = await translator()
   const { id } = await params
   const { error, notice } = await searchParams
   const found = await getTeam(user.id, id)
@@ -32,14 +34,16 @@ export default async function TeamDetailPage({
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex gap-4 text-sm">
         <Link href="/app/teams" className="text-[var(--text-muted)] underline">
-          ← Teams
+          ← {t('app.teams.back')}
         </Link>
       </div>
 
       <header>
         <h1 className="text-xl font-semibold tracking-tight">{team.name}</h1>
         <p className="text-sm text-[var(--text-muted)]">
-          {team.memberCount} {team.memberCount === 1 ? 'member' : 'members'} · you are {team.role}
+          {team.memberCount}{' '}
+          {team.memberCount === 1 ? t('app.teams.memberOne') : t('app.teams.memberMany')} ·{' '}
+          {t('app.teams.youAre', { role: team.role })}
         </p>
       </header>
 
@@ -49,10 +53,21 @@ export default async function TeamDetailPage({
         </p>
       ) : null}
       {notice === 'removed' ? (
-        <p className="text-sm text-[var(--text-muted)]">Member removed. Their access ended now.</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.teams.removed')}</p>
       ) : null}
 
-      {isOwner ? <RenameForm teamId={team.id} name={team.name} /> : null}
+      {isOwner ? (
+        <RenameForm
+          teamId={team.id}
+          name={team.name}
+          labels={{
+            heading: t('app.teams.teamName'),
+            name: t('app.teams.name'),
+            submit: t('app.teams.rename'),
+            pending: t('app.teams.renaming'),
+          }}
+        />
+      ) : null}
 
       <ul className="flex flex-col gap-2">
         {members.map((member) => (
@@ -72,7 +87,7 @@ export default async function TeamDetailPage({
                   type="submit"
                   className="rounded border border-[var(--border)] px-2 py-1 text-sm text-[var(--danger)]"
                 >
-                  Remove
+                  {t('app.teams.remove')}
                 </button>
               </form>
             ) : null}
@@ -83,7 +98,7 @@ export default async function TeamDetailPage({
                   type="submit"
                   className="rounded border border-[var(--border)] px-2 py-1 text-sm text-[var(--danger)]"
                 >
-                  Leave team
+                  {t('app.teams.leave')}
                 </button>
               </form>
             ) : null}
@@ -91,22 +106,29 @@ export default async function TeamDetailPage({
         ))}
       </ul>
 
-      {isOwner ? <MemberForm teamId={team.id} /> : null}
+      {isOwner ? (
+        <MemberForm
+          teamId={team.id}
+          labels={{
+            heading: t('app.teams.addMember'),
+            hint: t('app.teams.addHint'),
+            submit: t('app.teams.addMember'),
+            pending: t('app.teams.adding'),
+          }}
+        />
+      ) : null}
 
       {isOwner ? (
         <section className="flex flex-col gap-2 rounded-lg border border-[var(--danger)] p-4">
-          <h2 className="text-sm font-semibold">Delete team</h2>
-          <p className="text-sm text-[var(--text-muted)]">
-            Every project this team can see stops being shared with it. The projects themselves
-            are untouched.
-          </p>
+          <h2 className="text-sm font-semibold">{t('app.teams.deleteTeam')}</h2>
+          <p className="text-sm text-[var(--text-muted)]">{t('app.teams.deleteBody')}</p>
           <form action={deleteTeamAction} className="self-start">
             <input type="hidden" name="teamId" value={team.id} />
             <button
               type="submit"
               className="rounded border border-[var(--danger)] px-3 py-1.5 text-sm text-[var(--danger)]"
             >
-              Delete team
+              {t('app.teams.deleteTeam')}
             </button>
           </form>
         </section>

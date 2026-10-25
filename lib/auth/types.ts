@@ -5,4 +5,6 @@ export type AuthUser = {
   role: 'admin' | 'user'
   status: 'pending' | 'active' | 'disabled'
   mfaEnabled: boolean
+  /** The language this person chose, or '' before they chose one. */
+  locale: string
 }

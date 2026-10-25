@@ -8,6 +8,8 @@ import { deliverToken } from '@/lib/auth/tokens'
 import { absoluteLink, sendEmail } from '@/lib/email/client'
 import { inviteEmail } from '@/lib/email/templates'
 import { getSiteSettings } from '@/lib/settings/site'
+import { translator, type Translate } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 import {
   createUser,
   deleteUser,
@@ -22,17 +24,14 @@ import {
 export type ActionState = { ok?: string; error?: string; link?: string }
 
 const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
-const GENERIC = 'That did not work. Try again.'
 
-function messageOf(error: unknown): string {
+async function messageOf(error: unknown, t: Translate): Promise<string> {
   // redirect() signals by throwing. Catching it turned every successful action
   // into "That did not work" after the change had already been committed.
   const digest = (error as { digest?: string }).digest
   if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) throw error
-  const code = (error as { code?: string }).code
-  if (code && KNOWN.has(code)) return (error as Error).message
   console.error('admin user action failed', describeAuditFailure(error))
-  return GENERIC
+  return actionMessage(error, t)
 }
 
 function text(formData: FormData, name: string): string {
@@ -48,13 +47,14 @@ function back(params: Record<string, string>): never {
 
 export async function createUserAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const actor = await requireAdmin()
+  const t = await translator()
   const email = text(formData, 'email')
   const name = text(formData, 'name')
   const role = text(formData, 'role') === 'admin' ? 'admin' : 'user'
   const password = text(formData, 'password')
 
-  if (!email || !email.includes('@')) return { error: 'Enter an email address.' }
-  if (!name) return { error: 'Enter a name.' }
+  if (!email || !email.includes('@')) return { error: t('app.admin.users.errEmail') }
+  if (!name) return { error: t('app.admin.users.errName') }
 
   try {
     const created = await createUser(actor.id, {
@@ -66,7 +66,7 @@ export async function createUserAction(_prev: ActionState, formData: FormData): 
 
     if (!created.inviteToken) {
       revalidatePath('/app/admin/users')
-      return { ok: 'User created.' }
+      return { ok: t('app.admin.users.created') }
     }
 
     const url = await absoluteLink(`/set-password/${created.inviteToken}`)
@@ -78,20 +78,21 @@ export async function createUserAction(_prev: ActionState, formData: FormData): 
 
     revalidatePath('/app/admin/users')
     return sent.ok
-      ? { ok: 'User created and invited.' }
-      : { ok: 'User created.', link: url }
+      ? { ok: t('app.admin.users.createdInvited') }
+      : { ok: t('app.admin.users.created'), link: url }
   } catch (error) {
-    return { error: messageOf(error) }
+    return { error: await messageOf(error, t) }
   }
 }
 
 export async function resetPasswordAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const actor = await requireAdmin()
+  const t = await translator()
   const userId = text(formData, 'userId')
   const invitedBy = text(formData, 'email')
   const { getUser } = await import('@/lib/users/service')
   const target = await getUser(userId)
-  if (!target) return { error: 'That user no longer exists.' }
+  if (!target) return { error: t('app.admin.users.userGone') }
 
   const site = await getSiteSettings()
   const result = await deliverToken({
@@ -109,12 +110,13 @@ export async function resetPasswordAction(_prev: ActionState, formData: FormData
     targetId: userId,
   })
   return result.emailed
-    ? { ok: 'Password reset sent.' }
-    : { ok: 'Email is not configured — send this link yourself.', link: result.url }
+    ? { ok: t('app.admin.users.resetSent') }
+    : { ok: t('app.admin.users.emailOff'), link: result.url }
 }
 
 export async function resendInviteAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const actor = await requireAdmin()
+  const t = await translator()
   const userId = text(formData, 'id')
   const email = text(formData, 'email')
 
@@ -129,75 +131,81 @@ export async function resendInviteAction(_prev: ActionState, formData: FormData)
     })
     revalidatePath('/app/admin/users')
     return delivered.emailed
-      ? { ok: `Invite sent to ${email}.` }
-      : { ok: `Email is not configured — send this link yourself.`, link: delivered.url }
+      ? { ok: t('app.admin.users.inviteSent', { email }) }
+      : { ok: t('app.admin.users.emailOff'), link: delivered.url }
   } catch (error) {
-    return { error: messageOf(error) }
+    return { error: await messageOf(error, t) }
   }
 }
 
 export async function verifyUserAction(_prev: ActionState, formData: FormData): Promise<void> {
   const actor = await requireAdmin()
+  const t = await translator()
   try {
     await verifyUser(actor.id, text(formData, 'id'))
-    back({ notice: 'User verified.' })
+    back({ notice: t('app.admin.users.verified') })
   } catch (error) {
-    back({ error: messageOf(error) })
+    back({ error: await messageOf(error, t) })
   }
 }
 
 export async function enableUserAction(_prev: ActionState, formData: FormData): Promise<void> {
   const actor = await requireAdmin()
+  const t = await translator()
   try {
     await enableUser(actor.id, text(formData, 'id'))
-    back({ notice: 'User enabled.' })
+    back({ notice: t('app.admin.users.enabled') })
   } catch (error) {
-    back({ error: messageOf(error) })
+    back({ error: await messageOf(error, t) })
   }
 }
 
 export async function disableUserAction(_prev: ActionState, formData: FormData): Promise<void> {
   const actor = await requireAdmin()
+  const t = await translator()
   try {
     await disableUser(actor.id, text(formData, 'id'))
-    back({ notice: 'User disabled and signed out everywhere.' })
+    back({ notice: t('app.admin.users.disabled') })
   } catch (error) {
-    back({ error: messageOf(error) })
+    back({ error: await messageOf(error, t) })
   }
 }
 
 export async function setRoleAction(_prev: ActionState, formData: FormData): Promise<void> {
   const actor = await requireAdmin()
+  const t = await translator()
   const role = text(formData, 'role') === 'admin' ? 'admin' : 'user'
   try {
     await setUserRole(actor.id, text(formData, 'id'), role as UserRole)
-    back({ notice: `Role changed to ${role}.` })
+    back({ notice: t('app.admin.users.roleChanged', { role: t(`app.admin.users.role${role === 'admin' ? 'Admin' : 'User'}`) }) })
   } catch (error) {
-    back({ error: messageOf(error) })
+    back({ error: await messageOf(error, t) })
   }
 }
 
 export async function resetMfaAction(_prev: ActionState, formData: FormData): Promise<void> {
   const actor = await requireAdmin()
+  const t = await translator()
   try {
     await resetMfaForUser(actor.id, text(formData, 'id'))
-    back({ notice: 'Two-factor reset. The user can enrol again after signing in.' })
+    back({ notice: t('app.admin.users.mfaReset') })
   } catch (error) {
-    back({ error: messageOf(error) })
+    back({ error: await messageOf(error, t) })
   }
 }
 
 export async function deleteUserAction(_prev: ActionState, formData: FormData): Promise<void> {
   const actor = await requireAdmin()
+  const t = await translator()
   const email = text(formData, 'email')
   if (text(formData, 'confirmEmail') !== email) {
-    back({ error: 'Type the email exactly to delete this user.' })
+    back({ error: t('app.admin.users.confirmMismatch') })
   }
 
   try {
     await deleteUser(actor.id, text(formData, 'id'), email)
-    back({ notice: `${email} deleted.` })
+    back({ notice: t('app.admin.users.deleted', { email }) })
   } catch (error) {
-    back({ error: messageOf(error) })
+    back({ error: await messageOf(error, t) })
   }
 }

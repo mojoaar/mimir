@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth/admin'
 import { listAudit, type AuditRow } from '@/lib/audit/query'
+import { translator } from '@/lib/i18n/request'
 
 export const instant = false
 
@@ -41,6 +42,7 @@ export default async function AuditPage({
   searchParams: Promise<Search>
 }) {
   await requireAdmin()
+  const t = await translator()
   const search = await searchParams
   const page = Math.max(Number(search.page ?? '1') || 1, 1)
 
@@ -58,19 +60,19 @@ export default async function AuditPage({
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Audit log</h1>
+        <h1 className="text-2xl font-semibold">{t('app.admin.audit.title')}</h1>
         <Link
           href={`/app/admin/audit/export?${queryString(search)}`}
           className="rounded border px-3 py-1.5 text-sm underline"
           style={{ borderColor: 'var(--border)' }}
         >
-          Export CSV
+          {t('app.admin.audit.export')}
         </Link>
       </div>
 
       <form method="get" className="flex flex-wrap items-end gap-3 text-sm">
         <label className="flex flex-col gap-1">
-          <span className="text-[var(--text-muted)]">Action</span>
+          <span className="text-[var(--text-muted)]">{t('app.admin.audit.action')}</span>
           <input
             name="action"
             defaultValue={search.action ?? ''}
@@ -80,7 +82,7 @@ export default async function AuditPage({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-[var(--text-muted)]">From</span>
+          <span className="text-[var(--text-muted)]">{t('app.admin.audit.from')}</span>
           <input
             type="date"
             name="from"
@@ -90,7 +92,7 @@ export default async function AuditPage({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-[var(--text-muted)]">To</span>
+          <span className="text-[var(--text-muted)]">{t('app.admin.audit.to')}</span>
           <input
             type="date"
             name="to"
@@ -100,11 +102,11 @@ export default async function AuditPage({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-[var(--text-muted)]">Search</span>
+          <span className="text-[var(--text-muted)]">{t('app.admin.audit.search')}</span>
           <input
             name="q"
             defaultValue={search.q ?? ''}
-            placeholder="path or target"
+            placeholder={t('app.admin.audit.searchPlaceholder')}
             className="rounded border px-2 py-1.5"
             style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
           />
@@ -114,16 +116,20 @@ export default async function AuditPage({
           className="rounded px-3 py-1.5 font-medium"
           style={{ background: 'var(--accent)', color: 'var(--accent-fg)' }}
         >
-          Filter
+          {t('app.admin.audit.filter')}
         </button>
       </form>
 
       <p className="text-sm text-[var(--text-muted)]">
-        {total} event{total === 1 ? '' : 's'} · page {page} of {pages}
+        {t(total === 1 ? 'app.admin.audit.summaryOne' : 'app.admin.audit.summaryMany', {
+          total,
+          page,
+          pages,
+        })}
       </p>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-[var(--text-muted)]">Nothing matches.</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.admin.audit.empty')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {rows.map((row) => (
@@ -154,12 +160,12 @@ export default async function AuditPage({
       <div className="flex gap-4 text-sm">
         {page > 1 ? (
           <Link href={`/app/admin/audit?${queryString(search, { page: String(page - 1) })}`} className="underline">
-            Newer
+            {t('app.admin.audit.newer')}
           </Link>
         ) : null}
         {page < pages ? (
           <Link href={`/app/admin/audit?${queryString(search, { page: String(page + 1) })}`} className="underline">
-            Older
+            {t('app.admin.audit.older')}
           </Link>
         ) : null}
       </div>

@@ -7,11 +7,18 @@ const mocks = vi.hoisted(() => ({
   allowed: true,
   reachable: true,
   checks: 0,
+  locale: 'en' as string,
 }))
 
 vi.mock('@/lib/auth/tokens', () => ({ requestPasswordReset: mocks.request }))
 vi.mock('@/lib/settings/email-settings', () => ({ getEmailSettings: async () => mocks.email }))
-vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers(),
+  cookies: async () => ({ get: () => undefined }),
+}))
+vi.mock('@/lib/auth/context', () => ({
+  getCurrentUser: async () => ({ id: 'u1', email: 'a@b.test', locale: mocks.locale }),
+}))
 vi.mock('@/lib/http/allowlist', () => ({ isRequestAllowed: async () => mocks.reachable }))
 vi.mock('@/lib/auth/rate-limit', () => ({
   checkResetRateLimit: () => {
@@ -37,6 +44,7 @@ beforeEach(() => {
   mocks.allowed = true
   mocks.reachable = true
   mocks.checks = 0
+  mocks.locale = 'en'
 })
 
 describe('the forgot-password page', () => {
@@ -92,5 +100,12 @@ describe('the reset request', () => {
     expect(state.message).toContain('not allowed')
     expect(mocks.checks).toBe(0)
     expect(mocks.request).not.toHaveBeenCalled()
+  })
+
+  it('answers in the language of the reader', async () => {
+    mocks.locale = 'da'
+    const result = await requestResetAction({ message: '' }, form('alice@example.test'))
+
+    expect(result.message).toContain('har vi sendt et link')
   })
 })

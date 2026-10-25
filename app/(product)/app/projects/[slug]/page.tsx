@@ -11,6 +11,7 @@ import { MemoryEditor } from './editor'
 import { diffLines, MemoryHistory } from './history'
 import { MemoryTree } from './tree'
 import { Missing } from '../missing'
+import { translator, type Translate } from '@/lib/i18n/request'
 
 export const instant = false
 
@@ -34,10 +35,11 @@ export default async function ProjectBrowser({
   searchParams: Promise<Search>
 }) {
   const user = await requireUser()
+  const t = await translator()
   const { slug } = await params
   const search = await searchParams
   const project = await getProject(user.id, slug)
-  if (!project) return <Missing what="project" />
+  if (!project) return <Missing kind="project" t={t} />
 
   const query = first(search.q).trim()
   const showDeleted = first(search.deleted) === '1'
@@ -53,9 +55,9 @@ export default async function ProjectBrowser({
     } catch (error) {
       // A bad path is a miss; anything else (database down) must not look like one.
       if ((error as { code?: string }).code !== 'invalid_path') throw error
-      return <Missing what="memory" />
+      return <Missing kind="memory" t={t} />
     }
-    if (!memory) return <Missing what="memory" />
+    if (!memory) return <Missing kind="memory" t={t} />
   }
 
   const [entries, deleted, hits, versions] = await Promise.all([
@@ -79,10 +81,10 @@ export default async function ProjectBrowser({
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <Link href="/app" className="text-sm text-[var(--text-muted)] underline">
-          ← Projects
+          {t('app.browse.back')}
         </Link>
         <Link href={`${base}/settings`} className="text-sm text-[var(--text-muted)] underline">
-          Settings
+          {t('app.browse.settings')}
         </Link>
       </div>
 
@@ -98,18 +100,18 @@ export default async function ProjectBrowser({
 
       <form action={base} className="flex flex-wrap gap-2">
         <label htmlFor="memory-search" className="sr-only">
-          Search this project
+          {t('app.browse.searchLabel')}
         </label>
         <input
           id="memory-search"
           type="search"
           name="q"
           defaultValue={query}
-          placeholder="Search this project"
+          placeholder={t('app.browse.searchLabel')}
           className="min-w-0 flex-1 rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-sm"
         />
         <button type="submit" className="rounded bg-[var(--accent)] px-3 py-2 text-sm text-[var(--accent-fg)]">
-          Search
+          {t('app.browse.search')}
         </button>
       </form>
 
@@ -121,14 +123,20 @@ export default async function ProjectBrowser({
             active={memory?.path}
             deletedCount={deleted.length}
             showDeleted={showDeleted}
+            labels={{
+              live: t('app.tree.live'),
+              deleted: t('app.tree.deleted'),
+              empty: t('app.tree.empty'),
+              label: t('app.tree.label'),
+            }}
           />
         </aside>
 
         <section className="min-w-0 flex-1">
           {showDeleted ? (
-            <DeletedList slug={slug} projectId={project.id} rows={deleted} canWrite={canWrite} />
+            <DeletedList slug={slug} projectId={project.id} rows={deleted} canWrite={canWrite} t={t} />
           ) : query ? (
-            <SearchResults hits={hits} base={base} />
+            <SearchResults hits={hits} base={base} t={t} />
           ) : memory ? (
             <article className="flex flex-col gap-3">
               <p className="text-sm text-[var(--text-muted)]">{memory.path.split('/').join(' / ')}</p>
@@ -136,17 +144,17 @@ export default async function ProjectBrowser({
               {memory.summary ? (
                 <p className="text-sm text-[var(--text-muted)]">{memory.summary}</p>
               ) : (
-                <p className="text-sm text-[var(--text-muted)]">No summary yet.</p>
+                <p className="text-sm text-[var(--text-muted)]">{t('app.browse.noSummary')}</p>
               )}
               <p className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-muted)]">
                 <span>
-                  {memory.kind} · updated {memory.updatedAt.toISOString()}
+                  {memory.kind} · {t('app.browse.updated')} {memory.updatedAt.toISOString()}
                 </span>
                 <Link
                   href={`${base}?path=${encodeURIComponent(memory.path)}&history=1`}
                   className="underline"
                 >
-                  History ({versions.length})
+                  {t('app.browse.history', { count: versions.length })}
                 </Link>
               </p>
               {canWrite ? (
@@ -158,6 +166,13 @@ export default async function ProjectBrowser({
                     title={memory.title}
                     body={memory.body}
                     learning={project.learningEnabled}
+                    labels={{
+                      body: t('app.editor.body'),
+                      save: t('app.editor.save'),
+                      saving: t('app.editor.saving'),
+                      summary: t('app.editor.summary'),
+                      learningOff: t('app.editor.learningOff'),
+                    }}
                   />
                   <form action={deleteMemoryAction} className="flex items-center gap-3">
                     <input type="hidden" name="slug" value={slug} />
@@ -167,10 +182,10 @@ export default async function ProjectBrowser({
                       type="submit"
                       className="rounded border border-[var(--danger)] px-3 py-1 text-sm text-[var(--danger)]"
                     >
-                      Delete
+                      {t('app.browse.delete')}
                     </button>
                     <span className="text-xs text-[var(--text-muted)]">
-                      Recoverable for 30 days.
+                      {t('app.browse.recoverable')}
                     </span>
                   </form>
                 </>
@@ -178,10 +193,10 @@ export default async function ProjectBrowser({
                 <>
                   <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded border border-[var(--border)] bg-[var(--bg-raised)] p-3 text-sm">
                     {memory.body.length > BODY_DISPLAY_LIMIT
-                      ? `${memory.body.slice(0, BODY_DISPLAY_LIMIT)}\n\n[truncated for display]`
+                      ? `${memory.body.slice(0, BODY_DISPLAY_LIMIT)}\n\n${t('app.browse.truncated')}`
                       : memory.body}
                   </pre>
-                  <p className="text-xs text-[var(--text-muted)]">You have read access to this project.</p>
+                  <p className="text-xs text-[var(--text-muted)]">{t('app.browse.readOnly')}</p>
                 </>
               )}
               {showHistory ? (
@@ -194,11 +209,21 @@ export default async function ProjectBrowser({
                   selected={selectedVersion}
                   diff={diff}
                   restore={restoreVersionAction}
+                  labels={{
+                    title: t('app.history.title', { count: versions.length }),
+                    back: t('app.history.back'),
+                    empty: t('app.history.empty'),
+                    replaced: t('app.history.replaced', {
+                      when: selectedVersion?.updatedAt.toISOString() ?? '',
+                    }),
+                    restore: t('app.history.restore'),
+                    kept: t('app.history.kept'),
+                  }}
                 />
               ) : null}
             </article>
           ) : (
-            <p className="text-sm text-[var(--text-muted)]">Choose a memory, or search.</p>
+            <p className="text-sm text-[var(--text-muted)]">{t('app.browse.choose')}</p>
           )}
         </section>
       </div>
@@ -206,9 +231,17 @@ export default async function ProjectBrowser({
   )
 }
 
-function SearchResults({ hits, base }: { hits: Awaited<ReturnType<typeof searchMemories>>; base: string }) {
+function SearchResults({
+  hits,
+  base,
+  t,
+}: {
+  hits: Awaited<ReturnType<typeof searchMemories>>
+  base: string
+  t: Translate
+}) {
   if (hits.length === 0) {
-    return <p className="text-sm text-[var(--text-muted)]">No matches.</p>
+    return <p className="text-sm text-[var(--text-muted)]">{t('app.browse.noMatches')}</p>
   }
   return (
     <ul className="flex flex-col gap-2">
@@ -235,14 +268,16 @@ function DeletedList({
   projectId,
   rows,
   canWrite,
+  t,
 }: {
   slug: string
   projectId: string
   rows: Awaited<ReturnType<typeof listDeletedMemories>>
   canWrite: boolean
+  t: Translate
 }) {
   if (rows.length === 0) {
-    return <p className="text-sm text-[var(--text-muted)]">Nothing in the bin.</p>
+    return <p className="text-sm text-[var(--text-muted)]">{t('app.browse.binEmpty')}</p>
   }
   return (
     <ul className="flex flex-col gap-2">
@@ -254,7 +289,7 @@ function DeletedList({
           <span className="min-w-0">
             <span className="block text-sm">{row.title}</span>
             <span className="block text-xs text-[var(--text-muted)]">
-              {row.path} · deleted {row.deletedAt.toISOString()}
+              {row.path} · {t('app.browse.deleted')} {row.deletedAt.toISOString()}
             </span>
           </span>
           {canWrite ? (
@@ -266,18 +301,18 @@ function DeletedList({
                 type="submit"
                 className="rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--fg)]"
               >
-                Restore
+                {t('app.dashboard.restore')}
               </button>
             </form>
           ) : null}
         </li>
       ))}
       <li className="text-xs text-[var(--text-muted)]">
-        Deleted memories are removed for good after 30 days. Open{' '}
+        {t('app.browse.binFooterBefore')}{' '}
         <Link href={`/app/projects/${slug}`} className="underline">
-          live memory
+          {t('app.browse.binFooterLink')}
         </Link>
-        .
+        {t('app.browse.binFooterAfter')}
       </li>
     </ul>
   )

@@ -17,6 +17,7 @@ const asUser = (id: string, email: string): AuthUser => ({
   role: 'user',
   status: 'active',
   mfaEnabled: false,
+  locale: 'en',
 })
 
 const call = (name: string, args: Record<string, unknown> = {}) => ({

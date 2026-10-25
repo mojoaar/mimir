@@ -4,8 +4,9 @@ import { notFound } from 'next/navigation'
 import { requireUser } from '@/lib/auth/context'
 import { getTeam } from '@/lib/teams/service'
 
-import { deleteTeamAction, removeMemberAction } from '../actions'
+import { deleteTeamAction, leaveTeamAction, removeMemberAction } from '../actions'
 import { MemberForm } from './member-form'
+import { RenameForm } from './rename-form'
 
 export const instant = false
 
@@ -24,6 +25,8 @@ export default async function TeamDetailPage({
 
   const { team, members } = found
   const isOwner = team.role === 'owner'
+  const owners = members.filter((m) => m.role === 'owner').length
+  const canLeave = team.role === 'member' || (isOwner && owners > 1)
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
@@ -49,6 +52,8 @@ export default async function TeamDetailPage({
         <p className="text-sm text-[var(--text-muted)]">Member removed. Their access ended now.</p>
       ) : null}
 
+      {isOwner ? <RenameForm teamId={team.id} name={team.name} /> : null}
+
       <ul className="flex flex-col gap-2">
         {members.map((member) => (
           <li
@@ -62,13 +67,23 @@ export default async function TeamDetailPage({
             {isOwner && member.role !== 'owner' ? (
               <form action={removeMemberAction}>
                 <input type="hidden" name="teamId" value={team.id} />
-                <input type="hidden" name="teamId" value={team.id} />
                 <input type="hidden" name="userId" value={member.userId} />
                 <button
                   type="submit"
                   className="rounded border border-[var(--border)] px-2 py-1 text-sm text-[var(--danger)]"
                 >
                   Remove
+                </button>
+              </form>
+            ) : null}
+            {member.userId === user.id && canLeave ? (
+              <form action={leaveTeamAction}>
+                <input type="hidden" name="teamId" value={team.id} />
+                <button
+                  type="submit"
+                  className="rounded border border-[var(--border)] px-2 py-1 text-sm text-[var(--danger)]"
+                >
+                  Leave team
                 </button>
               </form>
             ) : null}
@@ -86,7 +101,6 @@ export default async function TeamDetailPage({
             are untouched.
           </p>
           <form action={deleteTeamAction} className="self-start">
-            <input type="hidden" name="teamId" value={team.id} />
             <input type="hidden" name="teamId" value={team.id} />
             <button
               type="submit"

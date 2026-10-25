@@ -7,8 +7,10 @@ import {
   createTeam,
   deleteTeam,
   getTeam,
+  leaveTeam,
   listTeams,
   removeTeamMember,
+  renameTeam,
 } from './service'
 
 let f: Fixtures
@@ -150,5 +152,58 @@ describe('teams', () => {
     await deleteTeam(f.bob, team.id)
 
     expect(await grantCount(f.aliceProjectId)).toBe(0)
+  })
+
+  it('lets a member leave without taking anyone else with them', async () => {
+    const team = await createTeam(f.alice, 'notes')
+    await addTeamMember(f.alice, team.id, 'bob@example.test')
+    await addTeamMember(f.alice, team.id, 'carol@example.test')
+
+    await leaveTeam(f.bob, team.id)
+
+    expect(await listTeams(f.bob)).toHaveLength(0)
+    const still = await getTeam(f.alice, team.id)
+    expect(still?.members.map((m) => m.email).sort()).toEqual([
+      'alice@example.test',
+      'carol@example.test',
+    ])
+    expect(await auditCount('team.member_leave')).toBe(1)
+  })
+
+  it('refuses to let the last owner leave', async () => {
+    const team = await createTeam(f.alice, 'notes')
+
+    await expect(leaveTeam(f.alice, team.id)).rejects.toMatchObject({ code: 'invalid_params' })
+    expect(await listTeams(f.alice)).toHaveLength(1)
+  })
+
+  it('answers not_found when someone who is not in the team tries to leave', async () => {
+    const team = await createTeam(f.alice, 'notes')
+
+    await expect(leaveTeam(f.bob, team.id)).rejects.toMatchObject({ code: 'not_found' })
+  })
+
+  it('renames a team without moving it', async () => {
+    const team = await createTeam(f.alice, 'notes')
+
+    const renamed = await renameTeam(f.alice, team.id, '  Reading notes  ')
+
+    expect(renamed.name).toBe('Reading notes')
+    const fetched = await getTeam(f.alice, team.id)
+    expect(fetched?.team).toMatchObject({ id: team.id, slug: team.slug, name: 'Reading notes' })
+    expect(await auditCount('team.rename')).toBe(1)
+  })
+
+  it('refuses a rename from anyone but an owner, and a name that is too long', async () => {
+    const team = await createTeam(f.alice, 'notes')
+    await addTeamMember(f.alice, team.id, 'bob@example.test')
+
+    await expect(renameTeam(f.bob, team.id, 'theirs')).rejects.toMatchObject({ code: 'forbidden' })
+    await expect(renameTeam(f.alice, team.id, 'a'.repeat(81))).rejects.toMatchObject({
+      code: 'invalid_params',
+    })
+    await expect(renameTeam(f.alice, team.id, '   ')).rejects.toMatchObject({
+      code: 'invalid_params',
+    })
   })
 })

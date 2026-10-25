@@ -9,7 +9,7 @@ export type ProjectRole = 'owner' | 'write' | 'read'
 export type ResolvedProject = {
   id: string
   slug: string
-  role: ProjectRole
+  role: ProjectRole | null
 }
 
 type AccessRow = {
@@ -125,4 +125,45 @@ async function createProject(
   }
 
   throw new Error(`could not allocate a project slug for ${repoKey ?? 'project'}`)
+}
+
+export type ProjectSummary = {
+  slug: string
+  name: string
+  role: ProjectRole | null
+  memoryCount: number
+}
+
+/** Projects the caller owns or holds a grant on — RLS already hides the rest. */
+export async function listProjects(userId: string): Promise<ProjectSummary[]> {
+  return withUser(userId, async (client) => {
+    const { rows } = await client.query<{
+      slug: string
+      name: string
+      owner_user_id: string
+      grant_role: ProjectRole | null
+      memory_count: number
+    }>(
+      `SELECT p.slug,
+              p.name,
+              p.owner_user_id,
+              g.role AS grant_role,
+              (SELECT count(*)::int FROM memories m
+                WHERE m.project_id = p.id AND m.deleted_at IS NULL) AS memory_count
+         FROM projects p
+         LEFT JOIN project_grants g
+                ON g.project_id = p.id
+               AND g.principal_type = 'user'
+               AND g.principal_id = $1
+        WHERE p.archived_at IS NULL
+        ORDER BY p.updated_at DESC`,
+      [userId],
+    )
+    return rows.map((row) => ({
+      slug: row.slug,
+      name: row.name,
+      role: row.owner_user_id === userId ? 'owner' : row.grant_role,
+      memoryCount: row.memory_count,
+    }))
+  })
 }

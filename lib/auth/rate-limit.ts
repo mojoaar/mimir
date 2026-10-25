@@ -40,3 +40,25 @@ export function clearLoginRateLimit(ip: string | null, email: string): void {
 export function resetLoginRateLimit(): void {
   attempts.clear()
 }
+
+const API_WINDOW_MS = 60_000
+const API_MAX_REQUESTS = 60
+const apiHits = new Map<string, number[]>()
+
+/** 60 requests a minute per user across MCP and REST. In-process: there is one process. */
+export function checkApiRateLimit(actorId: string): { allowed: boolean; retryAfter: number } {
+  const now = Date.now()
+  const recent = (apiHits.get(actorId) ?? []).filter((at) => now - at < API_WINDOW_MS)
+  if (recent.length >= API_MAX_REQUESTS) {
+    const oldest = recent[0] ?? now
+    return { allowed: false, retryAfter: Math.max(1, Math.ceil((API_WINDOW_MS - (now - oldest)) / 1000)) }
+  }
+  recent.push(now)
+  apiHits.set(actorId, recent)
+  return { allowed: true, retryAfter: 0 }
+}
+
+/** Test hook. */
+export function resetApiRateLimit(): void {
+  apiHits.clear()
+}

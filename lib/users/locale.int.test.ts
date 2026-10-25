@@ -31,14 +31,16 @@ describe('your own language', () => {
     await updateMyLocale(f.alice, 'da')
 
     expect(await localeOf(f.alice)).toBe('da')
-    expect(await localeOf(f.bob)).toBe('en')
+    // A new account has chosen nothing yet, so it stays blank and the
+    // resolver falls through to the cookie or the browser's language.
+    expect(await localeOf(f.bob)).toBe('')
   })
 
   it('refuses a language the install does not speak', async () => {
     await expect(updateMyLocale(f.alice, 'fr')).rejects.toMatchObject({
       code: 'invalid_params',
     })
-    expect(await localeOf(f.alice)).toBe('en')
+    expect(await localeOf(f.alice)).toBe('')
   })
 
   it('records each change', async () => {

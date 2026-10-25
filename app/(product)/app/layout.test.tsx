@@ -51,6 +51,9 @@ describe('the app shell', () => {
     expect(html).toContain('body')
     expect(html).toContain('Sign out')
     expect(html).toContain('alice@example.test')
+    // The select needs a real submit control, or the one control that
+    // changes the whole interface stops working without JavaScript.
+    expect(html).toContain('type="submit"')
   })
 
   it('keeps every link a signed-in person needs, including the docs', async () => {

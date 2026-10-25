@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth/context'
 import { audit } from '@/lib/audit'
-import { translator } from '@/lib/i18n/request'
+import { translator, type Translate } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 import { presetFor, type PresetId, type ProviderKind } from '@/lib/providers/presets'
 import {
   createProvider,
@@ -21,10 +22,9 @@ const PATH = '/app/settings/providers'
 // shown to a user with a driver message attached.
 const KNOWN = new Set(['invalid_params', 'not_found', 'provider_error'])
 
-function messageOf(error: unknown, fallback: string): string {
-  const code = (error as { code?: string }).code
-  if (code && KNOWN.has(code)) return (error as Error).message
-  return fallback
+function messageOf(error: unknown, t: Translate, fallback: string): string {
+  const mapped = actionMessage(error, t)
+  return mapped === t('app.error.generic') ? fallback : mapped
 }
 
 export async function createProviderAction(
@@ -73,7 +73,7 @@ export async function createProviderAction(
       isDefault,
     })
   } catch (error) {
-    return { error: messageOf(error, t('app.providers.saveFailed')) }
+    return { error: messageOf(error, t, t('app.providers.saveFailed')) }
   }
 
   revalidatePath(PATH)

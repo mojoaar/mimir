@@ -25,6 +25,11 @@ export function LanguageSwitcher({
       <label htmlFor="mimir-language" className="sr-only">
         {label}
       </label>
+      {/* Without JavaScript the select cannot submit itself, so this button is
+          the whole control; with it, the change is already submitted. */}
+      <button type="submit" className="sr-only">
+        {label}
+      </button>
       <select
         id="mimir-language"
         name="locale"

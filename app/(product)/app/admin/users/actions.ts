@@ -9,6 +9,7 @@ import { absoluteLink, sendEmail } from '@/lib/email/client'
 import { inviteEmail } from '@/lib/email/templates'
 import { getSiteSettings } from '@/lib/settings/site'
 import { translator, type Translate } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 import {
   createUser,
   deleteUser,
@@ -29,10 +30,8 @@ async function messageOf(error: unknown, t: Translate): Promise<string> {
   // into "That did not work" after the change had already been committed.
   const digest = (error as { digest?: string }).digest
   if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) throw error
-  const code = (error as { code?: string }).code
-  if (code && KNOWN.has(code)) return (error as Error).message
   console.error('admin user action failed', describeAuditFailure(error))
-  return t('app.error.generic')
+  return actionMessage(error, t)
 }
 
 function text(formData: FormData, name: string): string {

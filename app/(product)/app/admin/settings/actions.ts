@@ -8,16 +8,15 @@ import { getProviderSecret, recordVerification } from '@/lib/providers/service'
 import { verifyProvider } from '@/lib/providers/verify'
 import { EMBEDDING_DIM, setEmbeddingConfig } from '@/lib/settings/embedding'
 import { translator, type Translate } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 
 export type EmbeddingFormState = { ok?: string; error?: string }
 
 const KNOWN = new Set(['invalid_params', 'not_found', 'provider_error'])
 
 function message(error: unknown, t: Translate): string {
-  const code = (error as { code?: string }).code
-  return code && KNOWN.has(code)
-    ? String((error as Error).message)
-    : t('app.admin.embeddings.saveFailed')
+  const mapped = actionMessage(error, t)
+  return mapped === t('app.error.generic') ? t('app.admin.embeddings.saveFailed') : mapped
 }
 
 export async function saveEmbeddingAction(

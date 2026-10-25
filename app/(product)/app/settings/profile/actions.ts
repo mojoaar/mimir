@@ -8,6 +8,7 @@ import { requireUser } from '@/lib/auth/context'
 import { SESSION_COOKIE } from '@/lib/auth/cookie-name'
 import { revokeOtherSessions, sessionIdFor } from '@/lib/auth/session'
 import { translator } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 import { changePassword, revokeOwnSession, updateProfile } from '@/lib/users/self'
 
 export type ActionState = { ok?: string; error?: string }
@@ -16,15 +17,7 @@ const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
 const PROFILE = '/app/settings/profile'
 
 async function messageOf(error: unknown): Promise<string> {
-  const t = await translator()
-  const code = (error as { code?: string }).code ?? ''
-  const message = (error as Error).message ?? ''
-  // Only our own service errors are written for a person. A driver error
-  // carries a SQLSTATE in `code` and text nobody should read.
-  if (!KNOWN.has(code) || !message || message.includes('\n') || message.length > 200) {
-    return t('app.error.generic')
-  }
-  return message
+  return actionMessage(error, await translator())
 }
 
 async function sessionId(): Promise<string> {

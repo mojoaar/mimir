@@ -7,17 +7,17 @@ import { audit, describeAuditFailure } from '@/lib/audit'
 import { requireUser } from '@/lib/auth/context'
 import { deleteMemory, restoreMemory, writeMemory } from '@/lib/memory/service'
 import { restoreVersion } from '@/lib/memory/versions'
-import { translator } from '@/lib/i18n/request'
+import { translator, type Translate } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 
 export type ActionState = { ok?: string; error?: string }
 
 const KNOWN = new Set(['invalid_path', 'invalid_params', 'body_too_large', 'forbidden', 'not_found'])
 
-function messageOf(error: unknown, generic: string): string {
-  const code = (error as { code?: string }).code ?? ''
-  if (KNOWN.has(code)) return (error as Error).message
+function messageOf(error: unknown, t: Translate, generic: string): string {
   console.error('memory action failed', describeAuditFailure(error))
-  return generic
+  const mapped = actionMessage(error, t)
+  return mapped === t('app.error.generic') ? generic : mapped
 }
 
 function field(formData: FormData, name: string): string {
@@ -48,7 +48,7 @@ export async function saveMemoryAction(_prev: ActionState, formData: FormData): 
     return { ok: t('app.browse.saved') }
   } catch (error) {
     const t = await translator()
-    return { error: messageOf(error, t('app.error.generic')) }
+    return { error: messageOf(error, t, t('app.error.generic')) }
   }
 }
 

@@ -10,6 +10,7 @@ import {
   setWebDavCredentials,
 } from '@/lib/settings/backup-settings'
 import { translator } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 
 type Target = 's3' | 'webdav'
 
@@ -93,8 +94,7 @@ export async function saveBackupSettingsAction(formData: FormData): Promise<void
       detail: { target, enabled: text(formData, 'enabled') === 'on' },
     })
   } catch (thrown) {
-    const message = (thrown instanceof Error ? thrown : new Error(String(thrown))).message
-    back(`error=${encodeURIComponent(message)}`)
+    back(`error=${encodeURIComponent(actionMessage(thrown, t))}`)
   }
 
   back(`notice=${encodeURIComponent(t('app.admin.backups.saved'))}`)

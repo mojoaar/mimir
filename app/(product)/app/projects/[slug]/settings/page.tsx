@@ -49,17 +49,18 @@ export default async function ProjectSettingsPage({
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex gap-4 text-sm">
         <Link href="/app" className="text-[var(--text-muted)] underline">
-          ← Projects
+          {t('app.projectSettings.back')}
         </Link>
         <Link href={`/app/projects/${slug}`} className="text-[var(--text-muted)] underline">
-          Memory
+          {t('app.projectSettings.memory')}
         </Link>
       </div>
 
       <header>
         <h1 className="text-xl font-semibold tracking-tight">{project.name}</h1>
         <p className="text-sm text-[var(--text-muted)]">
-          {project.slug} · you are {project.role}
+          {project.slug} ·{' '}
+          {t('app.projectSettings.youAre', { role: project.role ?? '' })}
         </p>
       </header>
 
@@ -70,6 +71,16 @@ export default async function ProjectSettingsPage({
       ) : null}
 
       <ProjectForm
+        labels={{
+          learnTitle: t('app.projectSettings.learnTitle'),
+          learnOn: t('app.projectSettings.learnOn'),
+          learnOff: t('app.projectSettings.learnOff'),
+          llm: t('app.projectSettings.llm'),
+          ownerDefault: t('app.projectSettings.ownerDefault'),
+          llmHint: t('app.projectSettings.llmHint'),
+          save: t('app.projectSettings.save'),
+          saving: t('app.projectSettings.saving'),
+        }}
         projectId={project.id}
         slug={project.slug}
         isOwner={project.role === 'owner'}
@@ -80,9 +91,9 @@ export default async function ProjectSettingsPage({
 
       {project.role === 'owner' ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold">Sharing</h2>
+          <h2 className="text-sm font-semibold">{t('app.projectSettings.sharing')}</h2>
           {grants.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">Nobody else can see this project yet.</p>
+            <p className="text-sm text-[var(--text-muted)]">{t('app.projectSettings.noShares')}</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {grants.map((grant) => (
@@ -104,7 +115,7 @@ export default async function ProjectSettingsPage({
                       type="submit"
                       className="rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--bg)]"
                     >
-                      Revoke
+                      {t('app.projectSettings.revoke')}
                     </button>
                   </form>
                 </li>
@@ -112,6 +123,23 @@ export default async function ProjectSettingsPage({
             </ul>
           )}
           <GrantForm
+            labels={{
+              title: t('app.grant.title'),
+              intro: t('app.grant.intro'),
+              with: t('app.grant.with'),
+              person: t('app.grant.person'),
+              team: t('app.grant.team'),
+              can: t('app.grant.can'),
+              read: t('app.grant.read'),
+              readWrite: t('app.grant.readWrite'),
+              email: t('app.grant.email'),
+              emailPlaceholder: t('app.grant.emailPlaceholder'),
+              teamLabel: t('app.grant.teamLabel'),
+              noTeam: t('app.grant.noTeam'),
+              hint: t('app.grant.hint'),
+              share: t('app.grant.share'),
+              sharing: t('app.grant.sharing'),
+            }}
             projectId={project.id}
             slug={project.slug}
             teams={teams.map((team) => ({ id: team.id, name: team.name }))}
@@ -121,10 +149,9 @@ export default async function ProjectSettingsPage({
 
       {project.role === 'owner' ? (
         <section className="flex flex-col gap-3 rounded-lg border border-[var(--danger)] p-4">
-          <h2 className="text-sm font-semibold text-[var(--danger)]">Danger zone</h2>
+          <h2 className="text-sm font-semibold text-[var(--danger)]">{t('app.projectSettings.danger')}</h2>
           <p className="text-sm text-[var(--text-muted)]">
-            Hidden from every list and API call. Memories and grants are kept; you can restore it
-            from the projects page.
+            {t('app.projectSettings.dangerBody')}
           </p>
           <form action={archiveProjectAction}>
             <input type="hidden" name="projectId" value={project.id} />
@@ -133,7 +160,7 @@ export default async function ProjectSettingsPage({
               type="submit"
               className="rounded-md border border-[var(--danger)] px-3 py-1 text-sm text-[var(--danger)] hover:bg-[var(--bg-raised)]"
             >
-              Archive project
+              {t('app.projectSettings.archive')}
             </button>
           </form>
         </section>

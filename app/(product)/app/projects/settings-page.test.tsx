@@ -9,9 +9,13 @@ const mocks = vi.hoisted(() => ({
   grantProject: vi.fn(async () => {}),
   revokeGrant: vi.fn(async () => {}),
   findUserId: vi.fn(async () => 'u2' as string | null),
+  locale: 'en',
 }))
 
-vi.mock('@/lib/auth/context', () => ({ requireUser: async () => ({ id: 'u1' }) }))
+vi.mock('@/lib/auth/context', () => ({
+  requireUser: async () => ({ id: 'u1', email: 'alice@example.test', locale: mocks.locale }),
+  getCurrentUser: async () => ({ id: 'u1', email: 'alice@example.test', locale: mocks.locale }),
+}))
 vi.mock('@/lib/projects/service', () => ({ getProject: mocks.getProject }))
 vi.mock('@/lib/providers/service', () => ({ listProviders: mocks.listProviders }))
 vi.mock('@/lib/projects/access', () => ({
@@ -106,6 +110,23 @@ describe('project settings page', () => {
 
     expect(html).not.toContain('Share this project')
     expect(html).not.toContain('Revoke')
+  })
+})
+
+describe('the language of the page', () => {
+  it('speaks Danish on the project settings screen', async () => {
+    mocks.locale = 'da'
+
+    try {
+      mocks.getProject.mockResolvedValueOnce(project)
+      const html = await render()
+
+      expect(html).toContain('Farezone')
+      expect(html).toContain('Deling')
+      expect(html).toContain('← Projekter')
+    } finally {
+      mocks.locale = 'en'
+    }
   })
 })
 

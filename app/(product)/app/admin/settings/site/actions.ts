@@ -9,6 +9,7 @@ import { getEmailSettings, setEmailSettings } from '@/lib/settings/email-setting
 import { invalidateAllowlistCache } from '@/lib/http/allowlist'
 import { InvalidSetting } from '@/lib/settings/store'
 import { translator } from '@/lib/i18n/request'
+import { actionMessage } from '@/lib/i18n/errors'
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name)
@@ -67,8 +68,8 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
       },
     })
   } catch (thrown) {
-    const message = (thrown instanceof Error ? thrown : new Error(String(thrown))).message
-    redirect(`/app/admin/settings/site?error=${encodeURIComponent(message)}`)
+    // Never hand a driver message to a page: it can carry SQL and column names.
+    redirect(`/app/admin/settings/site?error=${encodeURIComponent(actionMessage(thrown, t))}`)
   }
 
   redirect(`/app/admin/settings/site?notice=${encodeURIComponent(t('app.admin.site.saved'))}`)

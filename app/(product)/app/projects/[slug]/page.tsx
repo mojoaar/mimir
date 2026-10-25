@@ -313,7 +313,6 @@ function DeletedList({
           {t('app.browse.binFooterLink')}
         </Link>
         {t('app.browse.binFooterAfter')}
-        .
       </li>
     </ul>
   )

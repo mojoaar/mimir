@@ -188,7 +188,7 @@ export function BackupForm({
             <input name="webdavPassword" type="password" autoComplete="off" className={FIELD} style={FIELD_STYLE} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">Prefix</span>
+            <span className="text-[var(--text-muted)]">{labels.prefix}</span>
             <input name="webdavPrefix" defaultValue={webdav?.prefix ?? 'mimir'} className={FIELD} style={FIELD_STYLE} />
           </label>
         </div>

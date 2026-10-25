@@ -3,7 +3,17 @@
 import { useActionState } from 'react'
 import { resetPasswordAction, type ActionState } from './actions'
 
-export function ResetForm({ userId, email }: { userId: string; email: string }) {
+export type ResetFormLabels = { submit: string; pending: string }
+
+export function ResetForm({
+  userId,
+  email,
+  labels,
+}: {
+  userId: string
+  email: string
+  labels: ResetFormLabels
+}) {
   const [state, submit, pending] = useActionState<ActionState, FormData>(resetPasswordAction, {})
 
   return (
@@ -16,7 +26,7 @@ export function ResetForm({ userId, email }: { userId: string; email: string }) 
           disabled={pending}
           className="rounded border border-[var(--border)] px-2 py-1 text-xs disabled:opacity-60"
         >
-          {pending ? 'Sending…' : 'Send reset'}
+          {pending ? labels.pending : labels.submit}
         </button>
       </form>
 

@@ -9,6 +9,7 @@ import {
   setS3Credentials,
   setWebDavCredentials,
 } from '@/lib/settings/backup-settings'
+import { translator } from '@/lib/i18n/request'
 
 type Target = 's3' | 'webdav'
 
@@ -23,6 +24,7 @@ function back(params: string): never {
 
 export async function saveBackupSettingsAction(formData: FormData): Promise<void> {
   const user = await requireAdmin()
+  const t = await translator()
   const target = text(formData, 'target')
 
   try {
@@ -95,11 +97,12 @@ export async function saveBackupSettingsAction(formData: FormData): Promise<void
     back(`error=${encodeURIComponent(message)}`)
   }
 
-  back('notice=Backup%20settings%20saved.')
+  back(`notice=${encodeURIComponent(t('app.admin.backups.saved'))}`)
 }
 
 export async function runBackupAction(): Promise<void> {
   const user = await requireAdmin()
+  const t = await translator()
   const id = await sendJob('backup', {})
   await audit({
     actorType: 'user',
@@ -110,8 +113,8 @@ export async function runBackupAction(): Promise<void> {
   })
   back(
     id
-      ? 'notice=Backup%20queued.'
-      : `error=${encodeURIComponent('The job queue is not running.')}`,
+      ? `notice=${encodeURIComponent(t('app.admin.backups.queued'))}`
+      : `error=${encodeURIComponent(t('app.admin.backups.queueDown'))}`,
   )
 }
 

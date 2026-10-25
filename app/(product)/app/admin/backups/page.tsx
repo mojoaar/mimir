@@ -8,6 +8,7 @@ import {
 } from '@/lib/settings/backup-settings'
 import { BackupForm } from './settings-form'
 import { runBackupAction } from './actions'
+import { translator, type Translate } from '@/lib/i18n/request'
 
 export const instant = false
 
@@ -23,10 +24,13 @@ type Run = {
 
 const HOUR = 60 * 60 * 1000
 
-function describeAge(when: Date | null): { text: string; stale: boolean } {
-  if (!when) return { text: 'Never', stale: true }
+function describeAge(when: Date | null, t: Translate): { text: string; stale: boolean } {
+  if (!when) return { text: t('app.admin.backups.never'), stale: true }
   const hours = Math.floor((Date.now() - when.getTime()) / HOUR)
-  const text = hours < 1 ? 'under an hour ago' : `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const text =
+    hours < 1
+      ? t('app.admin.backups.underHour')
+      : t(hours === 1 ? 'app.admin.backups.hourAgo' : 'app.admin.backups.hoursAgo', { count: hours })
   return { text, stale: hours > 26 }
 }
 
@@ -36,6 +40,7 @@ export default async function BackupsPage({
   searchParams: Promise<{ notice?: string; error?: string }>
 }) {
   await requireAdmin()
+  const t = await translator()
   const params = await searchParams
 
   const [settings, s3, webdav, runs] = await Promise.all([
@@ -55,15 +60,14 @@ export default async function BackupsPage({
       `select finished_at from backup_runs where status = 'ok' order by finished_at desc limit 1`,
     ),
   )
-  const age = describeAge(latestOk.rows[0]?.finished_at ?? null)
+  const age = describeAge(latestOk.rows[0]?.finished_at ?? null, t)
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10 sm:px-6">
       <section className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Backups</h1>
+        <h1 className="text-2xl font-semibold">{t('app.admin.backups.title')}</h1>
         <p className="text-sm text-[var(--text-muted)]">
-          Encrypted with <code>MIMIR_SECRET</code>. A run is only recorded as successful once every
-          object has been read back at the size that was uploaded.
+          {t('app.admin.backups.intro')}
         </p>
       </section>
 
@@ -78,13 +82,14 @@ export default async function BackupsPage({
       >
         <div className="text-sm">
           <p className="font-medium">
-            Last successful run:{' '}
+            {t('app.admin.backups.lastRun')}{' '}
             <span style={{ color: age.stale ? 'var(--danger)' : 'var(--fg)' }}>{age.text}</span>
           </p>
           <p className="text-[var(--text-muted)]">
-            {settings.enabled
-              ? `Scheduled ${settings.schedule}, keeping the newest ${settings.retention} runs.`
-              : 'Scheduled backups are off.'}
+            {t(
+              settings.enabled ? 'app.admin.backups.scheduled' : 'app.admin.backups.off',
+              { schedule: settings.schedule, retention: settings.retention },
+            )}
           </p>
         </div>
         <form action={runBackupAction}>
@@ -93,12 +98,35 @@ export default async function BackupsPage({
             className="rounded px-4 py-2 text-sm font-medium"
             style={{ background: 'var(--accent)', color: 'var(--accent-fg)' }}
           >
-            Run now
+            {t('app.admin.backups.runNow')}
           </button>
         </form>
       </section>
 
       <BackupForm
+        labels={{
+          where: t('app.admin.backups.where'),
+          onSchedule: t('app.admin.backups.onSchedule'),
+          cron: t('app.admin.backups.cron'),
+          keep: t('app.admin.backups.keep'),
+          runs: t('app.admin.backups.runs'),
+          target: t('app.admin.backups.target'),
+          targetS3: t('app.admin.backups.targetS3'),
+          targetWebdav: t('app.admin.backups.targetWebdav'),
+          targetNone: t('app.admin.backups.targetNone'),
+          bucket: t('app.admin.backups.bucket'),
+          endpoint: t('app.admin.backups.endpoint'),
+          region: t('app.admin.backups.region'),
+          prefix: t('app.admin.backups.prefix'),
+          accessKey: t('app.admin.backups.accessKey'),
+          secret: t('app.admin.backups.secret'),
+          keepStored: t('app.admin.backups.keepStored'),
+          pathStyle: t('app.admin.backups.pathStyle'),
+          baseUrl: t('app.admin.backups.baseUrl'),
+          username: t('app.admin.backups.username'),
+          password: t('app.admin.backups.password'),
+          save: t('app.admin.site.save'),
+        }}
         settings={settings}
         hasS3={s3 !== null}
         hasWebDav={webdav !== null}
@@ -119,9 +147,9 @@ export default async function BackupsPage({
       />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Recent runs</h2>
+        <h2 className="text-lg font-medium">{t('app.admin.backups.recent')}</h2>
         {runs.rows.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)]">No runs yet.</p>
+          <p className="text-sm text-[var(--text-muted)]">{t('app.admin.backups.noRuns')}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {runs.rows.map((run) => (
@@ -154,9 +182,9 @@ export default async function BackupsPage({
       </section>
 
       <p className="text-sm text-[var(--text-muted)]">
-        Restoring is a command, not a button: see <code>scripts/restore.sh</code>.{' '}
+        {t('app.admin.backups.restore')}{' '}
         <Link href="/app/admin" className="underline">
-          Back to overview
+          {t('app.admin.backups.back')}
         </Link>
       </p>
     </main>

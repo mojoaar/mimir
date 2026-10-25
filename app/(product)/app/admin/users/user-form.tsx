@@ -3,14 +3,26 @@
 import { useActionState } from 'react'
 import { createUserAction, type ActionState } from './actions'
 
-export function UserForm() {
+export type UserFormLabels = {
+  email: string
+  name: string
+  role: string
+  roleUser: string
+  roleAdmin: string
+  password: string
+  submit: string
+  pending: string
+  emailOff: string
+}
+
+export function UserForm({ labels }: { labels: UserFormLabels }) {
   const [state, submit, pending] = useActionState<ActionState, FormData>(createUserAction, {})
 
   return (
     <form action={submit} className="space-y-3 text-sm">
       <div className="flex flex-wrap gap-2">
         <label className="flex flex-col gap-1">
-          <span className="text-[var(--text-muted)]">Email</span>
+          <span className="text-[var(--text-muted)]">{labels.email}</span>
           <input
             name="email"
             type="email"
@@ -20,7 +32,7 @@ export function UserForm() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-[var(--text-muted)]">Name</span>
+          <span className="text-[var(--text-muted)]">{labels.name}</span>
           <input
             name="name"
             required
@@ -29,20 +41,20 @@ export function UserForm() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-[var(--text-muted)]">Role</span>
+          <span className="text-[var(--text-muted)]">{labels.role}</span>
           <select
             name="role"
             defaultValue="user"
             className="rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1"
           >
-            <option value="user">user</option>
-            <option value="admin">admin</option>
+            <option value="user">{labels.roleUser}</option>
+            <option value="admin">{labels.roleAdmin}</option>
           </select>
         </label>
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="text-[var(--text-muted)]">Password (optional)</span>
+        <span className="text-[var(--text-muted)]">{labels.password}</span>
         <input
           name="password"
           type="password"
@@ -56,16 +68,14 @@ export function UserForm() {
         disabled={pending}
         className="rounded bg-[var(--accent)] px-3 py-1.5 font-medium text-[var(--accent-fg)] disabled:opacity-60"
       >
-        {pending ? 'Creating…' : 'Create user'}
+        {pending ? labels.pending : labels.submit}
       </button>
 
       {state.error && <p className="text-[var(--danger)]">{state.error}</p>}
       {state.ok && <p className="text-[var(--text-muted)]">{state.ok}</p>}
       {state.link && (
         <div className="space-y-1">
-          <p className="text-[var(--text-muted)]">
-            Email is not configured — send this link yourself.
-          </p>
+          <p className="text-[var(--text-muted)]">{labels.emailOff}</p>
           <code className="block break-all rounded border border-[var(--border)] bg-[var(--bg-sunken)] p-2 text-xs">
             {state.link}
           </code>

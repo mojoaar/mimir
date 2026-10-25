@@ -7,15 +7,27 @@ type Option = { id: string; label: string; model: string }
 
 const initial: EmbeddingFormState = {}
 
-export function EmbeddingForm({ providers }: { providers: Option[] }) {
+export type EmbeddingFormLabels = {
+  noProviders: string
+  provider: string
+  model: string
+  probeNote: string
+  submit: string
+  pending: string
+}
+
+export function EmbeddingForm({
+  providers,
+  labels,
+}: {
+  providers: Option[]
+  labels: EmbeddingFormLabels
+}) {
   const [state, action, pending] = useActionState(saveEmbeddingAction, initial)
 
   if (providers.length === 0) {
     return (
-      <p className="text-sm text-[var(--text-muted)]">
-        Add an embedding provider under Settings first. Ollama with nomic-embed-text is the
-        homelab default.
-      </p>
+      <p className="text-sm text-[var(--text-muted)]">{labels.noProviders}</p>
     )
   }
 
@@ -23,7 +35,7 @@ export function EmbeddingForm({ providers }: { providers: Option[] }) {
     <form action={action} className="space-y-3 rounded border border-[var(--border)] bg-[var(--bg-raised)] p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="space-y-1 text-sm">
-          <span className="text-[var(--text-muted)]">Provider</span>
+          <span className="text-[var(--text-muted)]">{labels.provider}</span>
           <select
             name="providerId"
             required
@@ -38,7 +50,7 @@ export function EmbeddingForm({ providers }: { providers: Option[] }) {
         </label>
 
         <label className="space-y-1 text-sm">
-          <span className="text-[var(--text-muted)]">Model</span>
+          <span className="text-[var(--text-muted)]">{labels.model}</span>
           <input
             name="model"
             required
@@ -48,11 +60,7 @@ export function EmbeddingForm({ providers }: { providers: Option[] }) {
         </label>
       </div>
 
-      <p className="text-xs text-[var(--text-muted)]">
-        Saving probes the provider and records the dimension it actually returns. The column holds
-        768, so a model that answers with another size is refused instead of silently degrading
-        search.
-      </p>
+      <p className="text-xs text-[var(--text-muted)]">{labels.probeNote}</p>
 
       {state.error && <p className="text-sm text-[var(--danger)]">{state.error}</p>}
       {state.ok && <p className="text-sm">{state.ok}</p>}
@@ -62,7 +70,7 @@ export function EmbeddingForm({ providers }: { providers: Option[] }) {
         disabled={pending}
         className="rounded bg-[var(--accent)] px-3 py-1.5 text-sm text-[var(--accent-fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-60"
       >
-        {pending ? 'Testing…' : 'Test and save'}
+        {pending ? labels.pending : labels.submit}
       </button>
     </form>
   )

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth/admin'
 import { withAdmin } from '@/lib/db/tx'
+import { translator } from '@/lib/i18n/request'
 
 export const instant = false
 
@@ -74,52 +75,60 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 
 export default async function AdminOverviewPage() {
   await requireAdmin()
+  const t = await translator()
   const stats = await getStats()
   const embeddedPercent =
     stats.memories === 0 ? 100 : Math.round((stats.embedded / stats.memories) * 100)
   const lastBackup = stats.lastBackupAt
     ? `${stats.lastBackupAt.toISOString().replace('T', ' ').slice(0, 16)} UTC (${stats.lastBackupStatus})`
-    : 'Never'
+    : t('app.admin.overview.never')
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-semibold">Overview</h1>
+      <h1 className="text-2xl font-semibold">{t('app.admin.overview.title')}</h1>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Stat
-          label="Users"
+          label={t('app.admin.overview.users')}
           value={String(stats.activeUsers)}
-          hint={`${stats.pendingUsers} pending · ${stats.disabledUsers} disabled`}
+          hint={t('app.admin.overview.usersHint', {
+            pending: stats.pendingUsers,
+            disabled: stats.disabledUsers,
+          })}
         />
-        <Stat label="Projects" value={String(stats.projects)} />
+        <Stat label={t('app.admin.overview.projects')} value={String(stats.projects)} />
         <Stat
-          label="Memories"
+          label={t('app.admin.overview.memories')}
           value={String(stats.memories)}
-          hint={`${embeddedPercent}% embedded`}
+          hint={t('app.admin.overview.embedded', { percent: embeddedPercent })}
         />
-        <Stat label="Last backup" value={stats.lastBackupAt ? 'Done' : 'Never'} hint={lastBackup} />
         <Stat
-          label="Jobs"
+          label={t('app.admin.overview.lastBackup')}
+          value={t(stats.lastBackupAt ? 'app.admin.overview.done' : 'app.admin.overview.never')}
+          hint={lastBackup}
+        />
+        <Stat
+          label={t('app.admin.overview.jobs')}
           value={String(stats.jobsActive)}
-          hint={`${stats.jobsFailed} failed`}
+          hint={t('app.admin.overview.jobsFailed', { count: stats.jobsFailed })}
         />
       </section>
 
       <nav className="flex flex-wrap gap-4 text-sm">
         <Link href="/app/admin/users" className="underline">
-          Users
+          {t('app.admin.nav.users')}
         </Link>
         <Link href="/app/admin/backups" className="underline">
-          Backups
+          {t('app.admin.nav.backups')}
         </Link>
         <Link href="/app/admin/audit" className="underline">
-          Audit log
+          {t('app.admin.nav.audit')}
         </Link>
         <Link href="/app/admin/settings" className="underline">
-          Embeddings
+          {t('app.admin.nav.embeddings')}
         </Link>
         <Link href="/app/admin/settings/site" className="underline">
-          Site settings
+          {t('app.admin.nav.site')}
         </Link>
       </nav>
     </main>

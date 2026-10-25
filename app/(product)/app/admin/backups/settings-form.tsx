@@ -19,6 +19,30 @@ type S3 = {
 }
 type WebDav = { baseUrl: string; username: string; prefix: string }
 
+export type BackupFormLabels = {
+  where: string
+  onSchedule: string
+  cron: string
+  keep: string
+  runs: string
+  target: string
+  targetS3: string
+  targetWebdav: string
+  targetNone: string
+  bucket: string
+  endpoint: string
+  region: string
+  prefix: string
+  accessKey: string
+  secret: string
+  keepStored: string
+  pathStyle: string
+  baseUrl: string
+  username: string
+  password: string
+  save: string
+}
+
 const FIELD = 'w-full rounded border px-3 py-2 text-sm'
 const FIELD_STYLE = {
   borderColor: 'var(--border)',
@@ -32,12 +56,14 @@ export function BackupForm({
   hasWebDav,
   s3,
   webdav,
+  labels,
 }: {
   settings: Settings
   hasS3: boolean
   hasWebDav: boolean
   s3: S3 | null
   webdav: WebDav | null
+  labels: BackupFormLabels
 }) {
   const [target, setTarget] = useState<string>(settings.target ?? 's3')
 
@@ -47,15 +73,15 @@ export function BackupForm({
       className="flex flex-col gap-4 rounded-lg border p-4"
       style={{ borderColor: 'var(--border)', background: 'var(--bg-raised)' }}
     >
-      <h2 className="text-lg font-medium">Where and when</h2>
+      <h2 className="text-lg font-medium">{labels.where}</h2>
 
       <div className="flex flex-wrap items-center gap-4 text-sm">
         <label className="flex items-center gap-2">
           <input type="checkbox" name="enabled" defaultChecked={settings.enabled} />
-          Run on a schedule
+          {labels.onSchedule}
         </label>
         <label className="flex items-center gap-2">
-          <span className="text-[var(--text-muted)]">Cron</span>
+          <span className="text-[var(--text-muted)]">{labels.cron}</span>
           <input
             name="schedule"
             defaultValue={settings.schedule}
@@ -64,7 +90,7 @@ export function BackupForm({
           />
         </label>
         <label className="flex items-center gap-2">
-          <span className="text-[var(--text-muted)]">Keep</span>
+          <span className="text-[var(--text-muted)]">{labels.keep}</span>
           <input
             name="retention"
             type="number"
@@ -73,12 +99,12 @@ export function BackupForm({
             className={`${FIELD} w-20`}
             style={FIELD_STYLE}
           />
-          <span className="text-[var(--text-muted)]">runs</span>
+          <span className="text-[var(--text-muted)]">{labels.runs}</span>
         </label>
       </div>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-[var(--text-muted)]">Target</span>
+        <span className="text-[var(--text-muted)]">{labels.target}</span>
         <select
           name="target"
           value={target}
@@ -86,20 +112,20 @@ export function BackupForm({
           className={FIELD}
           style={FIELD_STYLE}
         >
-          <option value="s3">S3 bucket</option>
-          <option value="webdav">WebDAV (pCloud)</option>
-          <option value="none">No target</option>
+          <option value="s3">{labels.targetS3}</option>
+          <option value="webdav">{labels.targetWebdav}</option>
+          <option value="none">{labels.targetNone}</option>
         </select>
       </label>
 
       {target === 's3' ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">Bucket</span>
+            <span className="text-[var(--text-muted)]">{labels.bucket}</span>
             <input name="s3Bucket" defaultValue={s3?.bucket ?? ''} className={FIELD} style={FIELD_STYLE} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">Endpoint</span>
+            <span className="text-[var(--text-muted)]">{labels.endpoint}</span>
             <input
               name="s3Endpoint"
               defaultValue={s3?.endpoint ?? 'https://s3.amazonaws.com'}
@@ -108,15 +134,15 @@ export function BackupForm({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">Region</span>
+            <span className="text-[var(--text-muted)]">{labels.region}</span>
             <input name="s3Region" defaultValue={s3?.region ?? 'us-east-1'} className={FIELD} style={FIELD_STYLE} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">Prefix</span>
+            <span className="text-[var(--text-muted)]">{labels.prefix}</span>
             <input name="s3Prefix" defaultValue={s3?.prefix ?? 'mimir'} className={FIELD} style={FIELD_STYLE} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">Access key id</span>
+            <span className="text-[var(--text-muted)]">{labels.accessKey}</span>
             <input
               name="s3AccessKeyId"
               defaultValue={s3?.keyHighlight ?? ''}
@@ -127,13 +153,14 @@ export function BackupForm({
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-[var(--text-muted)]">
-              Secret{hasS3 ? ' (leave blank to keep the stored one)' : ''}
+              {labels.secret}
+              {hasS3 ? labels.keepStored : ''}
             </span>
             <input name="s3Secret" type="password" autoComplete="off" className={FIELD} style={FIELD_STYLE} />
           </label>
           <label className="flex items-center gap-2 text-sm sm:col-span-2">
             <input type="checkbox" name="s3PathStyle" defaultChecked={s3?.pathStyle ?? false} />
-            Path-style requests (MinIO and some S3-compatible hosts)
+            {labels.pathStyle}
           </label>
         </div>
       ) : null}
@@ -141,7 +168,7 @@ export function BackupForm({
       {target === 'webdav' ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-            <span className="text-[var(--text-muted)]">Base URL</span>
+            <span className="text-[var(--text-muted)]">{labels.baseUrl}</span>
             <input
               name="webdavUrl"
               defaultValue={webdav?.baseUrl ?? 'https://webdav.pcloud.com'}
@@ -150,12 +177,13 @@ export function BackupForm({
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">Username</span>
+            <span className="text-[var(--text-muted)]">{labels.username}</span>
             <input name="webdavUser" defaultValue={webdav?.username ?? ''} className={FIELD} style={FIELD_STYLE} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-[var(--text-muted)]">
-              Password{hasWebDav ? ' (leave blank to keep the stored one)' : ''}
+              {labels.password}
+              {hasWebDav ? labels.keepStored : ''}
             </span>
             <input name="webdavPassword" type="password" autoComplete="off" className={FIELD} style={FIELD_STYLE} />
           </label>
@@ -172,7 +200,7 @@ export function BackupForm({
           className="rounded px-4 py-2 text-sm font-medium"
           style={{ background: 'var(--accent)', color: 'var(--accent-fg)' }}
         >
-          Save
+          {labels.save}
         </button>
       </div>
     </form>

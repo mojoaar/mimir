@@ -8,6 +8,7 @@ import { getIpAllowlist, getRequireMfa, setIpAllowlist, setRequireMfa } from '@/
 import { getEmailSettings, setEmailSettings } from '@/lib/settings/email-settings'
 import { invalidateAllowlistCache } from '@/lib/http/allowlist'
 import { InvalidSetting } from '@/lib/settings/store'
+import { translator } from '@/lib/i18n/request'
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name)
@@ -16,6 +17,7 @@ function text(formData: FormData, name: string): string {
 
 export async function saveSiteSettingsAction(formData: FormData): Promise<void> {
   const user = await requireAdmin()
+  const t = await translator()
 
   try {
     const allowlist = text(formData, 'ipAllowlist')
@@ -69,5 +71,5 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
     redirect(`/app/admin/settings/site?error=${encodeURIComponent(message)}`)
   }
 
-  redirect('/app/admin/settings/site?notice=Saved.')
+  redirect(`/app/admin/settings/site?notice=${encodeURIComponent(t('app.admin.site.saved'))}`)
 }

@@ -3,6 +3,19 @@ import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   listUsers: vi.fn(),
+  locale: 'en',
+}))
+
+vi.mock('@/lib/auth/context', () => ({
+  getCurrentUser: async () => ({
+    id: 'admin-1',
+    email: 'admin@example.test',
+    name: 'Admin',
+    role: 'admin',
+    status: 'active',
+    mfaEnabled: false,
+    locale: mocks.locale,
+  }),
 }))
 
 vi.mock('@/lib/auth/admin', () => ({
@@ -68,6 +81,20 @@ describe('the users page', () => {
     expect(html).toContain('Create user')
     expect(html).not.toContain('password_hash')
     expect(html).not.toContain('totp_secret_enc')
+  })
+
+  it('speaks the language saved on the account', async () => {
+    mocks.locale = 'da'
+    mocks.listUsers.mockResolvedValue({ total: 0, rows: [] })
+
+    try {
+      const html = renderToStaticMarkup(await UsersPage({ searchParams: Promise.resolve({}) }))
+
+      expect(html).toContain('Opret bruger')
+      expect(html).toContain('Ingen brugere matcher det filter.')
+    } finally {
+      mocks.locale = 'en'
+    }
   })
 
   it('passes the filter to the service', async () => {

@@ -7,6 +7,7 @@ import { getConfig } from '@/lib/config'
 import { getRequireMfa } from '@/lib/settings/security'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 import { ThemeSwitcher } from '@/app/theme-switcher'
+import AppFooter from '@/components/app/footer'
 import { Enrolment } from './settings/mfa/enrolment'
 import { signOutAction } from './actions'
 
@@ -41,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <header className="mb-8 border-b border-[var(--border)]">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-4 px-4 py-3 text-sm sm:px-6">
           <nav className="flex flex-wrap gap-4">
@@ -79,6 +80,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       ) : (
         children
       )}
-    </>
+      <AppFooter />
+    </div>
   )
 }

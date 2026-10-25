@@ -1,0 +1,15 @@
+- generic [ref=f11e1]:
+  - main [ref=f11e2]:
+    - generic [ref=f11e3]:
+      - heading "Sign in to Mimir" [level=1] [ref=f11e4]
+      - paragraph [ref=f11e5]: Long-term memory for your agents.
+    - generic [ref=f11e6]:
+      - generic [ref=f11e7]:
+        - text: Email
+        - textbox "Email" [active] [ref=f11e8]
+      - generic [ref=f11e9]:
+        - text: Password
+        - textbox "Password" [ref=f11e10]
+      - button "Sign in" [ref=f11e11]
+  - button "Open Next.js Dev Tools" [ref=f11e17] [cursor=pointer]
+  - alert [ref=f11e21]

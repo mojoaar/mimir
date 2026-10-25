@@ -21,7 +21,7 @@ export class InvalidInput extends Error {
 export class BodyTooLarge extends Error {
   readonly code = 'body_too_large'
   constructor(size: number) {
-    super(`invalid_path: body is ${size} bytes, the limit is ${MAX_BODY_BYTES}`)
+    super(`body_too_large: body is ${size} bytes, the limit is ${MAX_BODY_BYTES}`)
     this.name = 'BodyTooLarge'
   }
 }
@@ -29,22 +29,41 @@ export class BodyTooLarge extends Error {
 /**
  * `..` is rejected before anything is stripped, because a rewrite could turn a
  * traversal into something that looks harmless while still resolving upwards.
+ *
+ * Everything outside `[a-z0-9._/-]` is rejected rather than removed: stripping
+ * would map `café` and `caf!` onto the same path, and the second write would
+ * silently overwrite the first.
  */
 export function normalisePath(raw: string): string {
   if (typeof raw !== 'string') throw new InvalidPath('path must be a string')
 
-  let path = raw.toLowerCase()
+  const lower = raw.toLowerCase()
+  if (lower.includes('..')) throw new InvalidPath('traversal (..) is not allowed')
 
-  if (path.includes('..')) throw new InvalidPath('traversal (..) is not allowed')
+  // A whitespace-only segment must not be trimmed away by the collapse below:
+  // 'deploy/ ' would otherwise become 'deploy' and overwrite it.
+  for (const segment of lower.split('/')) {
+    if (/^\s+$/.test(segment)) throw new InvalidPath('path has a whitespace-only segment')
+  }
 
-  path = path
+  const trimmed = lower.trim()
+  if (trimmed === '') throw new InvalidPath('path is empty')
+
+  const path = trimmed
     .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9._/-]/g, '')
     .replace(/\/{2,}/g, '/')
-    .replace(/^\/+/, '')
-    .replace(/\/+$/, '')
+    .replace(/^\/+|\/+$/g, '')
 
-  if (path === '') throw new InvalidPath('path is empty after normalisation')
+  for (const segment of path.split('/')) {
+    if (segment === '') throw new InvalidPath('path has an empty segment')
+    if (segment === '.') throw new InvalidPath("path must not contain '.' segments")
+  }
+
+  const bad = path.match(/[^a-z0-9._/-]/)
+  if (bad) {
+    throw new InvalidPath(`'${bad[0]}' is not allowed in a path (use a-z, 0-9, '.', '_', '/' or '-')`)
+  }
+
   if (path.length > MAX_PATH_LENGTH) {
     throw new InvalidPath(`path is ${path.length} characters, the limit is ${MAX_PATH_LENGTH}`)
   }

@@ -80,10 +80,10 @@ export async function handleRpc(
   }
 
   if (method === 'initialize') {
-    const params = isObject(body.params) ? body.params : {}
-    const requested = typeof params.protocolVersion === 'string' ? params.protocolVersion : PROTOCOL_VERSION
+    // Answer with the version we implement. Echoing the client's number would
+    // claim support for a revision we never wrote.
     const result = {
-      protocolVersion: requested,
+      protocolVersion: PROTOCOL_VERSION,
       capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'mimir', version: pkg.version },
       instructions: INSTRUCTIONS,

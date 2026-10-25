@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-25
+
+Review pass on 0.1.0, plus the theme system the UI was waiting for.
+
+### Added
+
+- Rimfrost tokens vendored from upstream, with eight themes (`nordlys` default,
+  plus `fjord`, `ravn` and `skumring`, each in dark and light) and semantic
+  aliases (`--bg`, `--fg`, `--border`, `--accent`, …) so pages never name a
+  palette colour.
+- Theme resolved from a cookie in the root layout, so there is no flash on
+  load; a switcher on every page writes it back and updates `theme-color`.
+- `/health` and `/api/v1/health` as aliases of `/api/health`.
+
+### Fixed
+
+- Paths are validated instead of rewritten: `café`, `caf!`, whitespace-only
+  input, a whitespace-only segment (`deploy/ `) and `.` segments are rejected
+  with `invalid_path` naming the offending character, rather than silently
+  colliding with another memory.
+- `path_prefix` matching is literal, so an underscore no longer acts as a SQL
+  wildcard and a prefix equal to an exact path now matches that memory.
+- One input contract for MCP and REST: empty bodies and unknown `kind` values
+  are rejected by both, and `body_too_large` no longer reports itself as a path
+  error.
+- A failed audit write logs a readable reason instead of a redacted one.
+- The anonymous health check queries the database, so a dead database reports
+  503 instead of `ok`, and a caller holding a token gets the same 503 instead
+  of an empty 500.
+- Login spends the same time on an unknown email as on a wrong password.
+- Listing a project's grants requires `write`, so a read-only grantee cannot
+  enumerate the other grantees.
+- MCP `initialize` answers with the protocol version Mimir implements rather
+  than echoing the client's claim.
+- The landing-page test renders the page; the unused `otpauth` dependency is
+  gone.
+- README states what 0.1.1 actually does, and the quick start names the two
+  database passwords the compose stack requires.
+- Tailwind's PostCSS plugin is configured and its stylesheet imported, so the
+  utility classes the pages use are generated at all; before this, the themed
+  markup shipped without any of its layout or colour rules.
+- `docker-compose.yml` pins the 0.1.1 image rather than 0.1.0.
+
 ## [0.1.0] - 2026-10-25
 
 First usable slice: Mimir boots from one container, authenticates a user, and

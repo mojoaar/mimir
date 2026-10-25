@@ -18,20 +18,20 @@ export function KeyForm() {
 
   return (
     <div className="space-y-4">
-      <form action={action} className="flex flex-wrap items-end gap-2">
+      <form action={action} className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-end">
         <label className="flex flex-col gap-1 text-sm">
           <span>Name</span>
           <input
             name="name"
             required
             placeholder="laptop"
-            className="rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2"
+            className="rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[var(--fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           />
         </label>
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] disabled:opacity-50"
+          className="rounded bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] disabled:opacity-50"
         >
           {pending ? 'Creating…' : 'Create key'}
         </button>
@@ -70,7 +70,7 @@ export function KeyList({ keys }: { keys: Key[] }) {
             {!k.revoked && (
               <form action={revokeKeyAction}>
                 <input type="hidden" name="id" value={k.id} />
-                <button type="submit" className="text-[var(--danger)] underline">
+                <button type="submit" className="text-[var(--danger)] underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">
                   revoke
                 </button>
               </form>

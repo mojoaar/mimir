@@ -4,19 +4,30 @@ Long-term memory for coding agents. Self-hosted, path-based, and readable by a h
 
 An agent asks "what do we already know about this project?" and gets back the decisions, conventions and gotchas that were learned the hard way — scoped to the repository it is standing in. Memory is a tree of paths with three levels of detail, so an agent pays for one line until it needs the whole thing.
 
-Nothing is stored as an opaque embedding you cannot inspect. Every memory is a file you can open, correct or delete from the web UI.
+Nothing is stored as an opaque embedding you cannot inspect. Every memory is a path with a title, a summary and a body, served over MCP and REST.
 
 ## Status
 
-`0.1.0` — boots from one container, authenticates a user, and stores and retrieves memory over MCP and REST.
+`0.1.1` — boots from one container, authenticates a user, stores and retrieves memory over MCP and REST, and ships the four Rimfrost themes in light and dark.
 
-Not yet: provider configuration UI, background extraction, backups, admin pages, i18n, and the docs site. The schema and seams for all of them are in place; see the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
+Not yet: provider configuration UI, background extraction, backups, admin pages, a memory browser, i18n, and the docs site. The schema and seams for all of them are in place; see the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
 
 ## Quick start
 
 ```bash
 cp .env.example .env
 openssl rand -hex 32          # paste into MIMIR_SECRET
+```
+
+Then set the two database passwords. `docker compose up` refuses to start without them, and both must be URL-safe: they are interpolated into the connection strings.
+
+```bash
+# in .env
+POSTGRES_OWNER_PASSWORD=...
+MIMIR_APP_PASSWORD=...
+```
+
+```bash
 docker compose up -d
 ```
 

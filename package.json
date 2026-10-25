@@ -1,6 +1,6 @@
 {
   "name": "mimir",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,7 +15,6 @@
   "dependencies": {
     "@node-rs/argon2": "^2.2.2",
     "next": "16.4.3",
-    "otpauth": "^9.5.2",
     "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"

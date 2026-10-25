@@ -1,26 +1,39 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata, Viewport } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import { cookies } from 'next/headers'
+import { parseTheme, THEME_COOKIE, themeColor } from '@/lib/theme'
+import './globals.css'
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
-  title: "Mimir",
-  description: "Long-term memory for your agents.",
-};
+  title: 'Mimir',
+  description: 'Long-term memory for your agents.',
+}
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const instant = false
+
+export async function generateViewport(): Promise<Viewport> {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
+  return { themeColor: themeColor(theme) }
+}
+
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  // Resolved on the server so the first paint already carries the right theme:
+  // a client-side swap would flash the default before settling.
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
+
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" data-theme={theme} className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>{children}</body>
     </html>
-  );
+  )
 }

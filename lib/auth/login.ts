@@ -1,6 +1,6 @@
 import { audit } from '../audit'
 import { withService } from '../db/tx'
-import { verifyPassword } from './password'
+import { verifyPassword, verifyPasswordForTiming } from './password'
 import { checkLoginRateLimit, clearLoginRateLimit, recordLoginFailure } from './rate-limit'
 import { createSession } from './session'
 
@@ -60,8 +60,12 @@ export async function authenticate(
   })
 
   // Same answer for an unknown account and a wrong password: the login form
-  // must not become an account enumerator.
-  if (!user) return fail('invalid', { email: normalised }, meta)
+  // must not become an account enumerator. The dummy verify keeps the response
+  // time identical too — returning here would answer in milliseconds.
+  if (!user) {
+    await verifyPasswordForTiming()
+    return fail('invalid', { email: normalised }, meta)
+  }
 
   if (user.locked_until && user.locked_until.getTime() > Date.now()) {
     return fail('locked', { email: normalised, source: 'account' }, meta)

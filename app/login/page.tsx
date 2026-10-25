@@ -9,6 +9,9 @@ const MESSAGES: Record<string, string> = {
 
 export const instant = false
 
+const FIELD =
+  'rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 font-normal text-[var(--fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]'
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -18,14 +21,17 @@ export default async function LoginPage({
   const message = error ? (MESSAGES[error] ?? 'Sign in failed.') : null
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 px-6">
+    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 px-6 py-16">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Sign in to Mimir</h1>
-        <p className="mt-1 text-sm text-neutral-500">Long-term memory for your agents.</p>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">Long-term memory for your agents.</p>
       </div>
 
       {message ? (
-        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p
+          role="alert"
+          className="rounded-md border border-[var(--danger)] px-3 py-2 text-sm text-[var(--danger)]"
+        >
           {message}
         </p>
       ) : null}
@@ -39,7 +45,7 @@ export default async function LoginPage({
             required
             autoComplete="username"
             autoFocus
-            className="rounded-md border border-neutral-300 px-3 py-2 font-normal"
+            className={FIELD}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
@@ -49,12 +55,12 @@ export default async function LoginPage({
             type="password"
             required
             autoComplete="current-password"
-            className="rounded-md border border-neutral-300 px-3 py-2 font-normal"
+            className={FIELD}
           />
         </label>
         <button
           type="submit"
-          className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white"
+          className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-medium text-[var(--accent-fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
         >
           Sign in
         </button>

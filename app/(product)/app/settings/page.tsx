@@ -11,7 +11,7 @@ export default async function SettingsPage() {
   const base = getConfig().publicUrlSeed?.replace(/\/$/, '') ?? 'http://localhost:3000'
 
   return (
-    <main className="mx-auto max-w-3xl space-y-8 p-6">
+    <main className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
       <section className="space-y-3">
         <h1 className="text-2xl font-semibold">API keys</h1>
         <p className="text-sm text-[var(--text-muted)]">

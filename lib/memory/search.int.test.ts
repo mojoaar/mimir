@@ -55,3 +55,31 @@ describe('searchMemories', () => {
     expect(await searchMemories({ userId: f.alice, projectId, query: '   ' })).toEqual([])
   })
 })
+
+describe('literal path prefixes', () => {
+  it('does not let an underscore act as a wildcard', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'a_b/one', body: 'snake' })
+    await writeMemory({ userId: f.alice, projectId, path: 'axb/two', body: 'snake' })
+
+    const hits = await searchMemories({
+      userId: f.alice,
+      projectId,
+      query: 'snake',
+      pathPrefix: 'a_b',
+    })
+    expect(hits.map((hit) => hit.path)).toEqual(['a_b/one'])
+  })
+
+  it('includes a memory stored at exactly the prefix path', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy', body: 'deploy notes' })
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy/runbook', body: 'deploy notes' })
+
+    const hits = await searchMemories({
+      userId: f.alice,
+      projectId,
+      query: 'deploy',
+      pathPrefix: 'deploy',
+    })
+    expect(hits.map((hit) => hit.path).sort()).toEqual(['deploy', 'deploy/runbook'])
+  })
+})

@@ -34,6 +34,25 @@ beforeEach(async () => {
 })
 
 describe('mcp server', () => {
+  it('answers with the version it speaks, not the one the client claimed', async () => {
+    const reply = (await handleRpc(
+      { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '1999-01-01' } },
+      alice,
+      meta,
+    )) as { result: { protocolVersion: string } }
+
+    expect(reply.result.protocolVersion).toBe('2025-06-18')
+  })
+
+  it('rejects an unknown kind with the documented code', async () => {
+    const reply = (await handleRpc(
+      call('memory_write', { path: 'x', body: 'text', kind: 'nonsense' }),
+      alice,
+      meta,
+    )) as any
+    expect(reply.error.data.code).toBe('invalid_params')
+  })
+
   it('answers initialize and lists seven tools', async () => {
     const init = (await handleRpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }, alice, meta)) as any
     expect(init.result.serverInfo.name).toBe('mimir')

@@ -99,11 +99,11 @@ export async function treeMemory(
   pathPrefix: string,
   depth: number,
 ): Promise<TreeEntry[]> {
-  const prefix = pathPrefix.trim() === '' ? '' : `${normalisePath(pathPrefix)}/`
+  const prefix = pathPrefix.trim() === '' ? '' : normalisePath(pathPrefix)
   const levels = Number.isFinite(depth) ? Math.max(1, Math.trunc(depth)) : 1
   await requireProjectRole(userId, projectId, 'read')
 
-  const prefixDepth = prefix === '' ? 0 : prefix.split('/').length - 1
+  const prefixDepth = prefix === '' ? 0 : prefix.split('/').length
 
   return withUser(userId, async (tx) => {
     const { rows } = await tx.query<{
@@ -116,7 +116,7 @@ export async function treeMemory(
          from memories
         where project_id = $1
           and deleted_at is null
-          and ($2 = '' or path like $2 || '%')
+          and ($2 = '' or path = $2 or starts_with(path, $2 || '/'))
           and array_length(string_to_array(path, '/'), 1) <= $3
         order by path`,
       [projectId, prefix, prefixDepth + levels],

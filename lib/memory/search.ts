@@ -45,7 +45,7 @@ export async function searchMemories(input: SearchInput): Promise<SearchHit[]> {
        from memories m, tsq
        where m.project_id = $1
          and m.deleted_at is null
-         and ($2::text is null or m.path like $2 || '/%')
+         and ($2::text is null or m.path = $2 or starts_with(m.path, $2 || '/'))
          and m.tsv @@ tsq.q
        order by ts_rank_cd(m.tsv, tsq.q) desc, m.path
        limit ${CANDIDATES}`,

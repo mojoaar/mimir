@@ -115,3 +115,21 @@ describe('memory service', () => {
     expect((await treeMemory(f.alice, projectId, '', 4)).map((m) => m.path)).toContain('a/b/c/d')
   })
 })
+
+describe('treeMemory path prefixes', () => {
+  it('does not let an underscore act as a wildcard', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'a_b/one', body: 'x' })
+    await writeMemory({ userId: f.alice, projectId, path: 'axb/two', body: 'x' })
+
+    const entries = await treeMemory(f.alice, projectId, 'a_b', 3)
+    expect(entries.map((entry) => entry.path)).toEqual(['a_b/one'])
+  })
+
+  it('includes a memory stored at exactly the prefix path', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy', body: 'x' })
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy/runbook', body: 'x' })
+
+    const entries = await treeMemory(f.alice, projectId, 'deploy', 3)
+    expect(entries.map((entry) => entry.path).sort()).toEqual(['deploy', 'deploy/runbook'])
+  })
+})

@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg'
 
 import { withUser } from '@/lib/db/tx'
 import { audit } from '@/lib/audit'
+import { slugify } from '@/lib/slug'
 
 import { forbidden, projectRole, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
@@ -35,15 +36,6 @@ const ACCESSIBLE = `
 function toRole(row: AccessRow): ProjectRole {
   if (row.is_owner) return 'owner'
   return row.grant_role === 'write' ? 'write' : 'read'
-}
-
-/** A name a human typed, turned into the slug the URL carries. */
-function slugify(name: string): string {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return slug || 'project'
 }
 
 /**

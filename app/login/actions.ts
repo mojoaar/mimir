@@ -71,15 +71,15 @@ export async function loginMfaAction(formData: FormData): Promise<void> {
   // cheap without a limit — the password step's throttle does not cover it.
   const request = await meta()
   const limitKey = `mfa:${userId}`
-  const limit = checkLoginRateLimit(request.ip, limitKey)
+  const limit = checkLoginRateLimit(limitKey)
   if (!limit.allowed) redirect('/login?error=locked')
 
   const result = await completeMfaLogin(userId, code, request)
   if (!result.ok) {
-    recordLoginFailure(request.ip, limitKey)
+    recordLoginFailure(limitKey)
     redirect(`/login?step=code&error=${result.reason}`)
   }
-  clearLoginRateLimit(request.ip, limitKey)
+  clearLoginRateLimit(limitKey)
 
   store.set(SESSION_COOKIE, result.cookieValue, SESSION_COOKIE_OPTIONS)
   store.delete(MFA_TICKET_COOKIE)

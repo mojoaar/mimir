@@ -27,6 +27,18 @@ describe('authenticate', () => {
     expect(await authenticate(fx.email, 'correct-password', meta)).toEqual({ ok: false, reason: 'locked' })
   })
 
+  it('locks an account even when every attempt comes from a different address', async () => {
+    for (let i = 0; i < 5; i++) {
+      const other = { ip: `203.0.113.${i + 1}`, userAgent: 'vitest' }
+      expect((await authenticate(fx.email, 'wrong', other)).ok).toBe(false)
+    }
+
+    expect(await authenticate(fx.email, 'correct-password', { ip: '198.51.100.7' })).toEqual({
+      ok: false,
+      reason: 'locked',
+    })
+  })
+
   it('spends as long on an unknown email as on a wrong password', async () => {
     // Warm the argon2 path so the first measurement is not dominated by
     // module initialisation.

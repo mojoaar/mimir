@@ -1,20 +1,19 @@
 const WINDOW_MS = 15 * 60 * 1000
 const MAX_ATTEMPTS = 5
 
-// In-process is enough because there is exactly one process (see spec §12).
-// A second replica would have to move this to Postgres; the users.failed_logins
-// columns already keep the lock across restarts.
+// One process, so an in-process map is enough; a second replica would have to
+// move this to Postgres. The real backstop is users.failed_logins /
+// locked_until, which survives a restart. The key is the account alone: the
+// runtime cannot see a client address without trusted proxies, so including it
+// would only make the throttle lie.
 const attempts = new Map<string, number[]>()
 
-function key(ip: string | null, email: string): string {
-  return `${ip ?? '-'}|${email.trim().toLowerCase()}`
+function key(account: string): string {
+  return account.trim().toLowerCase()
 }
 
-export function checkLoginRateLimit(
-  ip: string | null,
-  email: string,
-): { allowed: boolean; retryAfter: number } {
-  const k = key(ip, email)
+export function checkLoginRateLimit(account: string): { allowed: boolean; retryAfter: number } {
+  const k = key(account)
   const now = Date.now()
   const recent = (attempts.get(k) ?? []).filter((at) => now - at < WINDOW_MS)
   if (recent.length === 0) attempts.delete(k)
@@ -27,13 +26,13 @@ export function checkLoginRateLimit(
   return { allowed: true, retryAfter: 0 }
 }
 
-export function recordLoginFailure(ip: string | null, email: string): void {
-  const k = key(ip, email)
+export function recordLoginFailure(account: string): void {
+  const k = key(account)
   attempts.set(k, [...(attempts.get(k) ?? []), Date.now()])
 }
 
-export function clearLoginRateLimit(ip: string | null, email: string): void {
-  attempts.delete(key(ip, email))
+export function clearLoginRateLimit(account: string): void {
+  attempts.delete(key(account))
 }
 
 /** Test hook: the window has no clock to advance, so tests clear it instead. */

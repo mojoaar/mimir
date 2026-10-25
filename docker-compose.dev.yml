@@ -1,3 +1,5 @@
+name: mimir-dev
+
 services:
   db:
     image: pgvector/pgvector:pg17
@@ -18,3 +20,4 @@ services:
 
 volumes:
   pgdata_dev:
+    name: mimir_pgdata_dev

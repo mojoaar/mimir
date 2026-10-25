@@ -32,7 +32,7 @@ export default async function SiteSettingsPage({
   const proxyWarning = allowlist.length > 0 && getConfig().trustedProxies.length === 0
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-semibold">{t('app.admin.site.title')}</h1>
 
       {params.notice ? <p className="text-sm text-[var(--accent)]">{params.notice}</p> : null}

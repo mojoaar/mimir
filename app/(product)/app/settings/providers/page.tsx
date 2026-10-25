@@ -108,7 +108,7 @@ export default async function ProvidersPage() {
   const providers = await listProviders(user.id)
 
   return (
-    <main className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
       <section className="space-y-2">
         <h1 className="text-2xl font-semibold">{t('app.providers.title')}</h1>
         <p className="text-sm text-[var(--text-muted)]">{t('app.providers.intro')}</p>

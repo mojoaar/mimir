@@ -84,7 +84,7 @@ export default async function AdminOverviewPage() {
     : t('app.admin.overview.never')
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10 sm:px-6">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-semibold">{t('app.admin.overview.title')}</h1>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

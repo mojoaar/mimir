@@ -63,7 +63,7 @@ export default async function BackupsPage({
   const age = describeAge(latestOk.rows[0]?.finished_at ?? null, t)
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-10 sm:px-6">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-10 sm:px-6">
       <section className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold">{t('app.admin.backups.title')}</h1>
         <p className="text-sm text-[var(--text-muted)]">

@@ -46,7 +46,7 @@ export default async function ProjectSettingsPage({
       : [[], []]
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
       <div className="flex gap-4 text-sm">
         <Link href="/app" className="text-[var(--text-muted)] underline">
           {t('app.projectSettings.back')}

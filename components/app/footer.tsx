@@ -6,7 +6,7 @@ import pkg from '../../package.json'
 const YEAR = new Date().getFullYear()
 
 /**
- * The footer follows the column it sits under: the app reads at max-w-3xl and
+ * The footer follows the column it sits under: the app reads at max-w-5xl and
  * the docs at max-w-6xl, so `wide` exists rather than inventing a third width.
  */
 export default function AppFooter({ wide = false }: { wide?: boolean }) {
@@ -14,7 +14,7 @@ export default function AppFooter({ wide = false }: { wide?: boolean }) {
     <footer className="mt-auto border-t border-[var(--border)]">
       <div
         className={`mx-auto px-4 py-6 text-sm text-[var(--text-muted)] sm:px-6 ${
-          wide ? 'max-w-6xl' : 'max-w-3xl'
+          wide ? 'max-w-6xl' : 'max-w-5xl'
         }`}
       >
         <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center">

@@ -23,7 +23,7 @@ export default async function SettingsPage() {
   const base = getConfig().publicUrlSeed?.replace(/\/$/, '') ?? 'http://localhost:3000'
 
   return (
-    <main className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
       <section className="space-y-2">
         <h1 className="text-2xl font-semibold">{t('app.settings.profileTitle')}</h1>
         <p className="text-sm text-[var(--text-muted)]">{t('app.settings.profileBody')}</p>

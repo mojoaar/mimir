@@ -23,6 +23,8 @@ vi.mock('@/lib/auth/mfa', () => ({ mfaEnabled: async () => true }))
 vi.mock('@/lib/http/allowlist', () => ({ isRequestAllowed: async () => true }))
 vi.mock('@/lib/settings/security', () => ({ getRequireMfa: async () => false }))
 vi.mock('@/lib/config', () => ({ getConfig: () => ({ adminEmail: null }) }))
+// The app shell asks for the account's picture version; a unit test has no database.
+vi.mock('@/lib/users/avatar', () => ({ avatarVersion: async () => '0' }))
 
 import DocsLayout from '../../app/docs/layout'
 import AppLayout from '../../app/(product)/app/layout'

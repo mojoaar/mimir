@@ -37,6 +37,15 @@ function toRole(row: AccessRow): ProjectRole {
   return row.grant_role === 'write' ? 'write' : 'read'
 }
 
+/** A name a human typed, turned into the slug the URL carries. */
+function slugify(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return slug || 'project'
+}
+
 /**
  * Resolution order from the spec: explicit slug, then a repo key the caller can
  * already reach, then a new project owned by the caller. Finding a shared
@@ -57,10 +66,16 @@ export async function resolveProject(
            FROM projects p
           WHERE ${ACCESSIBLE} AND p.slug = $2
           LIMIT 1`,
-        [userId, opts.project],
+        [userId, slugify(opts.project)],
       )
       const row = found.rows[0]
-      if (!row) throw new ProjectNotFoundError(opts.project)
+      if (!row) {
+        // A named project is how a folder that is not a repository gets one:
+        // there is no repo key to derive it from, and the caller already chose
+        // the name. A lookup-only caller still gets the not-found error.
+        if (opts.create !== true) throw new ProjectNotFoundError(opts.project)
+        return createProject(userId, repoKey, client, opts.project)
+      }
       return { id: row.id, slug: row.slug, role: toRole(row) }
     }
 
@@ -79,7 +94,9 @@ export async function resolveProject(
       if (row) return { id: row.id, slug: row.slug, role: toRole(row) }
     }
 
-    if (opts.create === false) throw new ProjectNotFoundError(opts.project ?? opts.repo ?? 'project')
+    // Only a caller that says `create: true` may create: a typo'd slug on a
+    // read must be a 404, not a new empty project.
+    if (opts.create !== true) throw new ProjectNotFoundError(opts.project ?? opts.repo ?? 'project')
 
     return createProject(userId, repoKey, client)
   })
@@ -98,9 +115,16 @@ async function createProject(
   userId: string,
   repoKey: string | null,
   client: PoolClient,
+  requestedName?: string,
 ): Promise<ResolvedProject> {
-  const base = repoKey ? repoSlug(repoKey) : 'project'
-  const name = repoKey && !repoKey.startsWith('local:') ? repoKey : base
+  const base = requestedName
+    ? slugify(requestedName)
+    : repoKey
+      ? repoSlug(repoKey)
+      : 'project'
+  const name =
+    requestedName ??
+    (repoKey && !repoKey.startsWith('local:') ? repoKey : base)
 
   for (let attempt = 1; attempt <= 5; attempt++) {
     const slug = attempt === 1 ? base : `${base}-${attempt}`
@@ -124,11 +148,13 @@ async function createProject(
       await client.query('RELEASE SAVEPOINT create_project')
     } catch (error) {
       // Two clients created the same repo at once: adopt the winner.
-      if ((error as { code?: string }).code !== '23505' || !repoKey) throw error
+      if ((error as { code?: string }).code !== '23505') throw error
       await client.query('ROLLBACK TO SAVEPOINT create_project')
+      // A named project has no repo key, so match it by the slug that collided;
+      // otherwise an archived project would silently fork into `name-2`.
       const existing = await client.query<{ id: string; slug: string }>(
-        'SELECT id, slug FROM projects WHERE owner_user_id = $1 AND repo_key = $2',
-        [userId, repoKey],
+        'SELECT id, slug FROM projects WHERE owner_user_id = $1 AND (repo_key = $2 OR slug = $3)',
+        [userId, repoKey, slug],
       )
       const row = existing.rows[0]
       if (row) return { id: row.id, slug: row.slug, role: 'owner' }

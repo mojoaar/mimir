@@ -65,12 +65,10 @@ export async function callTool(
 export function detectRepo(directory: string): string | null {
   if (process.env.MIMIR_REPO) return process.env.MIMIR_REPO
   try {
-    const remote = require('node:child_process')
-      .execFileSync('git', ['-C', directory, 'remote', 'get-url', 'origin'], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      })
-      .trim()
+    const remote = execFileSync('git', ['-C', directory, 'remote', 'get-url', 'origin'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim()
     return remote || null
   } catch {
     return null

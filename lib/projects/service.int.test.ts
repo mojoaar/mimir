@@ -25,21 +25,21 @@ beforeEach(async () => {
 
 describe('resolveProject', () => {
   it('finds a project by repo key before creating a duplicate', async () => {
-    const first = await resolveProject(alice, { repo: 'github.com/mojoaar/mimir' })
-    const again = await resolveProject(alice, { repo: 'github.com/mojoaar/mimir' })
+    const first = await resolveProject(alice, { repo: 'github.com/mojoaar/mimir', create: true })
+    const again = await resolveProject(alice, { repo: 'github.com/mojoaar/mimir', create: true })
 
     expect(again.id).toBe(first.id)
   })
 
   it('finds a shared project rather than creating a private one', async () => {
-    const p = await resolveProject(alice, { repo: 'github.com/mojoaar/mimir' })
+    const p = await resolveProject(alice, { repo: 'github.com/mojoaar/mimir', create: true })
     await seedGrant(p.id, bob, 'read')
 
-    expect((await resolveProject(bob, { repo: 'github.com/mojoaar/mimir' })).id).toBe(p.id)
+    expect((await resolveProject(bob, { repo: 'github.com/mojoaar/mimir', create: true })).id).toBe(p.id)
   })
 
   it('creates a project owned by the caller', async () => {
-    const p = await resolveProject(bob, { repo: 'github.com/other/thing' })
+    const p = await resolveProject(bob, { repo: 'github.com/other/thing', create: true })
     const { rows } = await adminPool().query<{ owner_user_id: string }>(
       'select owner_user_id from projects where id = $1',
       [p.id],
@@ -134,5 +134,38 @@ describe('archiving', () => {
 
     await expect(archiveProject(bob, aliceProjectId)).rejects.toMatchObject({ code: 'forbidden' })
     expect(await getProject(alice, 'alice-project')).not.toBeNull()
+  })
+})
+
+describe('a project named by the caller', () => {
+  it('creates it on the first call and reuses it afterwards', async () => {
+    const first = await resolveProject(alice, { project: 'Reading Notes', create: true })
+
+    expect(first).toMatchObject({ slug: 'reading-notes', role: 'owner' })
+    expect((await getProject(alice, 'reading-notes'))?.name).toBe('Reading Notes')
+
+    const again = await resolveProject(alice, { project: 'Reading Notes', create: true })
+    expect(again.id).toBe(first.id)
+  })
+
+  it('still refuses to invent one when the caller asked for lookup only', async () => {
+    await expect(resolveProject(alice, { project: 'notes', create: false })).rejects.toMatchObject({
+      code: 'project_not_found',
+    })
+  })
+
+  it('gives two users their own project with the same name', async () => {
+    const one = await resolveProject(alice, { project: 'notes', create: true })
+    const two = await resolveProject(bob, { project: 'notes', create: true })
+
+    expect(two.id).not.toBe(one.id)
+    // slug uniqueness is per owner, so two people may both have "notes"
+    expect(two.slug).toBe('notes')
+  })
+
+  it('falls back to a usable slug when the name has none', async () => {
+    const created = await resolveProject(alice, { project: '***', create: true })
+
+    expect(created.slug).toBe('project')
   })
 })

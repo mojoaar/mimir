@@ -6,7 +6,8 @@ export const MAX_INGEST_FILES = 100
 export const MAX_INGEST_BYTES = 2 * 1024 * 1024
 
 export type IngestFile = { path: string; body: string }
-export type IngestResult = { written: number; skipped: string[] }
+export type IngestSkip = { path: string; reason: string }
+export type IngestResult = { written: number; skipped: IngestSkip[] }
 
 type IngestInput = {
   userId: string
@@ -45,15 +46,15 @@ export async function ingestFiles(input: IngestInput): Promise<IngestResult> {
     throw new InvalidInput(`a batch may hold at most ${MAX_INGEST_BYTES} bytes`)
   }
 
-  const skipped: string[] = []
+  const skipped: IngestSkip[] = []
   let written = 0
 
   for (const file of files) {
     let path: string
     try {
       path = normalisePath(prefix ? `${prefix}/${file.path}` : file.path)
-    } catch {
-      skipped.push(file.path)
+    } catch (error) {
+      skipped.push({ path: file.path, reason: (error as Error).message })
       continue
     }
 
@@ -63,7 +64,7 @@ export async function ingestFiles(input: IngestInput): Promise<IngestResult> {
     } catch (error) {
       const code = (error as { code?: string }).code
       if (code === 'invalid_path' || code === 'invalid_params' || code === 'body_too_large') {
-        skipped.push(file.path)
+        skipped.push({ path: file.path, reason: (error as Error).message })
         continue
       }
       throw error

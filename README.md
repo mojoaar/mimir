@@ -10,7 +10,7 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.6.0` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, repository ingest and an OpenCode plugin, and lets you read, edit, delete and restore every memory in the browser, with the last twenty versions of each kept and diffable.
+`0.7.0` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, an import command that walks a repository or a plain folder, and lets you read, edit, delete and restore every memory in the browser, with the last twenty versions of each kept and diffable.
 
 Not yet: Teams. See the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
 
@@ -21,6 +21,15 @@ The running install serves its own docs at `/docs`, including a page per agent
 Muse) with the exact config file each one reads. The OpenCode plugin is
 `@mojoaar/opencode-mimir`; the Claude Code session-start hook is
 `hooks/mimir-session-start.sh`.
+
+An existing project can be loaded in one command:
+
+```bash
+npx @mojoaar/opencode-mimir ingest .
+```
+
+That imports its documentation and configuration (not its source) into the
+same project your agents write to.
 
 ## Quick start
 

@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-10-25
+
+Bring your own project.
+
+### Added
+
+- `mimir ingest` walks a folder and imports its documentation and
+  configuration — READMEs, `docs/`, markdown, compose files, `package.json` —
+  in batches the server accepts, into `import/` where search finds them.
+  Source code is skipped by default, because the agent already has it.
+- `--project` names a project yourself, for a folder that is not a git
+  repository. In a repository the import joins the project your agents already
+  write to.
+- `--all` imports every text file; `--dry-run` prints the plan and sends
+  nothing.
+- A project can now be created by the name the caller asks for, so a named
+  import does not need a second run.
+
+### Fixed (review pass)
+
+- The published `mimir` command did nothing: npm installs a bin as a symlink,
+  so the entrypoint's self-check never matched. It is now its own file behind
+  the bin, and a test runs it through a symlink the way npm does.
+- A git checkout imported into a project called `repo` instead of the one your
+  agents use: the remote lookup used `require` inside an ES module, failed
+  silently, and sent no repo key.
+- Reading an unknown project created it. `GET /api/v1/projects/typo/tree` made
+  an empty project and answered 200; it is a 404 again, and only a caller that
+  asks to create may create.
+- A repository with more than 10,000 entries imported a prefix of its files and
+  reported success. The cap is now a guard against a symlinked home directory,
+  it is reported when hit, and the run fails instead of pretending.
+- An imported file the server refused is now reported with the server's reason,
+  not "refused by the server".
+- Files are batched by decoded size, so a Latin-1 file that inflates when read
+  as UTF-8 no longer takes its whole batch down.
+- `--url` and `--token` reach the request; a folder that is neither a
+  repository nor named with `--project` now says so and exits 2.
+- Re-importing a named project after archiving it reuses the project instead of
+  forking `name-2`.
+
 ## [0.6.0] - 2026-10-26
 
 History you can undo.

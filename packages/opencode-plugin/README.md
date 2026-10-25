@@ -45,3 +45,27 @@ The OpenCode plugin API documents tool registration, not context injection. A
 hook that silently prepended text to every session would be guessing at an
 undocumented surface, so this package registers tools and leaves the trigger to
 the agent's instructions.
+
+## Import an existing project
+
+```
+npx @mojoaar/opencode-mimir ingest .
+```
+
+Walks the folder and loads its **documentation and configuration** — READMEs,
+`docs/`, markdown, compose files, `package.json` — under the `import/` path
+prefix. Source code is skipped by default; the agent already has it.
+
+| Flag | What it does |
+|---|---|
+| `--project <name>` | Name the project yourself. Required for a folder that is not a git repository. |
+| `--all` | Import every text file, not just documentation. |
+| `--dry-run` | Print what would be sent, send nothing. |
+| `--url`, `--token` | Override `MIMIR_URL` / `MIMIR_TOKEN`. |
+
+In a git repository the import lands in the project your agents already write
+to (the normalised remote). With `--project` it lands in a project keyed by
+name, so the same folder on another machine is a different project.
+
+Exit codes: `0` everything imported, `1` something was skipped or a batch
+failed, `2` bad arguments or no such directory.

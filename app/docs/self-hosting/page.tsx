@@ -76,6 +76,21 @@ docker compose up -d`}</Code>
         memory is purged, 30 days after it was deleted.
       </P>
 
+      <H2>Import an existing project</H2>
+      <P>
+        <code>npx @mojoaar/opencode-mimir ingest .</code> reads a folder and loads its documentation and
+        configuration — READMEs, <code>docs/</code>, markdown, compose files, <code>package.json</code> — into the
+        project under <code>import/</code>, where <code>memory_search</code> finds them. Source code is skipped by
+        default, because the agent already has it on disk.
+      </P>
+      <P>
+        In a git repository the import lands in the same project your agents write to, so nothing is duplicated.
+        A folder that is not a repository needs a name: <code>--project notes</code> creates <code>notes</code> on
+        the first run and reuses it afterwards, which also means the same folder on another machine is a different
+        project. <code>--all</code> imports every text file, and <code>--dry-run</code> prints what would be sent
+        without sending it.
+      </P>
+
       <H2>Health</H2>
       <P>
         <code>/health</code> and <code>/api/health</code> answer <code>{'{"status":"ok"}'}</code> anonymously and{' '}

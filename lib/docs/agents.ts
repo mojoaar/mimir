@@ -45,6 +45,7 @@ export const AGENTS: AgentDoc[] = [
     notes: [
       'The plugin package registers mimir_digest and mimir_remember; ask the agent to call mimir_digest first, or use the MCP config above by hand.',
       'Set MIMIR_TOKEN in your shell before starting OpenCode.',
+      'Run `npx @mojoaar/opencode-mimir ingest .` once per project so the first session starts informed.',
     ],
   },
   {

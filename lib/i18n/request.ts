@@ -27,10 +27,27 @@ export async function getRequestLocale(): Promise<Locale> {
   }
   if (preferred !== null && isLocale(preferred)) return preferred
 
-  const stored = (await cookies()).get(LOCALE_COOKIE)?.value ?? ''
+  const stored = await readCookie(LOCALE_COOKIE)
   if (isLocale(stored)) return stored
 
-  return fromAcceptLanguage((await headers()).get('accept-language')) ?? DEFAULT_LOCALE
+  return fromAcceptLanguage(await readAcceptLanguage()) ?? DEFAULT_LOCALE
+}
+
+/** A page rendered outside a request (a unit test, a script) falls back to English. */
+async function readCookie(name: string): Promise<string> {
+  try {
+    return (await cookies()).get(name)?.value ?? ''
+  } catch {
+    return ''
+  }
+}
+
+async function readAcceptLanguage(): Promise<string | null> {
+  try {
+    return (await headers()).get('accept-language')
+  } catch {
+    return null
+  }
 }
 
 /** Resolve once per request and hand back a function that already knows the language. */

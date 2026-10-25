@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 
 import { setPasswordWithToken } from '@/lib/auth/tokens';
+import { translator } from '@/lib/i18n/request';
 
 export type PasswordState = { error?: string };
 
@@ -16,11 +17,10 @@ export async function setPasswordAction(
   const result = await setPasswordWithToken(token, password);
 
   if (!result.ok) {
+    const t = await translator();
     return {
       error:
-        result.reason === 'weak'
-          ? 'Use at least 12 characters.'
-          : 'This link is no longer valid. Ask an administrator for a new one.',
+        result.reason === 'weak' ? t('app.setPassword.weak') : t('app.setPassword.invalid'),
     };
   }
 

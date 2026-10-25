@@ -23,6 +23,6 @@ test('round-trips a setting', async () => {
 
 test('refuses an embedding dimension the column cannot hold', async () => {
   await expect(
-    setEmbeddingConfig({ providerId: crypto.randomUUID(), model: 'm', dim: 1024 }, fixtures.admin.id),
+    setEmbeddingConfig({ providerId: crypto.randomUUID(), model: 'm', dim: 1024 }, fixtures.admin),
   ).rejects.toMatchObject({ code: 'invalid_params' })
 })

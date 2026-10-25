@@ -6,6 +6,8 @@ import { listDeletedMemories, readMemory, treeMemory } from '@/lib/memory/servic
 import { searchMemories } from '@/lib/memory/search'
 import { getProject } from '@/lib/projects/service'
 
+import { deleteMemoryAction, restoreMemoryAction } from './actions'
+import { MemoryEditor } from './editor'
 import { MemoryTree } from './tree'
 
 export const instant = false
@@ -94,7 +96,7 @@ export default async function ProjectBrowser({
 
         <section className="min-w-0 flex-1">
           {showDeleted ? (
-            <DeletedList slug={slug} rows={deleted} canWrite={canWrite} />
+            <DeletedList slug={slug} projectId={project.id} rows={deleted} canWrite={canWrite} />
           ) : query ? (
             <SearchResults hits={hits} base={base} />
           ) : memory ? (
@@ -109,11 +111,34 @@ export default async function ProjectBrowser({
               <p className="text-xs text-[var(--text-muted)]">
                 {memory.kind} · updated {memory.updatedAt.toISOString()}
               </p>
-              <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded border border-[var(--border)] bg-[var(--bg-raised)] p-3 text-sm">
-                {memory.body.length > BODY_DISPLAY_LIMIT
-                  ? `${memory.body.slice(0, BODY_DISPLAY_LIMIT)}\n\n[truncated for display]`
-                  : memory.body}
-              </pre>
+              {canWrite ? (
+                <>
+                  <MemoryEditor slug={slug} projectId={project.id} path={memory.path} body={memory.body} />
+                  <form action={deleteMemoryAction} className="flex items-center gap-3">
+                    <input type="hidden" name="slug" value={slug} />
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <input type="hidden" name="path" value={memory.path} />
+                    <button
+                      type="submit"
+                      className="rounded border border-[var(--danger)] px-3 py-1 text-sm text-[var(--danger)]"
+                    >
+                      Delete
+                    </button>
+                    <span className="text-xs text-[var(--text-muted)]">
+                      Recoverable for 30 days.
+                    </span>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded border border-[var(--border)] bg-[var(--bg-raised)] p-3 text-sm">
+                    {memory.body.length > BODY_DISPLAY_LIMIT
+                      ? `${memory.body.slice(0, BODY_DISPLAY_LIMIT)}\n\n[truncated for display]`
+                      : memory.body}
+                  </pre>
+                  <p className="text-xs text-[var(--text-muted)]">You have read access to this project.</p>
+                </>
+              )}
             </article>
           ) : (
             <p className="text-sm text-[var(--text-muted)]">Choose a memory, or search.</p>
@@ -150,10 +175,12 @@ function SearchResults({ hits, base }: { hits: Awaited<ReturnType<typeof searchM
 
 function DeletedList({
   slug,
+  projectId,
   rows,
   canWrite,
 }: {
   slug: string
+  projectId: string
   rows: Awaited<ReturnType<typeof listDeletedMemories>>
   canWrite: boolean
 }) {
@@ -174,7 +201,17 @@ function DeletedList({
             </span>
           </span>
           {canWrite ? (
-            <span className="text-xs text-[var(--text-muted)]">Restore from here</span>
+            <form action={restoreMemoryAction}>
+              <input type="hidden" name="slug" value={slug} />
+              <input type="hidden" name="projectId" value={projectId} />
+              <input type="hidden" name="path" value={row.path} />
+              <button
+                type="submit"
+                className="rounded border border-[var(--border)] px-2 py-1 text-xs text-[var(--fg)]"
+              >
+                Restore
+              </button>
+            </form>
           ) : null}
         </li>
       ))}

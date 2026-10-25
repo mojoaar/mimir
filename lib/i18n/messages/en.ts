@@ -339,6 +339,7 @@ export const en = {
   'app.grant.sharing': 'Sharing…',
   'app.settings.appearanceTitle': 'Appearance',
   'app.settings.appearanceBody': 'The theme applies to this browser. The language is saved on your account, so it follows you to every device you sign in from.',
+  'app.user.profile': 'Your profile',
   'app.error.generic': 'That did not work. Try again.',
   'app.teams.title': 'Teams',
   'app.teams.intro':

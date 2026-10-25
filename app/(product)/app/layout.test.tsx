@@ -49,8 +49,11 @@ describe('the app shell', () => {
     const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
 
     expect(html).toContain('body')
-    expect(html).toContain('Sign out')
     expect(html).toContain('alice@example.test')
+    // The account name is the menu: profile and sign-out live behind it.
+    expect(html).toContain('<details')
+    expect(html).toContain('Your profile')
+    expect(html).toContain('Sign out')
     // The select needs a real submit control, or the one control that
     // changes the whole interface stops working without JavaScript.
     expect(html).toContain('type="submit"')

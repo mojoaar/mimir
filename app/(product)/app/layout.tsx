@@ -8,6 +8,7 @@ import { getRequireMfa } from '@/lib/settings/security'
 import AppFooter from '@/components/app/footer'
 import { Enrolment } from './settings/mfa/enrolment'
 import { signOutAction } from './actions'
+import { UserMenu } from '@/app/user-menu'
 import { translator } from '@/lib/i18n/request'
 
 export const instant = false
@@ -46,20 +47,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Link href="/app/teams">{t('app.nav.teams')}</Link>
             <Link href="/app/settings">{t('app.nav.settings')}</Link>
             <Link href="/app/settings/providers">{t('app.nav.providers')}</Link>
-              {user.role === 'admin' ? (
+            {user.role === 'admin' ? (
               <Link href="/app/admin">{t('app.nav.admin')}</Link>
             ) : null}
           </nav>
           <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-[var(--text-muted)] sm:inline">{user.email}</span>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="text-[var(--text-muted)] underline hover:text-[var(--fg)]"
-              >
-                {t('app.nav.signOut')}
-              </button>
-            </form>
+            <UserMenu
+              email={user.email}
+              profile={t('app.user.profile')}
+              signOutLabel={t('app.nav.signOut')}
+              signOut={signOutAction}
+            />
           </div>
         </div>
       </header>

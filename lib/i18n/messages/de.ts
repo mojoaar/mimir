@@ -351,6 +351,7 @@ export const de: Messages = {
   'app.grant.sharing': 'Wird geteilt…',
   'app.settings.appearanceTitle': 'Darstellung',
   'app.settings.appearanceBody': 'Das Design gilt für diesen Browser. Die Sprache wird an deinem Konto gespeichert und folgt dir auf jedes Gerät, an dem du dich anmeldest.',
+  'app.user.profile': 'Dein Profil',
   'app.error.generic': 'Das hat nicht funktioniert. Versuch es erneut.',
   'app.teams.title': 'Teams',
   'app.teams.intro':

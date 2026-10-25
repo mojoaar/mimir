@@ -341,6 +341,7 @@ export const da: Messages = {
   'app.grant.sharing': 'Deler…',
   'app.settings.appearanceTitle': 'Udseende',
   'app.settings.appearanceBody': 'Temaet gælder for denne browser. Sproget gemmes på din konto og følger dig til alle enheder, du logger ind fra.',
+  'app.user.profile': 'Din profil',
   'app.error.generic': 'Det virkede ikke. Prøv igen.',
   'app.teams.title': 'Hold',
   'app.teams.intro':

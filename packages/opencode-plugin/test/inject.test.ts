@@ -25,16 +25,23 @@ vi.mock('../src/client.js', () => ({
 import { MimirPlugin } from '../src/index.js'
 
 const original = { url: process.env.MIMIR_URL, token: process.env.MIMIR_TOKEN }
-
-async function transform() {
+async function fresh() {
   process.env.MIMIR_URL = 'http://127.0.0.1:3000'
   process.env.MIMIR_TOKEN = 'mimir_test'
-  const hooks = await MimirPlugin({ directory: '/tmp/project' } as never)
+  // The plugin remembers what it injected per session module-wide, so each
+  // test starts from a clean module rather than from another test's memory.
+  vi.resetModules()
+  const { MimirPlugin: Fresh } = await import('../src/index.js')
+  const hooks = await Fresh({ directory: '/tmp/project' } as never)
   const hook = hooks['experimental.chat.system.transform']
   if (!hook) throw new Error('the plugin registers no system transform hook')
+  return hook
+}
 
+async function transform(sessionId = 'session-1') {
+  const hook = await fresh()
   const output = { system: [] as string[] }
-  await hook({} as never, output)
+  await hook({ sessionID: sessionId } as never, output)
   return output
 }
 
@@ -105,6 +112,34 @@ describe('the session-start digest', () => {
     const output = await transform()
 
     expect(output.system).toHaveLength(0)
+  })
+
+  it('injects once per session, however many steps the agent takes', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { text: 'anything' } }
+    mocks.reject = false
+    const hook = await fresh()
+
+    const first = { system: [] as string[] }
+    const second = { system: [] as string[] }
+    await hook({ sessionID: 'session-a' } as never, first)
+    await hook({ sessionID: 'session-a' } as never, second)
+
+    expect(mocks.calls).toHaveLength(1)
+    expect(first.system).toHaveLength(1)
+    expect(second.system).toHaveLength(0)
+  })
+
+  it('injects again for a different session', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { text: 'anything' } }
+    mocks.reject = false
+    const hook = await fresh()
+
+    await hook({ sessionID: 'session-a' } as never, { system: [] })
+    await hook({ sessionID: 'session-b' } as never, { system: [] })
+
+    expect(mocks.calls).toHaveLength(2)
   })
 
   it('restores the environment', () => {

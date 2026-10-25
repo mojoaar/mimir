@@ -5,15 +5,18 @@ const mocks = vi.hoisted(() => ({
   request: vi.fn(async () => {}),
   email: null as null | { enabled: boolean },
   allowed: true,
-  counted: 0,
+  reachable: true,
+  checks: 0,
 }))
 
 vi.mock('@/lib/auth/tokens', () => ({ requestPasswordReset: mocks.request }))
 vi.mock('@/lib/settings/email-settings', () => ({ getEmailSettings: async () => mocks.email }))
+vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
+vi.mock('@/lib/http/allowlist', () => ({ isRequestAllowed: async () => mocks.reachable }))
 vi.mock('@/lib/auth/rate-limit', () => ({
-  checkLoginRateLimit: () => ({ allowed: mocks.allowed, retryAfter: 600 }),
-  recordLoginFailure: () => {
-    mocks.counted += 1
+  checkResetRateLimit: () => {
+    mocks.checks += 1
+    return { allowed: mocks.allowed, retryAfter: 600 }
   },
 }))
 
@@ -32,7 +35,8 @@ beforeEach(() => {
   mocks.request.mockClear()
   mocks.email = null
   mocks.allowed = true
-  mocks.counted = 0
+  mocks.reachable = true
+  mocks.checks = 0
 })
 
 describe('the forgot-password page', () => {
@@ -76,7 +80,17 @@ describe('the reset request', () => {
     const state = await requestResetAction({ message: '' }, form('alice@example.test'))
 
     expect(mocks.request).not.toHaveBeenCalled()
-    expect(mocks.counted).toBe(1)
+    expect(mocks.checks).toBe(1)
     expect(state.message).toContain('Too many attempts')
+  })
+
+  it('refuses an address outside the allowlist before doing anything', async () => {
+    mocks.reachable = false
+
+    const state = await requestResetAction({ message: '' }, form('alice@example.test'))
+
+    expect(state.message).toContain('not allowed')
+    expect(mocks.checks).toBe(0)
+    expect(mocks.request).not.toHaveBeenCalled()
   })
 })

@@ -12,12 +12,19 @@ const DIGEST_HEADER = "## What this project already knows (Mimir)\n\n";
  * spending a tool call. The hook is experimental in the plugin API and
  * fail-soft by design: a slow or missing Mimir must never hold up a session.
  */
+const injectedFor = new Set<string>()
+
 export const MimirPlugin: Plugin = async (input) => {
   const directory = input.directory;
 
   return {
-    "experimental.chat.system.transform": async (_input, output) => {
+    "experimental.chat.system.transform": async ({ sessionID }, output) => {
       if (!process.env.MIMIR_URL || !process.env.MIMIR_TOKEN) return;
+
+      // This hook runs immediately before every model dispatch, not once per
+      // session, so a session is fetched once and then left alone.
+      const session = sessionID ?? "default";
+      if (injectedFor.has(session)) return;
 
       const result = await callTool(
         "memory_digest",
@@ -28,7 +35,10 @@ export const MimirPlugin: Plugin = async (input) => {
       if (!result?.ok) return;
       const digest = result.result as { text?: string };
       const text = digest.text?.trim();
-      if (text) output.system.push(`${DIGEST_HEADER}${text}`);
+      if (text) {
+        output.system.push(`${DIGEST_HEADER}${text}`);
+        injectedFor.add(session);
+      }
     },
 
     tool: {

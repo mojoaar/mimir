@@ -118,6 +118,20 @@ test('never echoes a key shorter than the mask needs', async () => {
   expect(created.keyHint).not.toContain('bcd')
 })
 
+test('hides a short key completely rather than most of it', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'llm',
+    preset: 'deepseek',
+    label: 'six',
+    model: 'deepseek-chat',
+    apiKey: 'abcdef',
+  })
+
+  expect(created.keyHint).not.toContain('abcdef')
+  expect(created.keyHint).not.toContain('cdef')
+})
+
 test('keeps the last four characters and hides the rest', async () => {
   const created = await createProvider({
     userId: fixtures.alice,

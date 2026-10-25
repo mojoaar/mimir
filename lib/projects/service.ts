@@ -209,7 +209,8 @@ export type ProjectSettings = {
   name: string
   learningEnabled: boolean
   llmProviderId: string | null
-  role: ProjectRole
+  // null means RLS let the row through but no grant backs it: fail closed, never "read".
+  role: ProjectRole | null
 }
 
 /** One project by slug, with the caller's role. RLS hides what the caller cannot reach. */
@@ -240,7 +241,7 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
       name: row.name,
       learningEnabled: row.learning_enabled,
       llmProviderId: row.llm_provider_id,
-      role: row.is_owner ? 'owner' : (rankRole(row.rank) ?? 'read'),
+      role: row.is_owner ? 'owner' : (rankRole(row.rank)),
     }
   })
 }

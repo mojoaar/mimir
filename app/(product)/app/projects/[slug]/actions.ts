@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { audit } from '@/lib/audit'
+import { audit, describeAuditFailure } from '@/lib/audit'
 import { requireUser } from '@/lib/auth/context'
 import { deleteMemory, restoreMemory, writeMemory } from '@/lib/memory/service'
 import { restoreVersion } from '@/lib/memory/versions'
@@ -15,7 +15,7 @@ const KNOWN = new Set(['invalid_path', 'invalid_params', 'body_too_large', 'forb
 function messageOf(error: unknown): string {
   const code = (error as { code?: string }).code ?? ''
   if (KNOWN.has(code)) return (error as Error).message
-  console.error('memory action failed', error)
+  console.error('memory action failed', describeAuditFailure(error))
   return 'That did not work. Try again.'
 }
 

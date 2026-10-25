@@ -2,7 +2,7 @@ import { audit } from '../audit'
 import { getConfig } from '../config'
 import { decrypt, deriveKey, encrypt, redact } from '../crypto'
 import { withUser } from '../db/tx'
-import { checkProviderUrl } from './url'
+import { assertPublicProviderHost, checkProviderUrl } from './url'
 import { PRESETS, presetFor, type PresetId, type ProviderKind } from './presets'
 
 export type { ProviderKind } from './presets'
@@ -94,6 +94,14 @@ function invalid(message: string): Error & { code: string } {
   return error
 }
 
+/**
+ * A key short enough for the last four characters to matter is hidden whole:
+ * showing four of six characters is not a hint, it is half the key.
+ */
+function hintFor(apiKey: string): string {
+  return apiKey.length <= 8 ? '********' : redact(apiKey)
+}
+
 export async function createProvider(input: ProviderInput): Promise<ProviderSummary> {
   const preset = presetFor(input.preset)
   const baseUrl = (input.baseUrl ?? preset.baseUrl).replace(/\/+$/, '')
@@ -104,6 +112,11 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
   }
   const urlCheck = checkProviderUrl(baseUrl)
   if (!urlCheck.ok) throw invalid(urlCheck.reason)
+  try {
+    await assertPublicProviderHost(baseUrl)
+  } catch (error) {
+    throw invalid((error as Error).message)
+  }
   const dim = input.kind === 'embedding' ? (input.dim ?? preset.defaultDim ?? null) : null
   const apiKey = input.apiKey?.trim() ? input.apiKey.trim() : null
 
@@ -127,7 +140,7 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
         baseUrl,
         input.model,
         apiKey ? encrypt(keyEncryptionKey(), apiKey) : null,
-        apiKey ? redact(apiKey) : null,
+        apiKey ? hintFor(apiKey) : null,
         dim,
         input.isDefault ?? false,
       ],

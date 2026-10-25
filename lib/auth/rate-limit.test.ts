@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { checkLoginRateLimit, clearLoginRateLimit, recordLoginFailure, resetLoginRateLimit } from './rate-limit'
+import {
+  checkLoginRateLimit,
+  checkResetRateLimit,
+  clearLoginRateLimit,
+  recordLoginFailure,
+  resetLoginRateLimit,
+  resetResetRateLimit,
+} from './rate-limit'
 
 const alice = 'Alice@Example.test'
 
 beforeEach(() => {
   resetLoginRateLimit()
+  resetResetRateLimit()
 })
 
 describe('the login throttle', () => {
@@ -44,5 +52,36 @@ describe('the login throttle', () => {
     recordLoginFailure(alice)
 
     expect(checkLoginRateLimit(alice).allowed).toBe(false)
+  })
+})
+
+describe('the reset throttle', () => {
+  it('allows three requests and refuses the fourth', () => {
+    for (let i = 0; i < 3; i++) expect(checkResetRateLimit(alice).allowed).toBe(true)
+
+    const fourth = checkResetRateLimit(alice)
+
+    expect(fourth.allowed).toBe(false)
+    expect(fourth.retryAfter).toBeGreaterThan(0)
+  })
+
+  it('keeps its own count, so a reset flood cannot lock a sign-in', () => {
+    for (let i = 0; i < 4; i++) checkResetRateLimit(alice)
+
+    expect(checkResetRateLimit(alice).allowed).toBe(false)
+    expect(checkLoginRateLimit(alice).allowed).toBe(true)
+  })
+
+  it('does not spend the login budget on resets', () => {
+    for (let i = 0; i < 5; i++) recordLoginFailure(alice)
+
+    expect(checkLoginRateLimit(alice).allowed).toBe(false)
+    expect(checkResetRateLimit(alice).allowed).toBe(true)
+  })
+
+  it('leaves another account alone', () => {
+    for (let i = 0; i < 4; i++) checkResetRateLimit(alice)
+
+    expect(checkResetRateLimit('bob@example.test').allowed).toBe(true)
   })
 })

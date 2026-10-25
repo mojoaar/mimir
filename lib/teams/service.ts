@@ -259,7 +259,10 @@ export async function renameTeam(
     if (trimmed.length > 80) throw fail('invalid_params', 'a team name is at most 80 characters')
 
     // The name only: the slug and the URL carry the team's identity.
-    await client.query('update teams set name = $2 where id = $1', [teamId, trimmed])
+    const updated = await client.query('update teams set name = $2 where id = $1', [teamId, trimmed])
+  // The guard reads team_members; the update policy reads owner_user_id. Two owner
+  // rows can disagree, and then nothing is written — say so instead of "renamed".
+  if (updated.rowCount === 0) throw fail('forbidden', 'only a team owner can do that')
     await audit(
       {
         actorType: 'user',

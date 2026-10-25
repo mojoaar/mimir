@@ -46,6 +46,8 @@ async function request(target: ProviderTarget, path: string, body: unknown, deps
     headers: headersFor(target),
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(deps?.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+    // A public endpoint must not be able to redirect the server into the network.
+    redirect: 'manual',
   })
   // The body can echo the prompt, so it never reaches the message or the audit log.
   if (!response.ok) throw new ProviderError(`provider responded ${response.status}`, response.status)
@@ -84,6 +86,8 @@ export async function listModels(target: ProviderTarget, deps?: ClientDeps): Pro
     method: 'GET',
     headers: headersFor(target),
     signal: AbortSignal.timeout(deps?.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+    // A public endpoint must not be able to redirect the server into the network.
+    redirect: 'manual',
   })
   if (!response.ok) throw new ProviderError(`provider responded ${response.status}`, response.status)
   const json = (await response.json()) as { data?: { id?: string }[] }

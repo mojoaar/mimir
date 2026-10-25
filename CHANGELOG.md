@@ -56,6 +56,28 @@ Hardening: fewer ways to be surprised.
   address has an account, and when email is not configured the page says so
   rather than pretending to send.
 
+### Fixed (review pass)
+
+- The provider URL check now also catches the ways around it: a trailing dot
+  (`localhost.`), IPv4-mapped and NAT64 IPv6 addresses, and a public name that
+  resolves to a private address. Provider requests also refuse to follow a
+  redirect, so a public endpoint cannot bounce the server into the network.
+- The reset request is rate limited on its own budget (three per fifteen
+  minutes) and respects the IP allowlist. It used to mint a token on every
+  request and to fire before the allowlist check.
+- The reset answer no longer takes longer for a real account: the link is
+  minted and mailed without holding the reply, so timing cannot be used to ask
+  "does this address exist".
+- The session digest is fetched once per session instead of once per model
+  step, so a long session no longer pays a 1.5 s lookup and 800 tokens before
+  every dispatch.
+- A provider key of eight characters or fewer is now hidden whole.
+- A team rename reports failure when row-level security refuses the update
+  instead of claiming success.
+- An IPv6 address in `MIMIR_TRUSTED_PROXIES` no longer carries a wrong address
+  family into the peer check.
+- `getProject` no longer invents `read` when no grant backs the row.
+
 ## [0.8.0] - 2026-10-25
 
 Share with people, not accounts.

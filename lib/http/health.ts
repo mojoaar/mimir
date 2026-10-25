@@ -1,4 +1,5 @@
 import { resolveApiKey } from '@/lib/auth/apikey'
+import { describeAuditFailure } from '@/lib/audit'
 import { withService } from '@/lib/db/tx'
 import { connection } from 'next/server'
 import pkg from '../../package.json'
@@ -41,7 +42,7 @@ async function checkDatabase(): Promise<DatabaseCheck> {
     await withService((client) => client.query('select 1'))
     return { ok: true, latencyMs: Date.now() - started }
   } catch (error) {
-    console.error('health: database check failed', error)
+    console.error('health: database check failed', describeAuditFailure(error))
     return { ok: false, latencyMs: Date.now() - started }
   }
 }

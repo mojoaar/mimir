@@ -40,6 +40,31 @@ export function resetLoginRateLimit(): void {
   attempts.clear()
 }
 
+// A reset email is not a login attempt, and a spammer must not be able to lock a
+// victim out of signing in by requesting resets for their address. Its own bucket.
+const RESET_WINDOW_MS = 15 * 60 * 1000
+const RESET_MAX_REQUESTS = 3
+const resetHits = new Map<string, number[]>()
+
+export function checkResetRateLimit(account: string): { allowed: boolean; retryAfter: number } {
+  const k = key(account)
+  const now = Date.now()
+  const recent = (resetHits.get(k) ?? []).filter((at) => now - at < RESET_WINDOW_MS)
+  if (recent.length >= RESET_MAX_REQUESTS) {
+    resetHits.set(k, recent)
+    const oldest = recent[0] ?? now
+    return { allowed: false, retryAfter: Math.ceil((oldest + RESET_WINDOW_MS - now) / 1000) }
+  }
+  recent.push(now)
+  resetHits.set(k, recent)
+  return { allowed: true, retryAfter: 0 }
+}
+
+/** Test hook. */
+export function resetResetRateLimit(): void {
+  resetHits.clear()
+}
+
 const API_WINDOW_MS = 60_000
 const API_MAX_REQUESTS = 60
 const apiHits = new Map<string, number[]>()

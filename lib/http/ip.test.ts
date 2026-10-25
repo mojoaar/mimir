@@ -29,4 +29,11 @@ describe('clientIp', () => {
   it('falls back to the peer when the header is absent', () => {
     expect(clientIp(h({}), ['10.0.0.0/8'], '10.0.0.5')).toBe('10.0.0.5')
   })
+
+  it('accepts an ipv6 trusted subnet without throwing', () => {
+    expect(clientIp(h({ 'x-forwarded-for': '1.2.3.4' }), ['2001:db8::/32'], '2001:db8::1'))
+      .toBe('1.2.3.4')
+    expect(clientIp(h({ 'x-forwarded-for': '1.2.3.4' }), ['2001:db8::/32'], '203.0.113.9'))
+      .toBe('203.0.113.9')
+  })
 })

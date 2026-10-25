@@ -118,12 +118,12 @@ export async function requestPasswordReset(email: string): Promise<void> {
   if (!user) return;
 
   const { siteName } = await getSiteSettings();
-  await deliverToken({
-    userId: user.id,
-    kind: 'password_reset',
-    email: user.email,
-    siteName,
-    invitedBy: siteName,
+  // Mint now, send later: the reply must not take longer for a real account than
+  // for an unknown one, so the HTTPS round trip to Resend stays off the response.
+  const minted = await mintToken(user.id, 'password_reset', null);
+  const template = resetEmail({ siteName, link: minted.url });
+  void sendEmail({ to: user.email, subject: template.subject, text: template.text }).then((sent) => {
+    if (!sent.ok) console.warn(`mimir: could not email password_reset link (${sent.reason})`);
   });
 }
 

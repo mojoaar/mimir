@@ -40,8 +40,13 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
                    AND g.role = 'write')
 $$;
 
--- projects: read if owner or any grant; write only for the owner
-CREATE POLICY project_read ON projects FOR SELECT USING (can_access_project(id));
+-- projects: read if owner or any grant; write only for the owner.
+-- The direct owner check is not redundant: `INSERT ... RETURNING` applies this
+-- SELECT policy to the row being inserted, and a row created by this statement
+-- is not yet visible to can_access_project's snapshot, so without the first
+-- clause every insert that returns an id fails with an RLS violation.
+CREATE POLICY project_read ON projects FOR SELECT
+  USING (owner_user_id = app_user_id() OR can_access_project(id));
 CREATE POLICY project_insert ON projects FOR INSERT WITH CHECK (owner_user_id = app_user_id());
 CREATE POLICY project_update ON projects FOR UPDATE
   USING (owner_user_id = app_user_id()) WITH CHECK (owner_user_id = app_user_id());

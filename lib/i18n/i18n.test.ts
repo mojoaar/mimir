@@ -7,7 +7,7 @@ import {
   localeFromPath,
   withLocale,
 } from './locales';
-import { t } from './index';
+import { MESSAGES, t } from './index';
 
 describe('locales', () => {
   test('recognises only the three locales', () => {
@@ -40,6 +40,21 @@ describe('locales', () => {
   test('translates, falling back to english and then the key', () => {
     expect(t('da', 'hero.title')).not.toBe(t('en', 'hero.title'));
     expect(t('da', 'missing.key')).toBe('missing.key');
+  });
+
+  test('falls back to english when only english has the key', () => {
+    const en = MESSAGES.en as Record<string, string>;
+    en['app.test.onlyEnglish'] = 'English only';
+    expect(t('da', 'app.test.onlyEnglish')).toBe('English only');
+    delete en['app.test.onlyEnglish'];
+  });
+
+  test('fills placeholders and leaves an unfilled one visible', () => {
+    const da = MESSAGES.da as Record<string, string>;
+    da['app.test.greet'] = 'Hej {name}';
+    expect(t('da', 'app.test.greet', { name: 'Ada' })).toBe('Hej Ada');
+    expect(t('da', 'app.test.greet')).toBe('Hej {name}');
+    delete da['app.test.greet'];
   });
 
   test('builds hreflang alternates with an x-default', () => {

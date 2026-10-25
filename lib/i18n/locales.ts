@@ -8,6 +8,16 @@ export function isLocale(value: string): value is Locale {
   return (LOCALES as readonly string[]).includes(value);
 }
 
+/** The first language tag we speak, ignoring the quality weights browsers order by. */
+export function fromAcceptLanguage(header: string | null): Locale | null {
+  if (!header) return null;
+  for (const part of header.split(',')) {
+    const tag = part.split(';')[0]?.trim().toLowerCase().slice(0, 2) ?? '';
+    if (isLocale(tag)) return tag;
+  }
+  return null;
+}
+
 /**
  * Splits `/da/x` into a locale and the path it decorates. English is the
  * default and is served unprefixed, so `/en/x` is reported with `rest: '/x'`

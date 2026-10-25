@@ -80,9 +80,11 @@ export async function resolveApiKey(token: string): Promise<AuthUser | null> {
       role: 'admin' | 'user'
       status: string
       totp_secret_enc: Buffer | null
+      locale: string
       key_id: string
     }>(
-      `select u.id, u.email, u.name, u.role, u.status, u.totp_secret_enc, k.id as key_id
+      `select u.id, u.email, u.name, u.role, u.status, u.totp_secret_enc, u.locale,
+              k.id as key_id
          from api_keys k join users u on u.id = k.user_id
         where k.key_hash = $1 and k.revoked_at is null`,
       [sha256(token)],
@@ -109,6 +111,7 @@ export async function resolveApiKey(token: string): Promise<AuthUser | null> {
     role: row.role,
     status: row.status,
     mfaEnabled: row.totp_secret_enc !== null,
+    locale: row.locale,
   }
 }
 

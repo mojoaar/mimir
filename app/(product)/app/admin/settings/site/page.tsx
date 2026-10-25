@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/auth/admin'
 import { getConfig } from '@/lib/config'
 import { getSiteSettings } from '@/lib/settings/site'
 import { getIpAllowlist, getRequireMfa } from '@/lib/settings/security'
+import { getEmailSettings } from '@/lib/settings/email-settings'
 import { saveSiteSettingsAction } from './actions'
 
 export const instant = false
@@ -20,10 +21,11 @@ export default async function SiteSettingsPage({
 }) {
   await requireAdmin()
   const params = await searchParams
-  const [site, requireMfa, allowlist] = await Promise.all([
+  const [site, requireMfa, allowlist, email] = await Promise.all([
     getSiteSettings(),
     getRequireMfa(),
     getIpAllowlist(),
+    getEmailSettings(),
   ])
   const proxyWarning = allowlist.length > 0 && getConfig().trustedProxies.length === 0
 
@@ -80,6 +82,22 @@ export default async function SiteSettingsPage({
               : 'The client address is read from X-Forwarded-For, trusted only from MIMIR_TRUSTED_PROXIES.'}
           </span>
         </label>
+
+        <fieldset className="flex flex-col gap-3 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
+          <legend className="text-sm font-medium">Email (optional)</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="emailEnabled" defaultChecked={email !== null} />
+            Send invite, reset and backup-failure mail through Resend
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">From address</span>
+            <input name="emailFrom" defaultValue={email?.from ?? ''} placeholder="Mimir <mimir.com>" className={FIELD} style={FIELD_STYLE} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">Resend API key{email ? ' (leave blank to keep it)' : ''}</span>
+            <input name="emailKey" type="password" autoComplete="off" className={FIELD} style={FIELD_STYLE} />
+          </label>
+        </fieldset>
 
         <div>
           <button

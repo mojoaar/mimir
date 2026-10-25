@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth/admin'
 import { audit } from '@/lib/audit'
 import { getSiteSettings, setSiteSettings } from '@/lib/settings/site'
 import { getIpAllowlist, getRequireMfa, setIpAllowlist, setRequireMfa } from '@/lib/settings/security'
+import { getEmailSettings, setEmailSettings } from '@/lib/settings/email-settings'
 import { invalidateAllowlistCache } from '@/lib/http/allowlist'
 
 function text(formData: FormData, name: string): string {
@@ -32,6 +33,19 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
     await setRequireMfa(text(formData, 'requireMfa') === 'on', user.id)
     await setIpAllowlist(allowlist, user.id)
     invalidateAllowlistCache()
+
+    const emailEnabled = text(formData, 'emailEnabled') === 'on'
+    const emailFrom = text(formData, 'emailFrom')
+    const emailKey = text(formData, 'emailKey')
+    const stored = await getEmailSettings()
+    if (emailEnabled && emailFrom) {
+      await setEmailSettings(
+        { enabled: true, from: emailFrom, apiKey: emailKey || stored?.apiKey || '' },
+        user.id,
+      )
+    } else {
+      await setEmailSettings(null, user.id)
+    }
 
     const before = await getSiteSettings()
     const mfa = await getRequireMfa()

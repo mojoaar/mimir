@@ -1,10 +1,12 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Restore a Mimir database from a `pg_dump -Fc` file, encrypted or not.
 #
 # `.enc` files are the encrypted artifacts the backup job uploads: they are
 # decrypted with MIMIR_SECRET (see scripts/decrypt-backup.mjs) and piped
 # straight into pg_restore, so the plaintext dump never lands on disk.
-set -euo pipefail
+#
+# POSIX sh, not bash: this script is copied into the Alpine image and run there.
+set -eu
 
 if [ "${1:-}" = '' ] || [ "${2:-}" != '--yes' ]; then
   cat >&2 <<'USAGE'

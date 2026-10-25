@@ -6,7 +6,8 @@ const STDERR_LIMIT = 300
 
 /** Custom format keeps the dump restorable by `pg_restore` in one pass. */
 export function dumpArgs(url: string): string[] {
-  return ['-Fc', '--no-owner', '--no-privileges', '--dbname', url]
+  // Keep privileges: a dump without them restores a database the app role cannot read.
+  return ['-Fc', '--no-owner', '--dbname', url]
 }
 
 export async function dumpDatabase(url: string, deps: { runner?: DumpRunner } = {}): Promise<Buffer> {

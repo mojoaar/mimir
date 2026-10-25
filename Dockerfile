@@ -24,7 +24,7 @@ COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
 # The migration runner reads these from the working directory at boot.
 COPY --from=build --chown=node:node /app/lib/db/migrations ./lib/db/migrations
-COPY --from=build --chown=node:node /app/scripts/restore.sh ./scripts/restore.sh
+COPY --from=build --chown=node:node /app/scripts/restore.sh /app/scripts/decrypt-backup.mjs ./scripts/
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \

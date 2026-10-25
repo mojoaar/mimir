@@ -7,9 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-25
+
+Mimir can now be operated: it backs itself up, it manages its users, and an
+admin can see what happened.
+
+### Added
+
+- Encrypted scheduled backups to S3 or WebDAV (pCloud included): two artifacts
+  per run, a `pg_dump -Fc` of the database and a JSON export of settings,
+  projects and provider labels. Every upload is read back and its size checked
+  before the run is recorded as successful.
+- Retention: the newest N runs are kept (14 by default) and older artifacts
+  under the configured prefix are pruned; nothing outside that prefix is touched.
+- A backup admin page: target and schedule form, `Run now`, last-success age,
+  and the last 20 runs with their errors.
+- `scripts/decrypt-backup.mjs` and an encrypted branch in `scripts/restore.sh`,
+  so an uploaded `.enc` artifact restores without ever writing plaintext to disk.
+- Admin user management: create, verify, enable, disable, change role, reset a
+  password, reset MFA and delete. Disabling a user revokes their sessions and
+  API keys in the same transaction.
+- TOTP two-step login, optional per user, with a `require_mfa` install switch
+  and a replay guard on the last accepted step. The bootstrap admin is exempt so
+  a misconfigured install cannot lock its only operator out.
+- An optional IP allowlist (CIDR blocks) enforced on `/api/v1`, `/mcp`, the
+  login page and the product area. `/health` and the marketing page stay open.
+- An audit viewer with filters, pagination and CSV export, plus a nightly prune
+  that keeps memory traffic for 30 days and everything else for a year.
+- An admin overview with user, project, memory, embedding and job counts.
+- A site settings page for the public URL, site name, meta description,
+  `require_mfa` and the allowlist.
+- Invitation and password-reset links by email through Resend, falling back to a
+  copyable one-time link when email is not configured.
+
 ### Changed
 
 - PostgreSQL 18 (was 17). A pre-0.3.0 install must be dumped and restored; the image will not start on the old data directory.
+- The runtime image installs `postgresql18-client`, because `pg_dump` refuses a
+  server newer than itself and the backup job would fail at 3 a.m.
+- `scripts/restore.sh` is POSIX `sh` so it runs inside the Alpine image.
+
+### Fixed
+
+- Encrypted settings and provider credentials are sealed as one blob, so a
+  partially written settings row can no longer leave a secret in the clear.
+
 
 ## [0.2.0] - 2026-10-25
 

@@ -2,7 +2,7 @@
 
 Long-term memory for coding agents. Self-hosted, path-based, and readable by a human.
 
-> **Mímir** was the Norse god whose well held wisdom and memory; Óðinn traded an eye for a single draught from it. The name is the same word as *memory* and *remember* — and a memory worth an eye is the right standard for one your agents drink from.
+> **Mímir** was the Norse god whose well held wisdom and memory; Odin (Óðinn) traded an eye for a single draught from it. The name is the same word as *memory* and *remember* — and a memory worth an eye is the right standard for one your agents drink from.
 
 An agent asks "what do we already know about this project?" and gets back the decisions, conventions and gotchas that were learned the hard way — scoped to the repository it is standing in. Memory is a tree of paths with three levels of detail, so an agent pays for one line until it needs the whole thing.
 

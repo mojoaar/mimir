@@ -17,6 +17,9 @@ Room to breathe.
   of a URL you had to remember.
 - A footer on every app and docs page: author, GitHub, licence, docs, the
   version you are running, and the year.
+- The profile and two-factor screens sit in the same padded column as the
+  rest of the app, and a long email address no longer pushes the theme and
+  sign-out controls off a phone screen.
 
 ### Fixed
 

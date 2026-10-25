@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // not at the next login.
   if (!(await isRequestAllowed({ headers: await headers() }))) {
     return (
-      <section className="mx-auto flex max-w-md flex-col gap-3 py-16">
+      <section className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 py-16 sm:px-6">
         <h1 className="text-xl font-semibold tracking-tight">Not available here</h1>
         <p className="text-sm text-[var(--text-muted)]">
           This address is not allowed to reach Mimir. Ask the administrator which networks
@@ -54,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             {user.role === 'admin' ? <Link href="/app/admin">Admin</Link> : null}
           </nav>
           <div className="ml-auto flex items-center gap-3">
-            <span className="text-[var(--text-muted)]">{user.email}</span>
+            <span className="hidden text-[var(--text-muted)] sm:inline">{user.email}</span>
             <ThemeSwitcher value={theme} />
             <form action={signOutAction}>
               <button
@@ -68,7 +68,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       {forced ? (
-        <section className="flex max-w-xl flex-col gap-4">
+        <section className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-8 sm:px-6">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Two-factor is required</h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">

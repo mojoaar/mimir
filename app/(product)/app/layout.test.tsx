@@ -55,6 +55,12 @@ describe('the app shell', () => {
     }
   })
 
+  it('keeps the theme switcher beside the navigation', async () => {
+    const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
+    expect(html).toContain('<select')
+    expect(html).toContain('Nordlys')
+  })
+
   it('shows the admin link only to an admin', async () => {
     state.role = 'admin'
     const asAdmin = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))

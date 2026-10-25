@@ -1,4 +1,9 @@
+import Link from 'next/link'
+
 import pkg from '../../package.json'
+
+// Fixed at start-up: reading the clock during render aborts the docs prerender.
+const YEAR = new Date().getFullYear()
 
 /**
  * The footer follows the column it sits under: the app reads at max-w-3xl and
@@ -24,16 +29,16 @@ export default function AppFooter({ wide = false }: { wide?: boolean }) {
           <span aria-hidden="true">·</span>
           <span>MIT</span>
           <span aria-hidden="true">·</span>
-          <a
+          <Link
             href="/docs"
             className="underline hover:text-[var(--fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
           >
             Docs
-          </a>
+          </Link>
           <span aria-hidden="true">·</span>
           <span>v{pkg.version}</span>
           <span aria-hidden="true">·</span>
-          <span>© {new Date().getFullYear()}</span>
+          <span>© {YEAR}</span>
         </p>
       </div>
     </footer>

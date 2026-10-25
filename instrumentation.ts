@@ -15,9 +15,9 @@ export async function register() {
   await ensureBootstrapAdmin(config)
 
   // Importing a job module is what registers its worker; startJobs then starts
-  // only the workers that exist. Jobs run in this process, so a crash mid-job is
-  // retried by pg-boss on the next boot rather than lost. The extract and backfill
-  // modules are imported here as they land (tasks 9 and 10).
+  // only the workers that exist. The comment below names the modules as they
+  // land, because a static import of a file that does not exist yet breaks the build.
+  await import('./lib/jobs/backfill')
   const { startJobs } = await import('./lib/jobs/boss')
   await startJobs()
 

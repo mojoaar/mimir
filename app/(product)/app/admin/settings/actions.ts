@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth/admin'
+import { sendJob } from '@/lib/jobs/boss'
 import { getProviderSecret, recordVerification } from '@/lib/providers/service'
 import { verifyProvider } from '@/lib/providers/verify'
 import { EMBEDDING_DIM, setEmbeddingConfig } from '@/lib/settings/embedding'
@@ -44,6 +45,8 @@ export async function saveEmbeddingAction(
 
     await setEmbeddingConfig({ providerId, model, dim: probe.dim }, user.id)
     await recordVerification(user.id, providerId, null)
+    // Rows written before this moment have no vector; embed them in the background.
+    await sendJob('backfill', {})
     revalidatePath('/app/admin/settings')
     return { ok: `Embeddings now use ${model} (${probe.dim} dimensions).` }
   } catch (error) {

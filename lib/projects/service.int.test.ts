@@ -192,3 +192,24 @@ describe('listProjects', () => {
     expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)).toBeUndefined()
   })
 })
+
+describe('a team share reaches every read path', () => {
+  it('resolves and reads a project shared with the caller’s team', async () => {
+    const { rows } = await adminPool().query<{ id: string }>(
+      "insert into teams (owner_user_id, name, slug) values ($1, 'ops', 'ops') returning id",
+      [alice],
+    )
+    const team = rows[0]!.id
+    await adminPool().query(
+      "insert into team_members (team_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'member')",
+      [team, alice, carol],
+    )
+    await grantProject(alice, aliceProjectId, 'team', team, 'write')
+
+    const resolved = await resolveProject(carol, { project: 'alice-project' })
+    expect(resolved.role).toBe('write')
+
+    const project = await getProject(carol, 'alice-project')
+    expect(project?.role).toBe('write')
+  })
+})

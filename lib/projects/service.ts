@@ -19,23 +19,27 @@ type AccessRow = {
   id: string
   slug: string
   is_owner: boolean
-  grant_role: string | null
+  grant_rank: number | null
 }
+
+const GRANT_RANK = `(SELECT max(case g.role when 'write' then 2 else 1 end)
+                 FROM project_grants g
+                 LEFT JOIN team_members tm
+                        ON g.principal_type = 'team'
+                       AND tm.team_id = g.principal_id
+                       AND tm.user_id = $1
+                WHERE g.project_id = p.id
+                  AND ((g.principal_type = 'user' AND g.principal_id = $1)
+                       OR tm.user_id IS NOT NULL))`
 
 const ACCESSIBLE = `
   p.archived_at IS NULL
-  AND (
-    p.owner_user_id = $1
-    OR EXISTS (
-      SELECT 1 FROM project_grants g
-      WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1
-    )
-  )
+  AND (p.owner_user_id = $1 OR ${GRANT_RANK} IS NOT NULL)
 `
 
 function toRole(row: AccessRow): ProjectRole {
   if (row.is_owner) return 'owner'
-  return row.grant_role === 'write' ? 'write' : 'read'
+  return row.grant_rank === 2 ? 'write' : 'read'
 }
 
 /**
@@ -53,8 +57,7 @@ export async function resolveProject(
     if (opts.project) {
       const found = await client.query<AccessRow>(
         `SELECT p.id, p.slug, (p.owner_user_id = $1) AS is_owner,
-                (SELECT g.role::text FROM project_grants g
-                  WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1) AS grant_role
+                ${GRANT_RANK} AS grant_rank
            FROM projects p
           WHERE ${ACCESSIBLE} AND p.slug = $2
           LIMIT 1`,
@@ -74,8 +77,7 @@ export async function resolveProject(
     if (repoKey) {
       const found = await client.query<AccessRow>(
         `SELECT p.id, p.slug, (p.owner_user_id = $1) AS is_owner,
-                (SELECT g.role::text FROM project_grants g
-                  WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1) AS grant_role
+                ${GRANT_RANK} AS grant_rank
            FROM projects p
           WHERE ${ACCESSIBLE} AND p.repo_key = $2
           ORDER BY (p.owner_user_id = $1) DESC, p.updated_at DESC
@@ -235,12 +237,11 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
       learning_enabled: boolean
       llm_provider_id: string | null
       is_owner: boolean
-      grant_role: ProjectRole | null
+      rank: number | null
     }>(
       `SELECT p.id, p.slug, p.name, p.learning_enabled, p.llm_provider_id,
               (p.owner_user_id = $1) AS is_owner,
-              (SELECT g.role::text FROM project_grants g
-                WHERE g.project_id = p.id AND g.principal_type = 'user' AND g.principal_id = $1) AS grant_role
+              ${GRANT_RANK} AS rank
          FROM projects p
         WHERE p.archived_at IS NULL AND p.slug = $2
         LIMIT 1`,
@@ -254,7 +255,7 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
       name: row.name,
       learningEnabled: row.learning_enabled,
       llmProviderId: row.llm_provider_id,
-      role: row.is_owner ? 'owner' : (row.grant_role ?? 'read'),
+      role: row.is_owner ? 'owner' : (rankRole(row.rank) ?? 'read'),
     }
   })
 }

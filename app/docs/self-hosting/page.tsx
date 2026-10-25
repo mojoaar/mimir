@@ -91,6 +91,25 @@ docker compose up -d`}</Code>
         without sending it.
       </P>
 
+      <H2>Sharing a project</H2>
+      <P>
+        A project can be shared with a person or with a <strong>team</strong>. Open a project, then{' '}
+        <strong>Settings → Sharing</strong>, and grant either <code>read</code> or <code>read and write</code>. A
+        team is a group of accounts with one owner and any number of members: <strong>Teams</strong> in the app
+        creates one, adds people by email, and removes them again. Removing a member ends their access on their next
+        request, because access is read from the database every time rather than cached in a session.
+      </P>
+      <P>
+        A share is never the owner. Whoever owns the project keeps every right — renaming, archiving, deleting,
+        sharing again and changing settings — and a person or team with write access can read, write, delete and
+        restore memories but cannot do any of those. Deleting a team takes its shares with it; the projects it could
+        see are untouched.
+      </P>
+      <P>
+        An agent sees this too: <code>project_list</code> returns the projects shared with a team the token&apos;s
+        user belongs to, under the role the team grants.
+      </P>
+
       <H2>Health</H2>
       <P>
         <code>/health</code> and <code>/api/health</code> answer <code>{'{"status":"ok"}'}</code> anonymously and{' '}

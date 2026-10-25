@@ -63,8 +63,10 @@ export async function handleHealth(request: Request): Promise<Response> {
   }
   const database = await checkDatabase()
 
+  // With the database down the key cannot be resolved, and a monitor that sent
+  // a bearer should still get 503 rather than an opaque 500.
   const header = request.headers.get('authorization') ?? ''
-  const token = header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : ''
+  const token = database.ok && header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : ''
   const user = token ? await resolveApiKey(token) : null
 
   const { body, status } = healthPayload(

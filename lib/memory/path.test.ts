@@ -26,6 +26,16 @@ describe('normalisePath', () => {
     }
   })
 
+  it.each([
+    ['deploy/ ', 'whitespace-only trailing segment'],
+    [' /deploy', 'whitespace-only leading segment'],
+    ['a/ /b', 'whitespace-only middle segment'],
+  ])('rejects %s instead of collapsing onto a neighbour', (input) => {
+    // Trimming the whole string would turn 'deploy/ ' into 'deploy' and the
+    // write would silently land on an existing memory.
+    expect(() => normalisePath(input)).toThrow(/invalid_path: .*whitespace-only segment/)
+  })
+
   it('names the offending character so an agent can fix its path', () => {
     expect(() => normalisePath('caf!')).toThrow(/invalid_path: .*'!'/)
   })

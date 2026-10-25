@@ -51,3 +51,18 @@ describe('pages', () => {
     expect(offenders).toEqual([])
   })
 })
+
+describe('globals.css', () => {
+  const globals = readFileSync('app/globals.css', 'utf8')
+
+  it('imports tailwind, or none of the utility classes are generated', () => {
+    expect(globals).toMatch(/@import 'tailwindcss'/)
+  })
+
+  it('keeps its base rules in a layer, so they cannot beat the utilities', () => {
+    // An unlayered `* { padding: 0 }` wins against @layer utilities regardless
+    // of specificity, which silently cancels every spacing utility on the page.
+    expect(globals).not.toMatch(/^\s*\*\s*\{/m)
+    expect(globals).toContain('@layer base')
+  })
+})

@@ -16,7 +16,7 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0
-# pg_dump ships for operators and for the backup job that arrives in 0.2.0.
+# pg_dump ships for operators and for the backup job that arrives in 0.3.0.
 RUN apk add --no-cache postgresql-client
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static

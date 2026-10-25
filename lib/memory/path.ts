@@ -40,6 +40,12 @@ export function normalisePath(raw: string): string {
   const lower = raw.toLowerCase()
   if (lower.includes('..')) throw new InvalidPath('traversal (..) is not allowed')
 
+  // A whitespace-only segment must not be trimmed away by the collapse below:
+  // 'deploy/ ' would otherwise become 'deploy' and overwrite it.
+  for (const segment of lower.split('/')) {
+    if (/^\s+$/.test(segment)) throw new InvalidPath('path has a whitespace-only segment')
+  }
+
   const trimmed = lower.trim()
   if (trimmed === '') throw new InvalidPath('path is empty')
 

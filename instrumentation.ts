@@ -13,5 +13,13 @@ export async function register() {
   if (applied.length > 0) console.log(`mimir: applied ${applied.length} migration(s)`)
 
   await ensureBootstrapAdmin(config)
+
+  // Importing a job module is what registers its worker; startJobs then starts
+  // only the workers that exist. Jobs run in this process, so a crash mid-job is
+  // retried by pg-boss on the next boot rather than lost. The extract and backfill
+  // modules are imported here as they land (tasks 9 and 10).
+  const { startJobs } = await import('./lib/jobs/boss')
+  await startJobs()
+
   console.log(`mimir: ready at ${config.publicUrlSeed ?? 'http://localhost:3000'}`)
 }

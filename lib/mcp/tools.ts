@@ -10,6 +10,7 @@ import {
 } from '@/lib/memory/service'
 import { searchMemories } from '@/lib/memory/search'
 import { buildDigest } from '@/lib/memory/digest'
+import { ingestFiles, type IngestFile } from '@/lib/memory/ingest'
 import { invalidParams } from './errors'
 
 export type McpMeta = RequestMeta & { repo?: string | null }
@@ -174,6 +175,44 @@ const TOOLS: ToolDef[] = [
         title: str(args, 'title'),
         kind: str(args, 'kind'),
         source: 'agent',
+      })
+    },
+  },
+  {
+    name: 'memory_ingest',
+    action: 'memory.write',
+    description:
+      'Import a repository in one call: a batch of files, each written as a memory under the import prefix. Use this once when Mimir first meets a repo; use memory_write afterwards for what you learn.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project: PROJECT_ARG,
+        repo: REPO_ARG,
+        files: {
+          type: 'array',
+          maxItems: 100,
+          description: 'Up to 100 files, 2 MB total. Each is {path, body}.',
+          items: {
+            type: 'object',
+            properties: {
+              path: { type: 'string', description: 'Repo-relative path, e.g. docs/readme.md' },
+              body: { type: 'string', maxLength: 262144 },
+            },
+            required: ['path', 'body'],
+          },
+        },
+        path_prefix: { type: 'string', description: 'Defaults to import.' },
+      },
+      required: ['files'],
+    },
+    handler: async (args, ctx) => {
+      if (!Array.isArray(args.files)) throw invalidParams('files must be an array')
+      const p = await projectFor(args, ctx, true)
+      return ingestFiles({
+        userId: ctx.user.id,
+        projectId: p.id,
+        files: args.files as IngestFile[],
+        prefix: str(args, 'path_prefix'),
       })
     },
   },

@@ -53,7 +53,7 @@ describe('mcp server', () => {
     expect(reply.error.data.code).toBe('invalid_params')
   })
 
-  it('answers initialize and lists seven tools', async () => {
+  it('answers initialize and lists eight tools', async () => {
     const init = (await handleRpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }, alice, meta)) as any
     expect(init.result.serverInfo.name).toBe('mimir')
     expect(init.result.instructions).toContain('memory_digest')
@@ -65,6 +65,7 @@ describe('mcp server', () => {
       'memory_search',
       'memory_digest',
       'memory_write',
+      'memory_ingest',
       'memory_delete',
       'project_list',
     ])
@@ -111,5 +112,14 @@ describe('mcp server', () => {
   it('rejects an unknown method with -32601', async () => {
     const res = (await handleRpc({ jsonrpc: '2.0', id: 3, method: 'tools/nope' }, alice, meta)) as any
     expect(res.error.code).toBe(-32601)
+  })
+
+  it('imports a batch through memory_ingest', async () => {
+    const res = (await handleRpc(
+      call('memory_ingest', { repo: 'github.com/alice/ingest-repo', files: [{ path: 'a.md', body: 'via mcp' }] }),
+      alice,
+      meta,
+    )) as { result: { written: number } }
+    expect(res.result.written).toBe(1)
   })
 })

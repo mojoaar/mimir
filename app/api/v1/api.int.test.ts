@@ -3,6 +3,8 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { GET as listProjects } from '@/app/api/v1/projects/route'
 import { GET as readMemoryRoute, PUT as writeMemoryRoute } from '@/app/api/v1/projects/[slug]/memory/[...path]/route'
 import { GET as healthRoute } from '@/app/api/health/route'
+import { POST as ingestRoute } from '@/app/api/v1/projects/[slug]/ingest/route'
+import { GET as readMemoryGet } from '@/app/api/v1/projects/[slug]/memory/[...path]/route'
 import { sha256 } from '@/lib/crypto'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
@@ -114,5 +116,20 @@ describe('rest api', () => {
     )
     expect(res.status).toBe(413)
     expect((await res.json()).error).toMatch(/262144/)
+  })
+
+  it('ingests a batch and makes it readable', async () => {
+    const res = await ingestRoute(
+      req(`/api/v1/projects/${slug}/ingest`, { method: 'POST', body: { files: [{ path: 'docs/a.md', body: 'imported' }] } }),
+      params(),
+    )
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ written: 1, skipped: [] })
+
+    const read = await readMemoryGet(
+      req(`/api/v1/projects/${slug}/memory/import/docs/a.md`),
+      params({ path: ['import', 'docs', 'a.md'] }),
+    )
+    expect((await read.json()).body).toBe('imported')
   })
 })

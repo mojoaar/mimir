@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2026-10-25
+
+Room to breathe.
+
+### Changed
+
+- The app header sits in the same padded, centred column as the admin and docs
+  headers, so the navigation no longer hugs the corners of the window.
+- **Docs** and — for an admin — **Admin** are now links in the header, instead
+  of a URL you had to remember.
+- A footer on every app and docs page: author, GitHub, licence, docs, the
+  version you are running, and the year.
+
+### Fixed
+
+- Sign out was only on the dashboard; it is now in the header, so every page
+  offers a way out.
+
 ## [0.10.0] - 2026-10-25
 
 Your account, your control.

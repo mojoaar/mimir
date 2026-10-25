@@ -1,6 +1,16 @@
 import { withUser } from '@/lib/db/tx'
+import { withAdmin } from '@/lib/db/tx'
 
 export type ProjectRole = 'owner' | 'write' | 'read' | null
+
+export type PrincipalType = 'user' | 'team'
+
+export type GrantRow = {
+  principalType: PrincipalType
+  principalId: string
+  label: string
+  role: 'read' | 'write'
+}
 
 export type Forbidden = Error & { code: 'forbidden' }
 
@@ -15,9 +25,11 @@ const RANK: Record<Exclude<ProjectRole, null>, number> = { read: 1, write: 2, ow
 /**
  * The role a user holds on a project, or null when they cannot see it.
  *
- * RLS already hides projects the user has no business seeing, so a null here
- * means either "no access" or "no such project" — deliberately the same
- * answer, so a caller cannot probe for someone else's slugs.
+ * A grant can name the user or a team they belong to; the best of those decides,
+ * and a team never makes anyone the owner. RLS already hides projects the user
+ * has no business seeing, so a null here means either "no access" or "no such
+ * project" — deliberately the same answer, so a caller cannot probe for
+ * someone else's slugs.
  */
 export async function projectRole(
   userId: string,
@@ -25,21 +37,30 @@ export async function projectRole(
   opts: { includeArchived?: boolean } = {},
 ): Promise<ProjectRole> {
   return withUser(userId, async (tx) => {
-    const { rows } = await tx.query<{ owner_user_id: string; role: 'read' | 'write' | null }>(
+    const { rows } = await tx.query<{ owner_user_id: string; rank: number | null }>(
       // An archived project is out of reach for every verb, so a memory write by
       // id is refused the same way a read is. Only archive/restore pass
       // includeArchived, so they can still find the row they are changing.
-      `select p.owner_user_id, g.role
+      `select p.owner_user_id,
+              (select max(case g.role when 'write' then 2 else 1 end)
+                 from project_grants g
+                 left join team_members m
+                   on g.principal_type = 'team'
+                  and m.team_id = g.principal_id
+                  and m.user_id = $2
+                where g.project_id = p.id
+                  and ((g.principal_type = 'user' and g.principal_id = $2)
+                       or m.user_id is not null)) as rank
          from projects p
-         left join project_grants g
-           on g.project_id = p.id and g.principal_type = 'user' and g.principal_id = $2
         where p.id = $1 and ($3::boolean or p.archived_at is null)`,
       [projectId, userId, opts.includeArchived ?? false],
     )
     const row = rows[0]
     if (!row) return null
     if (row.owner_user_id === userId) return 'owner'
-    return row.role
+    if (row.rank === 2) return 'write'
+    if (row.rank === 1) return 'read'
+    return null
   })
 }
 
@@ -53,36 +74,47 @@ export async function requireProjectRole(
   return role
 }
 
-/** Only the owner may share a project; holding write does not imply that right. */
+/**
+ * Only the owner may share a project; holding write does not imply that right.
+ * A team may only be shared with by someone who belongs to it, so nobody can
+ * bolt a stranger's team onto their own project.
+ */
 export async function grantProject(
   actorUserId: string,
   projectId: string,
+  principalType: PrincipalType,
   principalId: string,
   role: 'read' | 'write',
 ): Promise<void> {
   await requireProjectRole(actorUserId, projectId, 'owner')
+  if (principalType === 'team') await requireTeamMembership(actorUserId, principalId)
   await withUser(actorUserId, async (tx) => {
     await tx.query(
       `insert into project_grants (project_id, principal_type, principal_id, role, created_by)
-       values ($1, 'user', $2, $3, $4)
+       values ($1, $2, $3, $4, $5)
        on conflict (project_id, principal_type, principal_id)
        do update set role = excluded.role`,
-      [projectId, principalId, role, actorUserId],
+      [projectId, principalType, principalId, role, actorUserId],
     )
   })
 }
 
+/**
+ * Removing access needs no membership check: taking access away is never an
+ * escalation, and an owner who has left a team must still be able to revoke it.
+ */
 export async function revokeGrant(
   actorUserId: string,
   projectId: string,
+  principalType: PrincipalType,
   principalId: string,
 ): Promise<void> {
   await requireProjectRole(actorUserId, projectId, 'owner')
   await withUser(actorUserId, async (tx) => {
     await tx.query(
       `delete from project_grants
-        where project_id = $1 and principal_type = 'user' and principal_id = $2`,
-      [projectId, principalId],
+        where project_id = $1 and principal_type = $2 and principal_id = $3`,
+      [projectId, principalType, principalId],
     )
   })
 }
@@ -90,17 +122,56 @@ export async function revokeGrant(
 export async function listGrants(
   actorUserId: string,
   projectId: string,
-): Promise<{ userId: string; email: string; role: 'read' | 'write' }[]> {
+): Promise<GrantRow[]> {
   await requireProjectRole(actorUserId, projectId, 'write')
   return withUser(actorUserId, async (tx) => {
-    const { rows } = await tx.query<{ user_id: string; email: string; role: 'read' | 'write' }>(
-      `select g.principal_id as user_id, u.email, g.role
+    const { rows } = await tx.query<{
+      principal_type: PrincipalType
+      principal_id: string
+      label: string | null
+      role: 'read' | 'write'
+    }>(
+      // A team the caller is not in is hidden by RLS, so its name can be
+      // missing; the id still lets the owner revoke it.
+      `select g.principal_type, g.principal_id,
+              coalesce(u.email, t.name, 'a team') as label,
+              g.role
          from project_grants g
-         join users u on u.id = g.principal_id
-        where g.project_id = $1 and g.principal_type = 'user'
-        order by u.email`,
+         left join users u on g.principal_type = 'user' and u.id = g.principal_id
+         left join teams t on g.principal_type = 'team' and t.id = g.principal_id
+        where g.project_id = $1
+        order by label`,
       [projectId],
     )
-    return rows.map((r) => ({ userId: r.user_id, email: r.email, role: r.role }))
+    return rows.map((r) => ({
+      principalType: r.principal_type,
+      principalId: r.principal_id,
+      label: r.label ?? '',
+      role: r.role,
+    }))
   })
+}
+
+async function requireTeamMembership(actorUserId: string, teamId: string): Promise<void> {
+  const member = await withUser(actorUserId, async (tx) => {
+    const { rows } = await tx.query(
+      'select 1 from team_members where team_id = $1 and user_id = $2',
+      [teamId, actorUserId],
+    )
+    return rows.length > 0
+  })
+  if (member) return
+
+  // RLS hides a team the actor cannot see, so existence needs the owner
+  // connection to tell "no such team" from "not yours".
+  const exists = await withAdmin(async (tx) => {
+    const { rows } = await tx.query('select 1 from teams where id = $1', [teamId])
+    return rows.length > 0
+  })
+  if (!exists) {
+    const err = new Error('no such team') as Error & { code: 'not_found' }
+    err.code = 'not_found'
+    throw err
+  }
+  throw forbidden('you can only share with a team you belong to')
 }

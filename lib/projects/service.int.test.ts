@@ -4,6 +4,7 @@ import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
 import { readMemory, writeMemory } from '@/lib/memory/service'
+import { grantProject, revokeGrant } from './access'
 
 import {
   archiveProject,
@@ -16,11 +17,12 @@ import {
 
 let alice: string
 let bob: string
+let carol: string
 let aliceProjectId: string
 
 beforeEach(async () => {
   await resetFixtures()
-  ;({ alice, bob, aliceProjectId } = await seedTwoUsersWithProjects())
+  ;({ alice, bob, carol, aliceProjectId } = await seedTwoUsersWithProjects())
 })
 
 describe('resolveProject', () => {
@@ -167,5 +169,26 @@ describe('a project named by the caller', () => {
     const created = await resolveProject(alice, { project: '***', create: true })
 
     expect(created.slug).toBe('project')
+  })
+})
+
+describe('listProjects', () => {
+  it('lists a project shared with the caller’s team, and not after the grant is revoked', async () => {
+    const { rows } = await adminPool().query<{ id: string }>(
+      "insert into teams (owner_user_id, name, slug) values ($1, 'design', 'design') returning id",
+      [alice],
+    )
+    const team = rows[0]!.id
+    await adminPool().query(
+      "insert into team_members (team_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'member')",
+      [team, alice, carol],
+    )
+    await grantProject(alice, aliceProjectId, 'team', team, 'read')
+
+    const shared = (await listProjects(carol)).find((p) => p.id === aliceProjectId)
+    expect(shared?.role).toBe('read')
+
+    await revokeGrant(alice, aliceProjectId, 'team', team)
+    expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)).toBeUndefined()
   })
 })

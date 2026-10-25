@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-26
+
+Seeing what the agents wrote.
+
+### Added
+
+- A memory browser at `/app/projects/<slug>`: the project's directory tree, a reader with the path, title, summary and body, search scoped to the project, and a deep link per memory (`?path=…`).
+- Edit, delete and restore from the browser. A rewrite clears the summary until the learning job writes a new one; a delete is recoverable, and a nightly job purges anything older than 30 days.
+- Project archiving: an owner can hide a project from every list and API call and restore it later, with its memories and grants intact.
+
+### Fixed
+
+- A URL that is not a page — an unknown locale, an unknown docs agent, any path with no route — answers a real `404` instead of `200` with a not-found body, and `/app/*` keeps its `noindex` header. A valid route with a missing id (a purged memory, a deleted project) still renders the not-found page with `200`, because Next streams a dynamic route's shell before the page can decide.
+- An archived project refuses reads and writes through the API instead of failing with an internal error, and the zero-config repo lookup no longer dead-ends on the repo-key unique index.
+- Editing a memory in the browser keeps its title, and a refused or impossible restore says why instead of landing silently.
+- Archiving is owner-only in the UI: a write or read grantee no longer sees a Restore button that cannot work.
+
 
 ## [0.4.0] - 2026-10-26
 

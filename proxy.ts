@@ -1,6 +1,43 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE } from './lib/auth/cookie-name'
-import { LOCALE_COOKIE, localeFromPath } from './lib/i18n/locales'
+import { agentById } from './lib/docs/agents'
+import { LOCALE_COOKIE, LOCALES, localeFromPath } from './lib/i18n/locales'
+
+// Next 16 streams a dynamic route's shell before notFound() resolves, so an
+// unknown [locale] or [agent] answers 200 with a not-found body. A path under
+// /api with no route handler is a real 404, so unknown paths are rewritten there.
+const SENTINEL = '/api/__missing'
+
+const PUBLIC_ROOTS = new Set([
+  'docs',
+  'app',
+  'api',
+  'mcp',
+  'login',
+  'set-password',
+  'health',
+  'sitemap.xml',
+  'robots.txt',
+  'opengraph-image',
+])
+
+function rootOf(pathname: string): string {
+  return pathname.split('/').filter(Boolean)[0] ?? ''
+}
+
+function isKnownPath(pathname: string): boolean {
+  const segments = pathname.split('/').filter(Boolean)
+  const root = segments[0] ?? ''
+  // public/ assets carry an extension; they are served, not routed.
+  if (/\.[a-z0-9]+$/i.test(segments.at(-1) ?? '')) return true
+  if ((LOCALES as readonly string[]).includes(root)) return true
+  if (!PUBLIC_ROOTS.has(root)) return false
+  // /docs/agents/<id> is generated per agent; anything else there is not a page.
+  if (root === 'docs' && segments[1] === 'agents' && segments[2]) {
+    return agentById(segments[2]) !== undefined
+  }
+  return true
+}
 
 // The edge runtime cannot reach Postgres, so the session branch only proves a
 // cookie exists. A cookie that is present but expired or revoked is caught by
@@ -32,7 +69,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.rewrite(url)
   }
 
-  if (!request.cookies.has(SESSION_COOKIE)) {
+  if (!isKnownPath(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = SENTINEL
+    url.search = ''
+    return NextResponse.rewrite(url)
+  }
+
+  if (rootOf(pathname) === 'app' && !request.cookies.has(SESSION_COOKIE)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.search = ''
@@ -40,10 +84,10 @@ export function proxy(request: NextRequest) {
   }
 
   const response = NextResponse.next()
-  response.headers.set('X-Robots-Tag', 'noindex')
+  if (rootOf(pathname) === 'app') response.headers.set('X-Robots-Tag', 'noindex')
   return response
 }
 
 export const config = {
-  matcher: ['/', '/en', '/en/:path*', '/da', '/de', '/app', '/app/:path*'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }

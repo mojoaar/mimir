@@ -1,7 +1,7 @@
 import { PgBoss } from 'pg-boss'
 import { getConfig } from '../config'
 
-export type JobName = 'extract' | 'backfill' | 'reembed' | 'backup' | 'prune'
+export type JobName = 'extract' | 'backfill' | 'reembed' | 'backup' | 'prune' | 'purge'
 
 // `short` keeps one queued job per singletonKey, which is what makes the
 // extract debounce work: the tenth write in a minute reuses the first job.
@@ -11,6 +11,7 @@ const POLICIES: Record<JobName, 'short' | 'standard'> = {
   reembed: 'standard',
   backup: 'standard',
   prune: 'standard',
+  purge: 'standard',
 }
 
 const JOB_NAMES = Object.keys(POLICIES) as JobName[]
@@ -84,6 +85,7 @@ export async function startJobs(): Promise<void> {
       console.error(`mimir: could not schedule backups (${(error as Error).message})`)
     }
     await instance.schedule('prune', '15 3 * * *', {})
+    await instance.schedule('purge', '20 4 * * *', {})
     process.once('SIGTERM', () => void stopJobs())
     process.once('SIGINT', () => void stopJobs())
   })()

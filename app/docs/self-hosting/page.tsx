@@ -61,6 +61,15 @@ docker compose up -d`}</Code>
         migration. 0.4.0 has no schema change.
       </P>
 
+      <H2>Browsing memory</H2>
+      <P>
+        Every memory is reachable in the web app at <code>/app/projects/&lt;slug&gt;</code>: a directory tree on the
+        left, a reader on the right, search in the header, and a deep link for every memory
+        (<code>?path=auth/rotation</code>). Saving an edit rewrites the body and clears the summary until the
+        learning job writes a new one; deleting keeps the memory recoverable for 30 days, after which a nightly job
+        removes it for good. Archiving a project hides it from every list and API call without touching its rows.
+      </P>
+
       <H2>Health</H2>
       <P>
         <code>/health</code> and <code>/api/health</code> answer <code>{'{"status":"ok"}'}</code> anonymously and{' '}

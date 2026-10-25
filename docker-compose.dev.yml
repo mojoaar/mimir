@@ -2,7 +2,7 @@ name: mimir-dev
 
 services:
   db:
-    image: pgvector/pgvector:pg17
+    image: pgvector/pgvector:pg18
     environment:
       POSTGRES_USER: mimir_owner
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-owner_dev_password}
@@ -10,7 +10,7 @@ services:
     ports:
       - '127.0.0.1:5433:5432'
     volumes:
-      - pgdata_dev:/var/lib/postgresql/data
+      - pgdata_dev:/var/lib/postgresql
       - ./scripts/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U mimir_owner -d mimir']

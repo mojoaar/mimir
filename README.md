@@ -33,6 +33,8 @@ MIMIR_APP_PASSWORD=...
 docker compose up -d
 ```
 
+An install created before 0.3.0 runs PostgreSQL 17. Moving it needs a dump from a 17 client (`pg_dump -Fc`) and a `pg_restore` into the 18 volume — the new image will not start on the old data directory. There is no automatic migration; a fresh volume with re-entered settings is the alternative.
+
 Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASSWORD`, then create an API key under **Settings**. Point an agent at `http://localhost:3000/mcp`:
 
 ```json

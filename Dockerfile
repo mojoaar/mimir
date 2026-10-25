@@ -17,7 +17,8 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 # pg_dump ships for operators and for the backup job that arrives in 0.3.0.
-RUN apk add --no-cache postgresql-client
+# The dump client major must match the server, or pg_dump refuses to run.
+RUN apk add --no-cache postgresql18-client
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public

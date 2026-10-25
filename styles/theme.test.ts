@@ -43,7 +43,7 @@ function tsxFiles(dir: string): string[] {
 
 describe('pages', () => {
   it('use theme aliases instead of tailwind palette colours', () => {
-    const offenders = tsxFiles('app').filter((file) =>
+    const offenders = [...tsxFiles('app'), ...tsxFiles('components')].filter((file) =>
       /(bg|text|border)-(neutral|red|green|blue|gray|white|black)(-\d{2,3})?\b/.test(
         readFileSync(file, 'utf8'),
       ),

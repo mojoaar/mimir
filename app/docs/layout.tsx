@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { DOCS_NAV } from '@/lib/docs/nav';
 import { parseTheme } from '@/lib/theme';
+import AppFooter from '@/components/app/footer';
 
 function Sidebar() {
   return (
@@ -37,7 +38,7 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
   const theme = parseTheme((await cookies()).get('mimir_theme')?.value);
 
   return (
-    <div data-theme={theme} className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
+    <div data-theme={theme} className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)]">
       <header className="border-b border-[var(--border)]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 sm:px-6">
           <Link href="/" className="font-semibold tracking-tight">
@@ -71,6 +72,7 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
           <article className="max-w-[72ch]">{children}</article>
         </main>
       </div>
+      <AppFooter wide />
     </div>
   );
 }

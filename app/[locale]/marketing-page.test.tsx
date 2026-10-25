@@ -23,6 +23,14 @@ describe('the marketing page', () => {
     expect(html).not.toContain(t('en', 'hero.title'));
   });
 
+  test('keeps its own footer and does not stack the app footer on top', async () => {
+    const html = renderToStaticMarkup(
+      await MarketingPage({ params: Promise.resolve({ locale: 'en' }) }),
+    );
+    expect(html.match(/<footer/g)?.length ?? 0).toBe(1);
+    expect(html).not.toContain('Crafted with');
+  });
+
   test('renders in german', async () => {
     const html = renderToStaticMarkup(await MarketingPage({ params: Promise.resolve({ locale: 'de' }) }));
     expect(html).toContain(t('de', 'hero.title'));

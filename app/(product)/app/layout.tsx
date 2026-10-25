@@ -7,6 +7,7 @@ import { getConfig } from '@/lib/config'
 import { getRequireMfa } from '@/lib/settings/security'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 import { ThemeSwitcher } from '@/app/theme-switcher'
+import AppFooter from '@/components/app/footer'
 import { Enrolment } from './settings/mfa/enrolment'
 import { signOutAction } from './actions'
 
@@ -30,7 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // not at the next login.
   if (!(await isRequestAllowed({ headers: await headers() }))) {
     return (
-      <section className="mx-auto flex max-w-md flex-col gap-3 py-16">
+      <section className="mx-auto flex w-full max-w-md flex-col gap-3 px-4 py-16 sm:px-6">
         <h1 className="text-xl font-semibold tracking-tight">Not available here</h1>
         <p className="text-sm text-[var(--text-muted)]">
           This address is not allowed to reach Mimir. Ask the administrator which networks
@@ -41,29 +42,33 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <>
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 text-sm">
-        <nav className="flex gap-4">
-          <Link href="/app">Projects</Link>
-          <Link href="/app/teams">Teams</Link>
-          <Link href="/app/settings">Settings</Link>
-          <Link href="/app/settings/providers">Providers</Link>
-        </nav>
-        <div className="flex items-center gap-3">
-          <span className="text-[var(--text-muted)]">{user.email}</span>
-          <ThemeSwitcher value={theme} />
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="text-[var(--text-muted)] underline hover:text-[var(--fg)]"
-            >
-              Sign out
-            </button>
-          </form>
+    <div className="flex min-h-screen flex-col">
+      <header className="mb-8 border-b border-[var(--border)]">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-4 px-4 py-3 text-sm sm:px-6">
+          <nav className="flex flex-wrap gap-4">
+            <Link href="/app">Projects</Link>
+            <Link href="/app/teams">Teams</Link>
+            <Link href="/app/settings">Settings</Link>
+            <Link href="/app/settings/providers">Providers</Link>
+            <Link href="/docs">Docs</Link>
+            {user.role === 'admin' ? <Link href="/app/admin">Admin</Link> : null}
+          </nav>
+          <div className="ml-auto flex items-center gap-3">
+            <span className="hidden text-[var(--text-muted)] sm:inline">{user.email}</span>
+            <ThemeSwitcher value={theme} />
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="text-[var(--text-muted)] underline hover:text-[var(--fg)]"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
       {forced ? (
-        <section className="flex max-w-xl flex-col gap-4">
+        <section className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-8 sm:px-6">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Two-factor is required</h1>
             <p className="mt-1 text-sm text-[var(--text-muted)]">
@@ -75,6 +80,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       ) : (
         children
       )}
-    </>
+      <AppFooter />
+    </div>
   )
 }

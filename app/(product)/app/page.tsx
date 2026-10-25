@@ -2,7 +2,6 @@ import Link from 'next/link'
 
 import { requireUser } from '@/lib/auth/context'
 import { listProjects } from '@/lib/projects/service'
-import { signOutAction } from './actions'
 import { restoreProjectAction } from './projects/actions'
 
 export default async function DashboardPage({
@@ -23,14 +22,6 @@ export default async function DashboardPage({
           <h1 className="text-xl font-semibold tracking-tight">Mimir</h1>
           <p className="text-sm text-[var(--text-muted)]">{user.email}</p>
         </div>
-        <form action={signOutAction}>
-          <button
-            type="submit"
-            className="text-sm text-[var(--text-muted)] underline hover:text-[var(--fg)]"
-          >
-            Sign out
-          </button>
-        </form>
       </header>
 
       {notice ? (

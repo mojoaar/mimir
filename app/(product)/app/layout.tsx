@@ -8,6 +8,7 @@ import { getRequireMfa } from '@/lib/settings/security'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 import { ThemeSwitcher } from '@/app/theme-switcher'
 import { Enrolment } from './settings/mfa/enrolment'
+import { signOutAction } from './actions'
 
 export const instant = false
 
@@ -51,6 +52,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="flex items-center gap-3">
           <span className="text-[var(--text-muted)]">{user.email}</span>
           <ThemeSwitcher value={theme} />
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="text-[var(--text-muted)] underline hover:text-[var(--fg)]"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </header>
       {forced ? (

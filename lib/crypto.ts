@@ -16,13 +16,21 @@ export function deriveKey(secret: string, info: string): Buffer {
 }
 
 export function encrypt(key: Buffer, plaintext: string): Buffer {
-  const nonce = randomBytes(NONCE_BYTES)
-  const cipher = createCipheriv('aes-256-gcm', key, nonce)
-  const ciphertext = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
-  return Buffer.concat([nonce, cipher.getAuthTag(), ciphertext])
+  return encryptBytes(key, Buffer.from(plaintext, 'utf8'))
 }
 
 export function decrypt(key: Buffer, blob: Buffer): string {
+  return decryptBytes(key, blob).toString('utf8')
+}
+
+export function encryptBytes(key: Buffer, plaintext: Buffer): Buffer {
+  const nonce = randomBytes(NONCE_BYTES)
+  const cipher = createCipheriv('aes-256-gcm', key, nonce)
+  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()])
+  return Buffer.concat([nonce, cipher.getAuthTag(), ciphertext])
+}
+
+export function decryptBytes(key: Buffer, blob: Buffer): Buffer {
   if (blob.length < NONCE_BYTES + TAG_BYTES) throw new CryptoError('cannot decrypt: blob too short')
   const nonce = blob.subarray(0, NONCE_BYTES)
   const tag = blob.subarray(NONCE_BYTES, NONCE_BYTES + TAG_BYTES)
@@ -30,7 +38,7 @@ export function decrypt(key: Buffer, blob: Buffer): string {
   try {
     const decipher = createDecipheriv('aes-256-gcm', key, nonce)
     decipher.setAuthTag(tag)
-    return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()])
   } catch {
     throw new CryptoError('cannot decrypt: wrong key or tampered data')
   }

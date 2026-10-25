@@ -22,7 +22,7 @@ describe('proxy', () => {
     expect(rewrittenTo(proxy(get(path)))).toBe(SENTINEL)
   })
 
-  it.each(['/docs', '/docs/agents/codex', '/api/v1/projects', '/mcp'])(
+  it.each(['/docs', '/docs/agents/codex', '/api/v1/projects', '/mcp', '/forgot-password'])(
     'leaves the known path %s alone',
     (path) => {
       const response = proxy(get(path))

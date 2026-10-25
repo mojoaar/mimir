@@ -37,6 +37,15 @@ function toRole(row: AccessRow): ProjectRole {
   return row.grant_role === 'write' ? 'write' : 'read'
 }
 
+/** A name a human typed, turned into the slug the URL carries. */
+function slugify(name: string): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return slug || 'project'
+}
+
 /**
  * Resolution order from the spec: explicit slug, then a repo key the caller can
  * already reach, then a new project owned by the caller. Finding a shared
@@ -57,10 +66,16 @@ export async function resolveProject(
            FROM projects p
           WHERE ${ACCESSIBLE} AND p.slug = $2
           LIMIT 1`,
-        [userId, opts.project],
+        [userId, slugify(opts.project)],
       )
       const row = found.rows[0]
-      if (!row) throw new ProjectNotFoundError(opts.project)
+      if (!row) {
+        // A named project is how a folder that is not a repository gets one:
+        // there is no repo key to derive it from, and the caller already chose
+        // the name. A lookup-only caller still gets the not-found error.
+        if (opts.create === false) throw new ProjectNotFoundError(opts.project)
+        return createProject(userId, repoKey, client, opts.project)
+      }
       return { id: row.id, slug: row.slug, role: toRole(row) }
     }
 
@@ -98,9 +113,16 @@ async function createProject(
   userId: string,
   repoKey: string | null,
   client: PoolClient,
+  requestedName?: string,
 ): Promise<ResolvedProject> {
-  const base = repoKey ? repoSlug(repoKey) : 'project'
-  const name = repoKey && !repoKey.startsWith('local:') ? repoKey : base
+  const base = requestedName
+    ? slugify(requestedName)
+    : repoKey
+      ? repoSlug(repoKey)
+      : 'project'
+  const name =
+    requestedName ??
+    (repoKey && !repoKey.startsWith('local:') ? repoKey : base)
 
   for (let attempt = 1; attempt <= 5; attempt++) {
     const slug = attempt === 1 ? base : `${base}-${attempt}`

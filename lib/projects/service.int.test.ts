@@ -136,3 +136,36 @@ describe('archiving', () => {
     expect(await getProject(alice, 'alice-project')).not.toBeNull()
   })
 })
+
+describe('a project named by the caller', () => {
+  it('creates it on the first call and reuses it afterwards', async () => {
+    const first = await resolveProject(alice, { project: 'Reading Notes', create: true })
+
+    expect(first).toMatchObject({ slug: 'reading-notes', role: 'owner' })
+    expect((await getProject(alice, 'reading-notes'))?.name).toBe('Reading Notes')
+
+    const again = await resolveProject(alice, { project: 'Reading Notes', create: true })
+    expect(again.id).toBe(first.id)
+  })
+
+  it('still refuses to invent one when the caller asked for lookup only', async () => {
+    await expect(resolveProject(alice, { project: 'notes', create: false })).rejects.toMatchObject({
+      code: 'project_not_found',
+    })
+  })
+
+  it('gives two users their own project with the same name', async () => {
+    const one = await resolveProject(alice, { project: 'notes', create: true })
+    const two = await resolveProject(bob, { project: 'notes', create: true })
+
+    expect(two.id).not.toBe(one.id)
+    // slug uniqueness is per owner, so two people may both have "notes"
+    expect(two.slug).toBe('notes')
+  })
+
+  it('falls back to a usable slug when the name has none', async () => {
+    const created = await resolveProject(alice, { project: '***', create: true })
+
+    expect(created.slug).toBe('project')
+  })
+})

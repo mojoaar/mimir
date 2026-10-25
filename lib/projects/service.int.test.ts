@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
-import { readMemory, writeMemory } from '@/lib/memory/service'
+import { deleteMemory, readMemory, writeMemory } from '@/lib/memory/service'
 import { grantProject, projectRole, revokeGrant } from './access'
 
 import {
@@ -249,5 +249,28 @@ describe('one rank rule behind every path', () => {
     })
     expect(await getProject(carol, 'alice-project')).toBeNull()
     expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)).toBeUndefined()
+  })
+})
+
+describe('the memory count in a project list', () => {
+  it('counts live memories per project and ignores deleted ones', async () => {
+    await resetFixtures()
+    const f = await seedTwoUsersWithProjects()
+    const empty = await resolveProject(f.bob, { project: 'quiet', create: true })
+
+    await writeMemory({ userId: f.alice, projectId: f.aliceProjectId, path: 'a/one', body: 'one' })
+    await writeMemory({ userId: f.alice, projectId: f.aliceProjectId, path: 'a/two', body: 'two' })
+    await writeMemory({ userId: f.alice, projectId: f.aliceProjectId, path: 'a/gone', body: 'gone' })
+    await deleteMemory(f.alice, f.aliceProjectId, 'a/gone')
+    await writeMemory({ userId: f.bob, projectId: empty.id, path: 'only', body: 'only' })
+
+    const alices = await listProjects(f.alice)
+    expect(alices.find((p) => p.id === f.aliceProjectId)?.memoryCount).toBe(2)
+
+    const bobs = await listProjects(f.bob)
+    expect(bobs.find((p) => p.id === empty.id)?.memoryCount).toBe(1)
+
+    const idle = await resolveProject(f.bob, { project: 'idle', create: true })
+    expect((await listProjects(f.bob)).find((p) => p.id === idle.id)?.memoryCount).toBe(0)
   })
 })

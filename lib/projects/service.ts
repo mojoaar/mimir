@@ -178,10 +178,11 @@ export async function listProjects(
               p.owner_user_id,
               ${GRANT_RANK} AS rank,
               (p.archived_at IS NOT NULL) AS archived,
-              (SELECT count(*)::int FROM memories m
-                WHERE m.project_id = p.id AND m.deleted_at IS NULL) AS memory_count
+              count(m.id)::int AS memory_count
          FROM projects p
+         LEFT JOIN memories m ON m.project_id = p.id AND m.deleted_at IS NULL
         WHERE ($2::boolean OR p.archived_at IS NULL)
+        GROUP BY p.id, p.owner_user_id, p.slug, p.name, p.archived_at, p.updated_at
         ORDER BY p.updated_at DESC`,
       [userId, includeArchived],
     )

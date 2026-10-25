@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { cancelMfaAction, loginAction, loginMfaAction } from './actions'
 import { isRequestAllowed } from '@/lib/http/allowlist'
+import { PRIVATE_ROBOTS } from '@/lib/seo'
 
 const MESSAGES: Record<string, string> = {
   invalid: 'Invalid email or password.',
@@ -17,6 +18,8 @@ export const instant = false
 
 const FIELD =
   'rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 font-normal text-[var(--fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]'
+
+export const metadata = { title: 'Sign in — Mimir', robots: PRIVATE_ROBOTS };
 
 export default async function LoginPage({
   searchParams,

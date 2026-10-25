@@ -1,0 +1,28 @@
+{
+  "name": "@mojoaar/opencode-mimir",
+  "version": "0.4.0",
+  "description": "Mimir long-term memory for OpenCode sessions",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "mcp",
+    "memory"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

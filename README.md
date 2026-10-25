@@ -10,9 +10,17 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.3.0` — boots from one container, authenticates a user, stores and retrieves memory over MCP and REST, learns a title and a summary for every memory with your own model, searches by keyword and by meaning, backs itself up on a schedule, and gives an admin users, MFA, an IP allowlist, an audit log and stats.
+`0.4.0` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, and now ships a localised landing page, a docs site with a config per agent, repository ingest and an OpenCode plugin.
 
-Not yet: a memory browser, i18n, the docs site, importing an existing repository, and Teams. The schema and seams for all of them are in place; see the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
+Not yet: a memory browser, Teams, and memory versioning. See the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
+
+## Documentation
+
+The running install serves its own docs at `/docs`, including a page per agent
+(OpenCode, Claude Code, Codex, Cursor, Gemini CLI, Pi, Antigravity, Hermes,
+Muse) with the exact config file each one reads. The OpenCode plugin is
+`@mojoaar/opencode-mimir`; the Claude Code session-start hook is
+`hooks/mimir-session-start.sh`.
 
 ## Quick start
 

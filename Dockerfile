@@ -25,6 +25,8 @@ COPY --from=build --chown=node:node /app/public ./public
 # The migration runner reads these from the working directory at boot.
 COPY --from=build --chown=node:node /app/lib/db/migrations ./lib/db/migrations
 COPY --from=build --chown=node:node /app/scripts/restore.sh /app/scripts/decrypt-backup.mjs ./scripts/
+# /docs/changelog reads this at request time, so it must exist in the runtime stage.
+COPY --from=build --chown=node:node /app/CHANGELOG.md ./CHANGELOG.md
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \

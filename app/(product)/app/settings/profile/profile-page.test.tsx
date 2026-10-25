@@ -94,3 +94,51 @@ describe('the profile page', () => {
     expect(html).not.toContain('value="s1"')
   })
 })
+
+const current = {
+  id: 's1',
+  ip: '127.0.0.1',
+  userAgent: 'Firefox',
+  lastSeenAt: new Date('2026-10-25T10:00:00Z'),
+  createdAt: new Date('2026-10-25T09:00:00Z'),
+  current: true,
+}
+
+const other = (id: string, ip: string) => ({
+  id,
+  ip,
+  userAgent: 'Safari',
+  lastSeenAt: new Date('2026-10-24T10:00:00Z'),
+  createdAt: new Date('2026-10-24T09:00:00Z'),
+  current: false,
+})
+
+describe('the sessions list', () => {
+  it('offers no sign-out-everywhere button when this is the only session', async () => {
+    mocks.sessions = [current]
+
+    const html = await render()
+
+    expect(html).not.toContain('Sign out everywhere else')
+    expect(html).not.toContain('name="sessionId"')
+  })
+
+  it('offers it once there is another device to sign out', async () => {
+    mocks.sessions = [current, other('s2', '10.0.0.9')]
+
+    const html = await render()
+
+    expect(html).toContain('Sign out everywhere else')
+  })
+
+  it('posts one revoke form per other device, and none for this one', async () => {
+    mocks.sessions = [current, other('s2', '10.0.0.9'), other('s3', '10.0.0.10')]
+
+    const html = await render()
+
+    expect(html).toContain('value="s2"')
+    expect(html).toContain('value="s3"')
+    expect(html).not.toContain('value="s1"')
+    expect(html.match(/name="sessionId"/g)).toHaveLength(2)
+  })
+})

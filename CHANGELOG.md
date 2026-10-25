@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-10-25
+
+Your face in the corner.
+
+### Added
+
+- Every account can upload a round icon in **Settings → Profile**. It sits before your email in the header menu and
+  falls back to your initial when you have not uploaded one. png, jpeg or webp, up to 128 KB, stored on the account
+  so it follows you between browsers.
+
+### Changed
+
+- The app column is wider (`max-w-5xl`), and the profile, security and admin pages now share it instead of each
+  picking their own width.
+- Appearance (language and theme) moved from the header into **Settings → Appearance**, so the header carries only
+  destinations.
+- Profile and sign out live behind your account name in the header.
+- Admin destinations render as buttons rather than a strip of small links.
+
+### Fixed
+
+- The account menu closes when you click the page or press Escape, instead of only on a second click.
+- A newly uploaded picture appears at once, without a hard reload.
+- The footer is centred under the docs column.
+
 ## [0.11.0] - 2026-10-25
 
 Every screen, in your language.

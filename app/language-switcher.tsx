@@ -22,9 +22,6 @@ export function LanguageSwitcher({
 }) {
   return (
     <form action={action} className="contents">
-      <label htmlFor="mimir-language" className="sr-only">
-        {label}
-      </label>
       {/* Without JavaScript the select cannot submit itself, so this button is
           the whole control; with it, the change is already submitted. */}
       <button type="submit" className="sr-only">
@@ -33,6 +30,7 @@ export function LanguageSwitcher({
       <select
         id="mimir-language"
         name="locale"
+        aria-label={label}
         defaultValue={value}
         className="rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1 text-sm"
         onChange={(event) => {

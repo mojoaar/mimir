@@ -1,26 +1,21 @@
 import Link from 'next/link'
-import { cookies, headers } from 'next/headers'
+import { headers } from 'next/headers'
 import { requireUser } from '@/lib/auth/context'
 import { isRequestAllowed } from '@/lib/http/allowlist'
 import { mfaEnabled } from '@/lib/auth/mfa'
 import { getConfig } from '@/lib/config'
 import { getRequireMfa } from '@/lib/settings/security'
-import { parseTheme, THEME_COOKIE } from '@/lib/theme'
-import { ThemeSwitcher } from '@/app/theme-switcher'
-import { LanguageSwitcher } from '@/app/language-switcher'
 import AppFooter from '@/components/app/footer'
 import { Enrolment } from './settings/mfa/enrolment'
-import { setLocaleAction, signOutAction } from './actions'
-import { getRequestLocale, translator } from '@/lib/i18n/request'
+import { signOutAction } from './actions'
+import { translator } from '@/lib/i18n/request'
 
 export const instant = false
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // The real session check. Middleware only sees that a cookie exists.
   const user = await requireUser()
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
   const t = await translator()
-  const locale = await getRequestLocale()
 
   // The layout cannot see the pathname, so under require_mfa the whole app is
   // replaced by the enrolment form until the user is enrolled. The bootstrap
@@ -51,19 +46,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <Link href="/app/teams">{t('app.nav.teams')}</Link>
             <Link href="/app/settings">{t('app.nav.settings')}</Link>
             <Link href="/app/settings/providers">{t('app.nav.providers')}</Link>
-            <Link href="/docs">{t('app.nav.docs')}</Link>
-            {user.role === 'admin' ? (
+              {user.role === 'admin' ? (
               <Link href="/app/admin">{t('app.nav.admin')}</Link>
             ) : null}
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden text-[var(--text-muted)] sm:inline">{user.email}</span>
-            <LanguageSwitcher
-              value={locale}
-              label={t('app.language.label')}
-              action={setLocaleAction}
-            />
-            <ThemeSwitcher value={theme} />
             <form action={signOutAction}>
               <button
                 type="submit"

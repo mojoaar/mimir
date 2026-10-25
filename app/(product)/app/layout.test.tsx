@@ -64,17 +64,15 @@ describe('the app shell', () => {
       'href="/app/teams"',
       'href="/app/settings"',
       'href="/app/settings/providers"',
-      'href="/docs"',
     ]) {
       expect(html).toContain(href)
     }
+
+    // Docs is reachable from the footer, not from the nav.
+    expect(html).toContain('href="/docs"')
   })
 
-  it('keeps the theme switcher beside the navigation', async () => {
-    const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
-    expect(html).toContain('<select')
-    expect(html).toContain('Nordlys')
-  })
+
 
   it('speaks the language saved on the account', async () => {
     state.locale = 'da'
@@ -82,18 +80,10 @@ describe('the app shell', () => {
 
     expect(html).toContain('Projekter')
     expect(html).toContain('Log ud')
-    expect(html).toContain('Dokumentation')
     expect(html).not.toContain('>Projects<')
   })
 
-  it('offers every language in its own name', async () => {
-    const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
 
-    expect(html).toContain('name="locale"')
-    expect(html).toContain('English')
-    expect(html).toContain('Dansk')
-    expect(html).toContain('Deutsch')
-  })
 
   it('shows the admin link only to an admin', async () => {
     state.role = 'admin'

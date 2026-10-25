@@ -1,9 +1,15 @@
 import Link from 'next/link'
 
+import { cookies } from 'next/headers'
+
+import { getRequestLocale, translator } from '@/lib/i18n/request'
+import { parseTheme, THEME_COOKIE } from '@/lib/theme'
+import { ThemeSwitcher } from '@/app/theme-switcher'
+import { LanguageSwitcher } from '@/app/language-switcher'
+import { setLocaleAction } from '../actions'
 import { requireUser } from '@/lib/auth/context'
 import { listApiKeys } from '@/lib/auth/apikey'
 import { getConfig } from '@/lib/config'
-import { translator } from '@/lib/i18n/request'
 import { KeyForm, KeyList } from './key-form'
 
 export const instant = false
@@ -12,6 +18,8 @@ export default async function SettingsPage() {
   const user = await requireUser()
   const t = await translator()
   const keys = await listApiKeys(user.id)
+  const locale = await getRequestLocale()
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
   const base = getConfig().publicUrlSeed?.replace(/\/$/, '') ?? 'http://localhost:3000'
 
   return (
@@ -24,6 +32,19 @@ export default async function SettingsPage() {
             {t('app.settings.profileLink')}
           </Link>
         </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-medium">{t('app.settings.appearanceTitle')}</h2>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.settings.appearanceBody')}</p>
+        <div className="flex flex-wrap items-center gap-6 text-sm">
+          <LanguageSwitcher
+            value={locale}
+            label={t('app.language.label')}
+            action={setLocaleAction}
+          />
+          <ThemeSwitcher value={theme} />
+        </div>
       </section>
 
       <section className="space-y-3">

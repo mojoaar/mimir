@@ -337,6 +337,8 @@ export const en = {
   'app.grant.hint': 'Fill the email for a person, or pick a team — the choice above decides which one is used.',
   'app.grant.share': 'Share',
   'app.grant.sharing': 'Sharing…',
+  'app.settings.appearanceTitle': 'Appearance',
+  'app.settings.appearanceBody': 'The theme applies to this browser. The language is saved on your account, so it follows you to every device you sign in from.',
   'app.error.generic': 'That did not work. Try again.',
   'app.teams.title': 'Teams',
   'app.teams.intro':

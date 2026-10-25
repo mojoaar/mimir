@@ -339,6 +339,8 @@ export const da: Messages = {
   'app.grant.hint': 'Udfyld e-mailen for en person, eller vælg et hold — valget ovenfor afgør, hvilken der bruges.',
   'app.grant.share': 'Del',
   'app.grant.sharing': 'Deler…',
+  'app.settings.appearanceTitle': 'Udseende',
+  'app.settings.appearanceBody': 'Temaet gælder for denne browser. Sproget gemmes på din konto og følger dig til alle enheder, du logger ind fra.',
   'app.error.generic': 'Det virkede ikke. Prøv igen.',
   'app.teams.title': 'Hold',
   'app.teams.intro':

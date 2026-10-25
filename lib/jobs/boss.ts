@@ -1,7 +1,7 @@
 import { PgBoss } from 'pg-boss'
 import { getConfig } from '../config'
 
-export type JobName = 'extract' | 'backfill' | 'reembed'
+export type JobName = 'extract' | 'backfill' | 'reembed' | 'backup'
 
 // `short` keeps one queued job per singletonKey, which is what makes the
 // extract debounce work: the tenth write in a minute reuses the first job.
@@ -9,6 +9,7 @@ const POLICIES: Record<JobName, 'short' | 'standard'> = {
   extract: 'short',
   backfill: 'standard',
   reembed: 'standard',
+  backup: 'standard',
 }
 
 const JOB_NAMES = Object.keys(POLICIES) as JobName[]
@@ -72,6 +73,9 @@ export async function startJobs(): Promise<void> {
     }
 
     jobs.boss = instance
+    // Imported lazily: the job module imports getBoss from this file.
+    const { scheduleBackups } = await import('./backup')
+    await scheduleBackups()
     process.once('SIGTERM', () => void stopJobs())
     process.once('SIGINT', () => void stopJobs())
   })()
@@ -98,6 +102,12 @@ export function getBoss(): PgBoss {
     throw error
   }
   return jobs.boss
+}
+
+/** Re-reads the backup schedule after settings change. A no-op when jobs are not running. */
+export async function rescheduleBackups(): Promise<void> {
+  const { scheduleBackups } = await import('./backup')
+  await scheduleBackups()
 }
 
 /** Returns null when the job was throttled away or the queue is not running. */

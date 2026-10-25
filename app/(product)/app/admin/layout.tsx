@@ -17,6 +17,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/app/admin/settings" className="text-[var(--text-muted)] underline">
             Embeddings
           </Link>
+          <Link href="/app/admin/backups" className="text-[var(--text-muted)] underline">
+            Backups
+          </Link>
           <Link href="/app" className="ml-auto text-[var(--text-muted)] underline">
             Back to app
           </Link>

@@ -86,6 +86,31 @@ describe('memory versions', () => {
     expect(new Set([...bodies, live]).size).toBe(3)
     expect(bodies).toContain('v0')
   })
+
+  it('reports the size in bytes, not characters', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'auth/emoji', body: '🎉🎉🎉🎉🎉' })
+    await writeMemory({ userId: f.alice, projectId, path: 'auth/emoji', body: 'plain' })
+
+    const [version] = await listVersions(f.alice, projectId, 'auth/emoji')
+
+    // Five astral characters are twenty UTF-8 bytes.
+    expect(version?.bytes).toBe(20)
+  })
+
+  it('never loses a version when two writers create the same path at once', async () => {
+    // No seeded first write: the row does not exist yet, so there is nothing to
+    // lock and both writers race the insert.
+    await Promise.all([
+      writeMemory({ userId: f.alice, projectId, path: 'auth/fresh-race', body: 'body-a' }),
+      writeMemory({ userId: f.alice, projectId, path: 'auth/fresh-race', body: 'body-b' }),
+    ])
+
+    const bodies = await bodiesOf(projectId, 'auth/fresh-race')
+    const live = (await readMemory(f.alice, projectId, 'auth/fresh-race'))!.body
+
+    // Both written bodies survive: one archived, one live.
+    expect(new Set([...bodies, live]).size).toBe(2)
+  })
 })
 
 describe('pruning', () => {
@@ -96,10 +121,9 @@ describe('pruning', () => {
     await writeMemory({ userId: f.alice, projectId, path: 'auth/other', body: 'one' })
     await writeMemory({ userId: f.alice, projectId, path: 'auth/other', body: 'two' })
 
-    const removed = await pruneVersions()
-
-    // 23 writes make 22 versions (the first write has nothing to replace).
-    expect(removed).toBe(2)
+    // The write path keeps the window itself, so the nightly job has nothing
+    // left to do here; it remains the backstop for rows that predate it.
+    expect(await pruneVersions()).toBe(0)
     expect(await listVersions(f.alice, projectId, 'auth/many', 100)).toHaveLength(VERSION_LIMIT)
     expect(await listVersions(f.alice, projectId, 'auth/other', 100)).toHaveLength(1)
   })

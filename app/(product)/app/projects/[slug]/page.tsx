@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
 import { listDeletedMemories, readMemory, treeMemory } from '@/lib/memory/service'
-import { InvalidPath } from '@/lib/memory/path'
 import { searchMemories } from '@/lib/memory/search'
 import { getVersion, listVersions } from '@/lib/memory/versions'
 import { getProject } from '@/lib/projects/service'
@@ -67,7 +66,10 @@ export default async function ProjectBrowser({
   ])
 
   const versionId = first(search.version)
-  const selectedVersion = versionId ? await getVersion(user.id, project.id, versionId) : null
+  const found = versionId ? await getVersion(user.id, project.id, versionId) : null
+  // A version id can be pasted from a different memory in the same project;
+  // diffing it here would show one memory's history beside another's body.
+  const selectedVersion = found && memory && found.path === memory.path ? found : null
   const diff = selectedVersion && memory ? diffLines(selectedVersion.body, memory.body) : null
 
   const base = `/app/projects/${slug}`

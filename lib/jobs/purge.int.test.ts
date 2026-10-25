@@ -44,6 +44,23 @@ describe('purge job', () => {
     for (let i = 0; i < 23; i += 1) {
       await writeMemory({ userId: f.alice, projectId, path: 'a/many', body: `body ${i}` })
     }
+    // The write path keeps its own window, so the nightly sweep only has work
+    // when a history predates that (or a caller inserted rows by hand). Two
+    // extra rows stand in for such a history.
+    await withAdmin(async (tx) => {
+      const { rows } = await tx.query<{ id: string }>(
+        `select id from memories where project_id = $1 and path = 'a/many'`,
+        [projectId],
+      )
+      for (const marker of ['stale one', 'stale two']) {
+        await tx.query(
+          `insert into memory_versions
+             (memory_id, project_id, path, title, summary, body, kind, source, updated_at)
+           values ($1, $2, 'a/many', 'old', null, $3, 'note', 'agent', now() - interval '1 day')`,
+          [rows[0]?.id, projectId, marker],
+        )
+      }
+    })
     await writeMemory({ userId: f.alice, projectId, path: 'a/gone', body: 'first' })
     await writeMemory({ userId: f.alice, projectId, path: 'a/gone', body: 'second' })
     await deleteMemory(f.alice, projectId, 'a/gone')

@@ -176,6 +176,11 @@ describe('memory history over the rest api', () => {
     )
     // The body the restore replaced is history now, so a restore can be undone.
     expect(((await after.json()) as { versions: unknown[] }).versions).toHaveLength(2)
+
+    const { rows } = await adminPool().query<{ detail: { via?: string } }>(
+      `select detail from audit_log where action = 'memory.restore_version' order by id desc limit 1`,
+    )
+    expect(rows[0]?.detail).toMatchObject({ via: 'api' })
   })
 
   it('refuses a version from another project', async () => {

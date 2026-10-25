@@ -16,5 +16,5 @@ export async function POST(request: NextRequest, { params }: Params) {
     }
 
     return Response.json(result)
-  })
+  }, { detail: { via: 'api' } })
 }

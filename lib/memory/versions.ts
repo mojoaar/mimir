@@ -33,54 +33,60 @@ type SummaryRow = {
 type VersionRow = SummaryRow & { summary: string | null; body: string }
 
 /**
- * The row about to be overwritten, locked. The lock is the point: without it two
- * concurrent writers read the same old body, both archive it, and the body
- * written between them is never recorded.
+ * Records the body a write is about to replace, then trims this memory's
+ * history back to `VERSION_LIMIT`.
+ *
+ * The caller passes the pre-image returned by the upsert's own `returning`
+ * clause, not a row it read earlier. A `select ... for update` cannot lock a row
+ * that does not exist yet, so two writers creating the same path both saw "no
+ * previous row" and one body was lost without a trace.
+ *
+ * Trimming happens here rather than only in the nightly job: a path rewritten in
+ * a loop would otherwise grow all day, and 256 KB per version is not a leak the
+ * operator would see coming.
  */
-export async function archivePrevious(
+export async function archiveVersion(
   tx: PoolClient,
-  input: { projectId: string; path: string; nextBody: string },
-): Promise<string | null> {
-  const { rows } = await tx.query<{
-    id: string
+  input: {
+    memoryId: string
+    projectId: string
+    path: string
     title: string
     summary: string | null
     body: string
     kind: string
     source: string
-    updated_at: Date
-    deleted_at: Date | null
-  }>(
-    `select id, title, summary, body, kind, source, updated_at, deleted_at
-       from memories
-      where project_id = $1 and lower(path) = lower($2)
-        for update`,
-    [input.projectId, input.path],
-  )
-
-  const previous = rows[0]
-  // Reviving a deleted memory is not an overwrite: its body was discarded on
-  // purpose, and keeping it would fill history with what someone deleted.
-  if (!previous || previous.deleted_at !== null || previous.body === input.nextBody) return null
-
+    updatedAt: Date
+  },
+): Promise<void> {
   await tx.query(
     `insert into memory_versions
        (memory_id, project_id, path, title, summary, body, kind, source, updated_at)
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
-      previous.id,
+      input.memoryId,
       input.projectId,
       input.path,
-      previous.title,
-      previous.summary,
-      previous.body,
-      previous.kind,
-      previous.source,
-      previous.updated_at,
+      input.title,
+      input.summary,
+      input.body,
+      input.kind,
+      input.source,
+      input.updatedAt,
     ],
   )
 
-  return previous.id
+  await tx.query(
+    `delete from memory_versions
+      where memory_id = $1
+        and id not in (
+          select id from memory_versions
+           where memory_id = $1
+           order by created_at desc, id desc
+           limit $2
+        )`,
+    [input.memoryId, VERSION_LIMIT],
+  )
 }
 
 export async function listVersions(
@@ -95,7 +101,7 @@ export async function listVersions(
 
   return withUser(userId, async (tx) => {
     const { rows } = await tx.query<SummaryRow>(
-      `select id, path, title, kind, source, updated_at, created_at, length(body) as bytes
+      `select id, path, title, kind, source, updated_at, created_at, octet_length(body) as bytes
          from memory_versions
         where project_id = $1 and lower(path) = $2
         order by created_at desc, id desc
@@ -128,7 +134,7 @@ export async function getVersion(
   return withUser(userId, async (tx) => {
     const { rows } = await tx.query<VersionRow>(
       `select id, path, title, summary, body, kind, source, updated_at, created_at,
-              length(body) as bytes
+              octet_length(body) as bytes
          from memory_versions
         where id = $1 and project_id = $2`,
       [versionId, projectId],

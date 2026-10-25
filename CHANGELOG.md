@@ -30,6 +30,18 @@ History you can undo.
 - `runPurge` reports `{ removed, versionsRemoved }`, and the `memory.purge`
   audit row carries both counts.
 
+### Fixed (review pass)
+
+- A body is no longer lost when two writers create the same memory at the same
+  time. The archive now reads the row the update actually replaced, instead of
+  locking a row that does not exist yet.
+- History stays at twenty bodies per memory as it is written, not only after the
+  nightly sweep, so a path rewritten in a loop cannot grow all day.
+- The history panel ignores a version id belonging to a different memory, and
+  the API's restore audit row records `via: api`.
+- Size is reported in bytes, not characters, so a body of emoji reports what it
+  costs on disk.
+
 ## [0.5.0] - 2026-10-26
 
 Seeing what the agents wrote.

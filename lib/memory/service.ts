@@ -2,7 +2,7 @@ import { withAdmin, withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
 import { EXTRACT_DEBOUNCE_SECONDS } from '@/lib/jobs/constants'
 import { embedText } from './embeddings'
-import { archivePrevious } from './versions'
+import { archiveVersion } from './versions'
 import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
 import { MEMORY_KINDS } from './types'
 import type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
@@ -48,10 +48,17 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   const embedding = await embedText([path, title, input.body].join('\n'))
 
   const result = await withUser(input.userId, async (tx) => {
-    // Archive before writing: the row this statement replaces becomes history.
-    await archivePrevious(tx, { projectId: input.projectId, path, nextBody: input.body })
-
-    const { rows } = await tx.query<{ created: boolean }>(
+    const { rows } = await tx.query<{
+      created: boolean
+      id: string
+      old_title: string | null
+      old_summary: string | null
+      old_body: string | null
+      old_kind: string | null
+      old_source: string | null
+      old_updated_at: Date | null
+      old_deleted_at: Date | null
+    }>(
       `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id, embedding)
        select $1, $2, $3, null, $4,
               to_tsvector(coalesce(p.fts_language, 'english')::regconfig, $2 || ' ' || $3 || ' ' || $4),
@@ -68,11 +75,42 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
               embedding = excluded.embedding,
               updated_at = now(),
               deleted_at = null
-       returning (xmax = 0) as created`,
+       returning (xmax = 0) as created,
+                 id,
+                 old.title as old_title,
+                 old.summary as old_summary,
+                 old.body as old_body,
+                 old.kind as old_kind,
+                 old.source as old_source,
+                 old.updated_at as old_updated_at,
+                 old.deleted_at as old_deleted_at`,
       [input.projectId, path, title, input.body, kind, source, input.userId, embedding],
     )
 
-    return { path, created: rows[0]?.created ?? false }
+    const written = rows[0]
+    // Postgres 18 returns the pre-image of the updated row, so the archive costs
+    // no extra query and sees the row the winner of a create race committed.
+    if (
+      written &&
+      !written.created &&
+      written.old_body !== null &&
+      written.old_deleted_at === null &&
+      written.old_body !== input.body
+    ) {
+      await archiveVersion(tx, {
+        memoryId: written.id,
+        projectId: input.projectId,
+        path,
+        title: written.old_title ?? title,
+        summary: written.old_summary,
+        body: written.old_body,
+        kind: written.old_kind ?? kind,
+        source: written.old_source ?? source,
+        updatedAt: written.old_updated_at ?? new Date(),
+      })
+    }
+
+    return { path, created: written?.created ?? false }
   })
 
   await enqueueExtraction(input.projectId)

@@ -12,8 +12,19 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
+      <section className="space-y-2">
+        <h1 className="text-2xl font-semibold">Your profile</h1>
+        <p className="text-sm text-[var(--text-muted)]">
+          Your name, the address you sign in with, your password and your sessions live on the{' '}
+          <a href="/app/settings/profile" className="underline">
+            profile page
+          </a>
+          .
+        </p>
+      </section>
+
       <section className="space-y-3">
-        <h1 className="text-2xl font-semibold">API keys</h1>
+        <h2 className="text-lg font-medium">API keys</h2>
         <p className="text-sm text-[var(--text-muted)]">
           Agents authenticate to <code>{base}/mcp</code> and <code>{base}/api/v1</code> with a bearer
           token. Keys are hashed at rest and cannot be recovered.

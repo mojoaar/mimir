@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { sha256 } from '../crypto'
 import { withService } from '../db/tx'
+import { audit } from '../audit'
 import type { AuthUser } from './types'
 
 export { SESSION_COOKIE } from './cookie-name'
@@ -96,4 +97,110 @@ export async function revokeAllSessions(userId: string, tx?: PoolClient): Promis
     ])
   if (tx) await run(tx)
   else await withService(run)
+}
+
+export type SessionRecord = {
+  id: string
+  ip: string | null
+  userAgent: string | null
+  lastSeenAt: Date
+  createdAt: Date
+}
+
+/** The session a cookie value belongs to, so a page can mark "this device". */
+export async function sessionIdFor(cookieValue: string): Promise<string | null> {
+  if (!cookieValue) return null
+
+  return withService(async (tx) => {
+    const { rows } = await tx.query<{ id: string }>(
+      `select id from sessions
+        where token_hash = $1 and revoked_at is null and expires_at > now()`,
+      [sha256(cookieValue)],
+    )
+    return rows[0]?.id ?? null
+  })
+}
+
+/** Live sessions only: a revoked or expired row is not something to show or act on. */
+export async function listSessions(userId: string): Promise<SessionRecord[]> {
+  return withService(async (tx) => {
+    const { rows } = await tx.query<{
+      id: string
+      ip: string | null
+      user_agent: string | null
+      last_seen_at: Date
+      created_at: Date
+    }>(
+      `select id, host(ip) as ip, user_agent, last_seen_at, created_at
+         from sessions
+        where user_id = $1 and revoked_at is null and expires_at > now()
+        order by created_at desc`,
+      [userId],
+    )
+
+    return rows.map((row) => ({
+      id: row.id,
+      ip: row.ip,
+      userAgent: row.user_agent,
+      lastSeenAt: row.last_seen_at,
+      createdAt: row.created_at,
+    }))
+  })
+}
+
+/** Scoped by user_id: a session id belonging to someone else changes nothing. */
+export async function revokeSessionById(userId: string, sessionId: string): Promise<boolean> {
+  return withService(async (tx) => {
+    const { rowCount } = await tx.query(
+      `update sessions set revoked_at = now()
+        where id = $1 and user_id = $2 and revoked_at is null`,
+      [sessionId, userId],
+    )
+    return rowCount === 1
+  })
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * The "sign out everywhere else" verb; the current device survives.
+ *
+ * Pass `tx` when the caller is already inside a transaction: opening a second
+ * connection from inside one is how a handful of parallel password changes
+ * used to hold every pool slot and wedge the whole process.
+ */
+export async function revokeOtherSessions(
+  userId: string,
+  exceptId: string,
+  tx?: PoolClient,
+): Promise<number> {
+  if (!UUID.test(exceptId)) {
+    // A stale cookie has no id; revoking everything would sign the caller out
+    // of the browser they are using without telling them.
+    const expired = new Error('invalid_params: your session has expired; sign in again')
+    throw Object.assign(expired, { code: 'invalid_params' })
+  }
+
+  const run = async (client: PoolClient) => {
+    const { rowCount } = await client.query(
+      `update sessions set revoked_at = now()
+        where user_id = $1 and id <> $2 and revoked_at is null`,
+      [userId, exceptId],
+    )
+    return rowCount ?? 0
+  }
+
+  const revoked = tx ? await run(tx) : await withService(run)
+  await audit(
+    {
+      actorType: 'user',
+      actorId: userId,
+      action: 'auth.session_revoke',
+      targetType: 'user',
+      targetId: userId,
+      detail: { all: true, except: exceptId, revoked },
+    },
+    tx,
+  )
+  return revoked
 }

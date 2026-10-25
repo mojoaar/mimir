@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg'
 
 import { withUser } from '@/lib/db/tx'
+import { audit } from '@/lib/audit'
 
 import { forbidden, requireProjectRole } from './access'
 import { normaliseRepoKey, repoSlug } from './repo'
@@ -129,24 +130,33 @@ async function createProject(
 }
 
 export type ProjectSummary = {
+  id: string
   slug: string
   name: string
   role: ProjectRole | null
   memoryCount: number
+  archived: boolean
 }/** Projects the caller owns or holds a grant on — RLS already hides the rest. */
-export async function listProjects(userId: string): Promise<ProjectSummary[]> {
+export async function listProjects(
+  userId: string,
+  includeArchived = false,
+): Promise<ProjectSummary[]> {
   return withUser(userId, async (client) => {
     const { rows } = await client.query<{
+      id: string
       slug: string
       name: string
       owner_user_id: string
       grant_role: ProjectRole | null
       memory_count: number
+      archived: boolean
     }>(
-      `SELECT p.slug,
+      `SELECT p.id,
+              p.slug,
               p.name,
               p.owner_user_id,
               g.role AS grant_role,
+              (p.archived_at IS NOT NULL) AS archived,
               (SELECT count(*)::int FROM memories m
                 WHERE m.project_id = p.id AND m.deleted_at IS NULL) AS memory_count
          FROM projects p
@@ -154,15 +164,17 @@ export async function listProjects(userId: string): Promise<ProjectSummary[]> {
                 ON g.project_id = p.id
                AND g.principal_type = 'user'
                AND g.principal_id = $1
-        WHERE p.archived_at IS NULL
+        WHERE ($2::boolean OR p.archived_at IS NULL)
         ORDER BY p.updated_at DESC`,
-      [userId],
+      [userId, includeArchived],
     )
     return rows.map((row) => ({
+      id: row.id,
       slug: row.slug,
       name: row.name,
       role: row.owner_user_id === userId ? 'owner' : row.grant_role,
       memoryCount: row.memory_count,
+      archived: row.archived,
     }))
   })
 }
@@ -234,5 +246,45 @@ export async function updateProjectSettings(
     if (result.rowCount === 0) {
       throw forbidden('Only the project owner can change that.')
     }
+  })
+}
+
+/**
+ * Archiving hides a project everywhere `archived_at IS NULL` is checked — lists,
+ * `getProject`, and therefore every page and API call — while keeping its rows.
+ * Only the owner may do it, and it is reversible, because an archive nobody can
+ * undo is a deletion with extra steps.
+ */
+export async function archiveProject(userId: string, projectId: string): Promise<void> {
+  await setArchived(userId, projectId, true)
+}
+
+export async function restoreProject(userId: string, projectId: string): Promise<void> {
+  await setArchived(userId, projectId, false)
+}
+
+async function setArchived(userId: string, projectId: string, archived: boolean): Promise<void> {
+  await requireProjectRole(userId, projectId, 'owner')
+
+  await withUser(userId, async (client) => {
+    const result = await client.query(
+      `UPDATE projects
+          SET archived_at = CASE WHEN $2::boolean THEN now() ELSE NULL END
+        WHERE id = $1`,
+      [projectId, archived],
+    )
+    if (result.rowCount === 0) {
+      throw forbidden('Only the project owner can change that.')
+    }
+    await audit(
+      {
+        actorType: 'user',
+        actorId: userId,
+        action: archived ? 'project.archive' : 'project.restore',
+        targetType: 'project',
+        targetId: projectId,
+      },
+      client,
+    )
   })
 }

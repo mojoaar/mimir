@@ -3,7 +3,16 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
-import { getProject, resolveProject, updateProjectSettings } from './service'
+import { writeMemory } from '@/lib/memory/service'
+
+import {
+  archiveProject,
+  getProject,
+  listProjects,
+  resolveProject,
+  restoreProject,
+  updateProjectSettings,
+} from './service'
 
 let alice: string
 let bob: string
@@ -63,5 +72,49 @@ describe('project settings', () => {
     ).rejects.toMatchObject({ code: 'forbidden' })
 
     expect((await getProject(alice, 'alice-project'))?.learningEnabled).toBe(false)
+  })
+})
+
+describe('archiving', () => {
+  it('hides an archived project from the list unless asked for it', async () => {
+    await archiveProject(alice, aliceProjectId)
+
+    expect(await listProjects(alice)).toEqual([])
+    const withArchived = await listProjects(alice, true)
+    expect(withArchived).toHaveLength(1)
+    expect(withArchived[0]).toMatchObject({ slug: 'alice-project', archived: true })
+  })
+
+  it('makes an archived project unreachable while keeping its memories', async () => {
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'deploy/compose', body: 'keep me' })
+    await archiveProject(alice, aliceProjectId)
+
+    expect(await getProject(alice, 'alice-project')).toBeNull()
+    const { rows } = await adminPool().query<{ count: number }>(
+      'select count(*)::int as count from memories where project_id = $1',
+      [aliceProjectId],
+    )
+    expect(rows[0]?.count).toBe(1)
+  })
+
+  it('restores an archived project with its memories intact', async () => {
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'deploy/compose', body: 'keep me' })
+    await archiveProject(alice, aliceProjectId)
+    await restoreProject(alice, aliceProjectId)
+
+    expect((await getProject(alice, 'alice-project'))?.slug).toBe('alice-project')
+    expect((await listProjects(alice))[0]).toMatchObject({ archived: false })
+    const { rows } = await adminPool().query<{ count: number }>(
+      'select count(*)::int as count from memories where project_id = $1 and deleted_at is null',
+      [aliceProjectId],
+    )
+    expect(rows[0]?.count).toBe(1)
+  })
+
+  it('a read grantee cannot archive', async () => {
+    await seedGrant(aliceProjectId, bob, 'read')
+
+    await expect(archiveProject(bob, aliceProjectId)).rejects.toMatchObject({ code: 'forbidden' })
+    expect(await getProject(alice, 'alice-project')).not.toBeNull()
   })
 })

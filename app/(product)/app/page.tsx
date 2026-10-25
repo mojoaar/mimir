@@ -3,10 +3,18 @@ import Link from 'next/link'
 import { requireUser } from '@/lib/auth/context'
 import { listProjects } from '@/lib/projects/service'
 import { signOutAction } from './actions'
+import { restoreProjectAction } from './projects/actions'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string; error?: string }>
+}) {
   const user = await requireUser()
-  const projects = await listProjects(user.id)
+  const { notice, error } = await searchParams
+  const all = await listProjects(user.id, true)
+  const projects = all.filter((project) => !project.archived)
+  const archived = all.filter((project) => project.archived)
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6 sm:py-12">
@@ -24,6 +32,17 @@ export default async function DashboardPage() {
           </button>
         </form>
       </header>
+
+      {notice ? (
+        <p role="status" className="text-sm text-[var(--accent)]">
+          {notice}
+        </p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="text-sm text-[var(--danger)]">
+          {error}
+        </p>
+      ) : null}
 
       {projects.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">
@@ -53,6 +72,36 @@ export default async function DashboardPage() {
           ))}
         </ul>
       )}
+
+      {archived.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-[var(--text-muted)]">Archived</h2>
+          <ul className="flex flex-col gap-3">
+            {archived.map((project) => (
+              <li
+                key={project.slug}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] p-4"
+              >
+                <div>
+                  <p className="font-medium">{project.name}</p>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    {project.slug} · hidden from every list and API call
+                  </p>
+                </div>
+                <form action={restoreProjectAction}>
+                  <input type="hidden" name="projectId" value={project.id} />
+                  <button
+                    type="submit"
+                    className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-sunken)]"
+                  >
+                    Restore
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   )
 }

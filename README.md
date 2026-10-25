@@ -22,6 +22,15 @@ Muse) with the exact config file each one reads. The OpenCode plugin is
 `@mojoaar/opencode-mimir`; the Claude Code session-start hook is
 `hooks/mimir-session-start.sh`.
 
+An existing project can be loaded in one command:
+
+```bash
+npx @mojoaar/opencode-mimir ingest .
+```
+
+That imports its documentation and configuration (not its source) into the
+same project your agents write to.
+
 ## Quick start
 
 ```bash

@@ -53,3 +53,12 @@ describe('docs content', () => {
     expect(html).toContain(pkg.version)
   })
 })
+
+describe('the import page', () => {
+  it('documents the ingest command', async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage())
+
+    expect(html).toContain('mimir ingest')
+    expect(html).toContain('--project')
+  })
+})

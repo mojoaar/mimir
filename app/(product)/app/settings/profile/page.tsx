@@ -7,7 +7,8 @@ import { translator } from '@/lib/i18n/request'
 import { listMySessions } from '@/lib/users/self'
 import { ProfileForm } from './profile-form'
 import { PasswordForm } from './password-form'
-import { revokeSessionAction, signOutEverywhereElseAction } from './actions'
+import { AvatarForm } from './avatar-form'
+import { removeAvatarAction, revokeSessionAction, signOutEverywhereElseAction } from './actions'
 
 export const instant = false
 
@@ -45,6 +46,30 @@ export default async function ProfilePage({
           {error}
         </p>
       ) : null}
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">{t('app.profile.avatar')}</h2>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/app/avatar"
+          alt=""
+          width={56}
+          height={56}
+          className="h-14 w-14 rounded-full border border-[var(--border)] object-cover"
+        />
+        <AvatarForm
+          labels={{
+            hint: t('app.profile.avatarHint'),
+            submit: t('app.profile.avatarSave'),
+            pending: t('app.profile.avatarSaving'),
+          }}
+        />
+        <form action={removeAvatarAction}>
+          <button type="submit" className="text-sm text-[var(--text-muted)] underline">
+            {t('app.profile.avatarRemove')}
+          </button>
+        </form>
+      </div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{t('app.profile.nameAndEmail')}</h2>

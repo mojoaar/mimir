@@ -9,6 +9,7 @@ import { SESSION_COOKIE } from '@/lib/auth/cookie-name'
 import { revokeOtherSessions, sessionIdFor } from '@/lib/auth/session'
 import { translator } from '@/lib/i18n/request'
 import { actionMessage } from '@/lib/i18n/errors'
+import { setAvatar, clearAvatar } from '@/lib/users/avatar'
 import { changePassword, revokeOwnSession, updateProfile } from '@/lib/users/self'
 
 export type ActionState = { ok?: string; error?: string }
@@ -100,4 +101,36 @@ export async function signOutEverywhereElseAction(): Promise<void> {
   await revokeOtherSessions(user.id, current)
   revalidatePath(PROFILE)
   redirect(`${PROFILE}?notice=others`)
+}
+
+export type AvatarState = { ok?: string; error?: string }
+
+export async function uploadAvatarAction(
+  _prev: AvatarState,
+  formData: FormData,
+): Promise<AvatarState> {
+  const user = await requireUser()
+  const t = await translator()
+  const file = formData.get('avatar')
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: t('app.profile.avatarMissing') }
+  }
+
+  try {
+    const bytes = Buffer.from(await file.arrayBuffer())
+    await setAvatar(user.id, bytes, file.type)
+  } catch (error) {
+    return { error: actionMessage(error, t) }
+  }
+
+  // The header picture is part of the layout, so refresh it too.
+  revalidatePath('/app', 'layout')
+  return { ok: t('app.profile.avatarSaved') }
+}
+
+export async function removeAvatarAction(): Promise<void> {
+  const user = await requireUser()
+  await clearAvatar(user.id)
+  revalidatePath('/app', 'layout')
+  redirect(`${PROFILE}?notice=avatar`)
 }

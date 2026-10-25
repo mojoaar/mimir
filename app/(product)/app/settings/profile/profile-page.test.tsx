@@ -141,6 +141,20 @@ const other = (id: string, ip: string) => ({
   current: false,
 })
 
+describe('the picture', () => {
+  it('offers an upload that becomes a round icon', async () => {
+    mocks.sessions = [current]
+
+    const html = await render()
+
+    expect(html).toContain('type="file"')
+    expect(html).toContain('name="avatar"')
+    expect(html).toContain('image/png')
+    expect(html).toContain('src="/app/avatar"')
+    expect(html).toContain('rounded-full')
+  })
+})
+
 describe('the sessions list', () => {
   it('offers no sign-out-everywhere button when this is the only session', async () => {
     mocks.sessions = [current]

@@ -126,6 +126,70 @@ describe('runBackup', () => {
     const rows = await runs()
     expect(rows.map((row) => row.status)).toEqual(['failed', 'ok'])
   })
+
+  it('keeps one dump per restore point when retention prunes', async () => {
+    const objects = new Map<string, number>()
+    for (let day = 10; day <= 23; day += 1) {
+      const stamp = `202610${day}-030000`
+      objects.set(`mimir-${stamp}.dump.enc`, 100)
+      objects.set(`settings-${stamp}.json.enc`, 20)
+    }
+    const removed: string[] = []
+    const storage: Storage = {
+      async put(key, body) {
+        objects.set(key, body.length)
+      },
+      async head(key) {
+        const size = objects.get(key)
+        return size === undefined ? null : { size }
+      },
+      async list() {
+        return [...objects].map(([key, size]) => ({ key, size }))
+      },
+      async remove(key) {
+        objects.delete(key)
+        removed.push(key)
+      },
+    }
+    const { runBackup } = await import('./run')
+
+    // 15 restore points before pruning: 14 seeded plus the new one.
+    const result = await runBackup({ triggeredBy: 'schedule' }, { storage, artifacts: ARTIFACTS })
+
+    expect(result.ok).toBe(true)
+    const dumps = [...objects.keys()].filter((key) => key.startsWith('mimir-'))
+    const settings = [...objects.keys()].filter((key) => key.startsWith('settings-'))
+    expect(dumps).toHaveLength(14)
+    expect(settings).toHaveLength(14)
+    expect(objects.has('mimir-20261026-030000.dump.enc')).toBe(true)
+    expect(removed).toContain('mimir-20261010-030000.dump.enc')
+    expect(removed).toContain('settings-20261010-030000.json.enc')
+  })
+
+  it('removes what it uploaded when the run fails after a successful put', async () => {
+    const objects = new Map<string, number>()
+    const storage: Storage = {
+      async put(key, body) {
+        objects.set(key, body.length)
+      },
+      async head(key) {
+        const size = objects.get(key)
+        return size === undefined ? null : { size: size + 1 }
+      },
+      async list() {
+        return []
+      },
+      async remove(key) {
+        objects.delete(key)
+      },
+    }
+    const { runBackup } = await import('./run')
+
+    const result = await runBackup({ triggeredBy: 'manual' }, { storage, artifacts: ARTIFACTS })
+
+    expect(result.ok).toBe(false)
+    expect([...objects.keys()]).toEqual([])
+  })
 })
 
 afterAll(async () => {

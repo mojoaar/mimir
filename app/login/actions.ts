@@ -11,6 +11,11 @@ import {
   readTicket,
 } from '@/lib/auth/mfa-ticket'
 import { getConfig } from '@/lib/config'
+import {
+  checkLoginRateLimit,
+  clearLoginRateLimit,
+  recordLoginFailure,
+} from '@/lib/auth/rate-limit'
 import { clientIp } from '@/lib/http/ip'
 import { isRequestAllowed } from '@/lib/http/allowlist'
 
@@ -62,8 +67,19 @@ export async function loginMfaAction(formData: FormData): Promise<void> {
   // rather than letting them guess at a form that can never succeed.
   if (!userId) redirect('/login?error=expired')
 
-  const result = await completeMfaLogin(userId, code, await meta())
-  if (!result.ok) redirect(`/login?step=code&error=${result.reason}`)
+  // A six-digit code is guessable at ~1 in a million per try, which is far too
+  // cheap without a limit — the password step's throttle does not cover it.
+  const request = await meta()
+  const limitKey = `mfa:${userId}`
+  const limit = checkLoginRateLimit(request.ip, limitKey)
+  if (!limit.allowed) redirect('/login?error=locked')
+
+  const result = await completeMfaLogin(userId, code, request)
+  if (!result.ok) {
+    recordLoginFailure(request.ip, limitKey)
+    redirect(`/login?step=code&error=${result.reason}`)
+  }
+  clearLoginRateLimit(request.ip, limitKey)
 
   store.set(SESSION_COOKIE, result.cookieValue, SESSION_COOKIE_OPTIONS)
   store.delete(MFA_TICKET_COOKIE)

@@ -19,13 +19,13 @@ export async function runPrune(now: Date = new Date()): Promise<PruneResult> {
     await client.query(`select set_config('mimir.allow_audit_prune', 'on', true)`)
     const reads = await client.query(
       `delete from audit_log
-        where action like 'memory.%'
+        where action like 'memory.read%'
           and created_at < $1::timestamptz - ($2 || ' days')::interval`,
       [now, AUDIT_READ_RETENTION_DAYS],
     )
     const other = await client.query(
       `delete from audit_log
-        where action not like 'memory.%'
+        where action not like 'memory.read%'
           and created_at < $1::timestamptz - ($2 || ' days')::interval`,
       [now, AUDIT_RETENTION_DAYS],
     )

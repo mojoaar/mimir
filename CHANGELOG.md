@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (review pass)
+
+- Retention counts restore points, not files. It deleted every database dump once 14 runs existed, because `mimir-…` names sort before `settings-…` names, and then recorded the run `ok`.
+- A failed backup now removes the objects it already uploaded, so a truncated dump cannot sit next to the good ones.
+- Saving the backup form a second time no longer wipes the S3 access key id, and saving email settings without a key is refused instead of silently disabling email.
+- The IP allowlist now covers server actions and route handlers, not just page renders, so a blocked network cannot mutate anything with an old cookie.
+- Admin user actions no longer report "That did not work" after a successful change; `redirect()` was being caught as a failure.
+- The audit CSV export returns up to 10,000 rows instead of being clamped to 200.
+- A password reset action exists, and a user created without a password can be re-invited from the users page.
+- The TOTP step is rate limited, and the replay guard is a single conditional write so two simultaneous submissions cannot both pass.
+- An invalid cron expression is rejected when saved and can no longer stop the job queue from starting.
+- Audit retention ages out reads at 30 days; writes and deletes are kept for a year.
+
 ## [0.3.0] - 2026-10-25
 
 Mimir can now be operated: it backs itself up, it manages its users, and an

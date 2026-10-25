@@ -7,6 +7,7 @@ import { getSiteSettings, setSiteSettings } from '@/lib/settings/site'
 import { getIpAllowlist, getRequireMfa, setIpAllowlist, setRequireMfa } from '@/lib/settings/security'
 import { getEmailSettings, setEmailSettings } from '@/lib/settings/email-settings'
 import { invalidateAllowlistCache } from '@/lib/http/allowlist'
+import { InvalidSetting } from '@/lib/settings/store'
 
 function text(formData: FormData, name: string): string {
   const value = formData.get(name)
@@ -39,10 +40,11 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
     const emailKey = text(formData, 'emailKey')
     const stored = await getEmailSettings()
     if (emailEnabled && emailFrom) {
-      await setEmailSettings(
-        { enabled: true, from: emailFrom, apiKey: emailKey || stored?.apiKey || '' },
-        user.id,
-      )
+      const apiKey = emailKey || stored?.apiKey || ''
+      if (!apiKey) {
+        throw new InvalidSetting('an API key is required to send email through Resend')
+      }
+      await setEmailSettings({ enabled: true, from: emailFrom, apiKey }, user.id)
     } else {
       await setEmailSettings(null, user.id)
     }

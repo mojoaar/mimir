@@ -136,10 +136,14 @@ export async function verifyMfaCode(userId: string, code: string): Promise<CodeR
     }
 
     const step = currentStep() + delta
-    const last = row.last_step === null ? Number.NEGATIVE_INFINITY : Number(row.last_step)
-    if (step <= last) return { ok: false as const, reason: 'replayed' as const }
-
-    await tx.query('update users set totp_last_step = $2 where id = $1', [userId, step])
+    // The compare happens inside the write so two simultaneous submissions of
+    // the same code cannot both pass: the second matches no row.
+    const claimed = await tx.query(
+      `update users set totp_last_step = $2
+        where id = $1 and (totp_last_step is null or totp_last_step < $2)`,
+      [userId, step],
+    )
+    if (claimed.rowCount === 0) return { ok: false as const, reason: 'replayed' as const }
     return { ok: true as const }
   })
 }

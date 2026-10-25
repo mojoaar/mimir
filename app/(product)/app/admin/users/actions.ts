@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/admin'
+import { audit } from '@/lib/audit'
 import { deliverToken } from '@/lib/auth/tokens'
 import { absoluteLink, sendEmail } from '@/lib/email/client'
 import { inviteEmail } from '@/lib/email/templates'
@@ -24,6 +25,10 @@ const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
 const GENERIC = 'That did not work. Try again.'
 
 function messageOf(error: unknown): string {
+  // redirect() signals by throwing. Catching it turned every successful action
+  // into "That did not work" after the change had already been committed.
+  const digest = (error as { digest?: string }).digest
+  if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) throw error
   const code = (error as { code?: string }).code
   if (code && KNOWN.has(code)) return (error as Error).message
   console.error('admin user action failed', (error as Error).message)
@@ -78,6 +83,34 @@ export async function createUserAction(_prev: ActionState, formData: FormData): 
   } catch (error) {
     return { error: messageOf(error) }
   }
+}
+
+export async function resetPasswordAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const actor = await requireAdmin()
+  const userId = text(formData, 'userId')
+  const invitedBy = text(formData, 'email')
+  const { getUser } = await import('@/lib/users/service')
+  const target = await getUser(userId)
+  if (!target) return { error: 'That user no longer exists.' }
+
+  const site = await getSiteSettings()
+  const result = await deliverToken({
+    userId,
+    kind: 'password_reset',
+    email: target.email,
+    siteName: site.siteName,
+    invitedBy: actor.email || invitedBy,
+  })
+  await audit({
+    actorType: 'user',
+    actorId: actor.id,
+    action: 'admin.password_reset',
+    targetType: 'user',
+    targetId: userId,
+  })
+  return result.emailed
+    ? { ok: 'Password reset sent.' }
+    : { ok: 'Email is not configured — send this link yourself.', link: result.url }
 }
 
 export async function resendInviteAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

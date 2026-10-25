@@ -45,6 +45,17 @@ describe('listAudit', () => {
     const result = await listAudit({ action: 'memory.read', limit: 1 })
     expect(result.rows[0]?.actorEmail).toBe('alice@example.test')
   })
+
+  it('lets the csv export ask for more than a page', async () => {
+    for (let i = 0; i < 250; i += 1) await add('memory.read', { i })
+    const page = await listAudit({ limit: 50 })
+    const exported = await listAudit({ limit: 10_000 })
+
+    expect(page.rows).toHaveLength(50)
+    expect(exported.rows.length).toBeGreaterThan(200)
+    // 250 added here plus the 3 seeded in beforeEach.
+    expect(exported.total).toBe(253)
+  })
 })
 
 describe('toCsv', () => {

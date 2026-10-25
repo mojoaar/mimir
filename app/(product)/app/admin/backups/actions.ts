@@ -43,8 +43,13 @@ export async function saveBackupSettingsAction(formData: FormData): Promise<void
     // Credentials are stored separately and sealed; a blank secret keeps the old one.
     if (target === 's3') {
       const secretAccessKey = text(formData, 's3Secret')
-      const existing = secretAccessKey ? null : await currentS3Secret()
-      if (secretAccessKey || existing) {
+      const existingSecret = await currentS3Secret()
+      const existingKeyId = (await currentS3Credentials())?.accessKeyId ?? ''
+      // The key id is not a secret but it is also not prefilled, so a blank
+      // field means "keep", exactly like the secret. Sending '' would break
+      // every later run with a 403.
+      const accessKeyId = text(formData, 's3AccessKeyId') || existingKeyId
+      if (secretAccessKey || existingSecret) {
         await setS3Credentials(
           {
             bucket: text(formData, 's3Bucket'),
@@ -52,8 +57,8 @@ export async function saveBackupSettingsAction(formData: FormData): Promise<void
             region: text(formData, 's3Region') || 'us-east-1',
             prefix: text(formData, 's3Prefix') || 'mimir',
             pathStyle: text(formData, 's3PathStyle') === 'on',
-            accessKeyId: text(formData, 's3AccessKeyId'),
-            secretAccessKey: secretAccessKey || (existing as string),
+            accessKeyId,
+            secretAccessKey: secretAccessKey || (existingSecret as string),
           },
           user.id,
         )
@@ -110,9 +115,13 @@ export async function runBackupAction(): Promise<void> {
   )
 }
 
-async function currentS3Secret(): Promise<string | null> {
+async function currentS3Credentials() {
   const { getS3Credentials } = await import('@/lib/settings/backup-settings')
-  return (await getS3Credentials())?.secretAccessKey ?? null
+  return getS3Credentials()
+}
+
+async function currentS3Secret(): Promise<string | null> {
+  return (await currentS3Credentials())?.secretAccessKey ?? null
 }
 
 async function currentWebDavPassword(): Promise<string | null> {

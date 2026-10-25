@@ -75,7 +75,8 @@ export async function listAudit(
   }
 
   const clause = where.length > 0 ? `where ${where.join(' and ')}` : ''
-  const limit = Math.min(Math.max(filters.limit ?? 50, 1), 200)
+  // 10k is the CSV export's ceiling; the page passes 50.
+  const limit = Math.min(Math.max(filters.limit ?? 50, 1), 10_000)
   const offset = Math.max(filters.offset ?? 0, 0)
 
   return withAdmin(async (client) => {

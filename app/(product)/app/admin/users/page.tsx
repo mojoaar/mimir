@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/admin'
 import { listUsers, type AdminUser, type UserStatus } from '@/lib/users/service'
 import { InviteForm } from './invite-form'
+import { ResetForm } from './reset-form'
 import { UserForm } from './user-form'
 import {
   deleteUserAction,
@@ -64,7 +65,6 @@ function Row({ user }: { user: AdminUser }) {
                 Verify
               </button>
             </form>
-            <InviteForm userId={user.id} email={user.email} />
           </>
         )}
 
@@ -96,6 +96,8 @@ function Row({ user }: { user: AdminUser }) {
             Set role
           </button>
         </form>
+
+        {user.hasPassword ? <ResetForm userId={user.id} email={user.email} /> : <InviteForm userId={user.id} email={user.email} />}
 
         {user.mfaEnabled && (
           <form action={resetMfaAction.bind(null, {})}>

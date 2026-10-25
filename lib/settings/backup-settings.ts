@@ -47,8 +47,14 @@ export async function setBackupSettings(
   if (!Number.isInteger(next.retention) || next.retention < 1) {
     throw new InvalidSetting('retention must be a whole number of backups, at least 1')
   }
-  if (next.schedule.trim() === '') {
-    throw new InvalidSetting('the backup schedule must be a five-field cron expression')
+  // pg-boss validates again when the schedule is registered, and a rejection
+  // there happens inside startJobs — where it would take the whole queue down.
+  const fields = next.schedule.trim().split(/\s+/)
+  const validField = /^[0-9A-Za-z*/,\-]+$/
+  if (fields.length !== 5 || !fields.every((field) => validField.test(field))) {
+    throw new InvalidSetting(
+      'the backup schedule must be a five-field cron expression, such as 0 3 * * *',
+    )
   }
   if (next.target !== null && next.target !== 's3' && next.target !== 'webdav') {
     throw new InvalidSetting('the backup target must be s3 or webdav')

@@ -14,6 +14,8 @@ export type AdminUser = {
   role: UserRole
   status: UserStatus
   mfaEnabled: boolean
+  /** False for a user created without a password who has not accepted their invite. */
+  hasPassword: boolean
   lastLoginAt: Date | null
   createdAt: Date
   projectCount: number
@@ -34,6 +36,7 @@ type Row = {
   role: UserRole
   status: UserStatus
   mfa_enabled: boolean
+  has_password: boolean
   last_login_at: Date | null
   created_at: Date
   project_count: string | number
@@ -42,6 +45,7 @@ type Row = {
 const SELECT_USER = `
   select u.id, u.email::text as email, u.name, u.role, u.status,
          (u.totp_secret_enc is not null) as mfa_enabled,
+         (u.password_hash is not null) as has_password,
          u.last_login_at, u.created_at,
          (select count(*) from projects p where p.owner_user_id = u.id) as project_count
     from users u`
@@ -54,6 +58,7 @@ function toUser(row: Row): AdminUser {
     role: row.role,
     status: row.status,
     mfaEnabled: row.mfa_enabled,
+    hasPassword: row.has_password,
     lastLoginAt: row.last_login_at,
     createdAt: row.created_at,
     projectCount: Number(row.project_count),

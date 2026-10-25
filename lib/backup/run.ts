@@ -50,14 +50,18 @@ export async function runBackup(input: BackupInput, deps: Deps = {}): Promise<Ba
   if (!runId) throw new Error('could not record the backup run')
 
   let bytes = 0
+  const uploaded: string[] = []
+  let storage: Storage | null = null
   try {
     const target = deps.storage ? { storage: deps.storage, prefix: '' } : await storageFromSettings()
     if (!target) throw new Error('no backup target is configured')
+    storage = target.storage
 
     const artifacts = deps.artifacts ?? (await buildBackupArtifacts({ now: deps.now }))
 
     for (const artifact of artifacts) {
       await target.storage.put(artifact.name, artifact.body)
+      uploaded.push(artifact.name)
       const stored = await target.storage.head(artifact.name)
       if (!stored) throw new Error(`verify failed for ${artifact.name}: nothing was stored`)
       if (stored.size !== artifact.body.length) {
@@ -95,6 +99,16 @@ export async function runBackup(input: BackupInput, deps: Deps = {}): Promise<Ba
   } catch (thrown) {
     const error = (thrown instanceof Error ? thrown : new Error(String(thrown))).message.slice(0, 500)
     console.error(`mimir: backup failed (${error})`)
+
+    // A failed run must not leave half-verified objects under valid names: an
+    // operator restoring "the newest dump" would pick a truncated file.
+    for (const key of uploaded) {
+      try {
+        await storage?.remove(key)
+      } catch (cleanup) {
+        console.error(`mimir: could not remove ${key} after a failed backup (${String(cleanup)})`)
+      }
+    }
 
     await withAdmin((client) =>
       client.query(

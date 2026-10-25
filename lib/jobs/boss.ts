@@ -76,7 +76,13 @@ export async function startJobs(): Promise<void> {
     jobs.boss = instance
     // Imported lazily: the job module imports getBoss from this file.
     const { scheduleBackups } = await import('./backup')
-    await scheduleBackups()
+    try {
+      await scheduleBackups()
+    } catch (error) {
+      // A rejected cron would otherwise abort startJobs and leave every job
+      // unscheduled, including the audit prune.
+      console.error(`mimir: could not schedule backups (${(error as Error).message})`)
+    }
     await instance.schedule('prune', '15 3 * * *', {})
     process.once('SIGTERM', () => void stopJobs())
     process.once('SIGINT', () => void stopJobs())

@@ -23,6 +23,23 @@ Your account, your control.
 - A password change signs out every other device and keeps the one making the
   change. The same is true of the reset link, as before.
 
+### Fixed (review pass)
+
+- A password change used to open a second database connection while its own
+  transaction was still open. Enough parallel requests could hold every
+  connection in the pool and leave the app unresponsive until a restart; the
+  revocation now runs inside the same transaction.
+- Signing out every other device is recorded in the audit log with a count,
+  which it previously was not.
+- Current-password guesses on the profile and password forms are throttled
+  the same way sign-in is, so a stolen session cookie cannot be turned into an
+  account takeover by grinding a password.
+- A session id that is no longer valid reports that your session expired
+  rather than failing with a database error.
+- An email address is checked for a plausible shape, not just for an `@`.
+- Session times say UTC, and form errors are announced to screen readers.
+- The release commit no longer carries local scratch files.
+
 ## [0.9.0] - 2026-10-25
 
 Hardening: fewer ways to be surprised.

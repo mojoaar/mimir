@@ -82,7 +82,7 @@ export default async function ProfilePage({
                 </span>
                 <span className="text-xs text-[var(--text-muted)]">
                   {session.userAgent ?? 'unknown device'} · last seen{' '}
-                  {session.lastSeenAt.toISOString().slice(0, 16).replace('T', ' ')}
+                  {session.lastSeenAt.toISOString().slice(0, 16).replace('T', ' ')} UTC
                 </span>
               </span>
 

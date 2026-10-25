@@ -52,7 +52,7 @@ export function ProfileForm({ user }: { user: AuthUser }) {
         >
           {pending ? 'Saving…' : 'Save'}
         </button>
-        {state.error ? <span className="text-sm text-[var(--danger)]">{state.error}</span> : null}
+        {state.error ? <span role="alert" className="text-sm text-[var(--danger)]">{state.error}</span> : null}
         {state.ok ? <span className="text-sm text-[var(--text-muted)]">{state.ok}</span> : null}
       </div>
     </form>

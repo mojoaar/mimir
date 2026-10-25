@@ -3,6 +3,7 @@ import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
 import { createSession, resolveSession } from '@/lib/auth/session'
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
+import { resetLoginRateLimit } from '@/lib/auth/rate-limit'
 import { changePassword, listMySessions, revokeOwnSession, updateProfile } from './self'
 
 const CORRECT = 'correct-password'
@@ -11,6 +12,7 @@ const NEW_PASSWORD = 'a-brand-new-pass'
 let fixtures: Fixtures
 
 beforeEach(async () => {
+  resetLoginRateLimit()
   await resetFixtures()
   fixtures = await seedTwoUsersWithProjects()
 })
@@ -163,5 +165,31 @@ describe('your own sessions', () => {
       code: 'not_found',
     })
     expect(await resolveSession(bob.cookieValue)).not.toBeNull()
+  })
+})
+
+describe('guessing the current password', () => {
+  it('is refused once too many guesses have failed', async () => {
+    for (let i = 0; i < 5; i++) {
+      await expect(
+        changePassword(fixtures.alice, 'not-the-password', NEW_PASSWORD, 'session'),
+      ).rejects.toMatchObject({ code: 'invalid_params' })
+    }
+
+    await expect(
+      changePassword(fixtures.alice, CORRECT, NEW_PASSWORD, 'session'),
+    ).rejects.toThrow(/too many attempts/)
+  })
+})
+
+describe('the case of an email address', () => {
+  it('accepts a differently cased address and stores it in lower case', async () => {
+    const saved = await updateProfile(fixtures.alice, {
+      email: 'ALICE@example.test',
+      currentPassword: CORRECT,
+    })
+
+    expect(saved.email).toBe('alice@example.test')
+    expect(await emailOf(fixtures.alice)).toBe('alice@example.test')
   })
 })

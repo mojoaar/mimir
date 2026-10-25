@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 import type { PoolClient } from 'pg'
 import { sha256 } from '../crypto'
 import { withService } from '../db/tx'
+import { audit } from '../audit'
 import type { AuthUser } from './types'
 
 export { SESSION_COOKIE } from './cookie-name'
@@ -89,7 +90,8 @@ export async function revokeSession(cookieValue: string): Promise<void> {
 }
 
 /** Call inside the same transaction as disabling a user, or the disable is cosmetic. */
-export async function revokeAllSessions(userId: string, tx?: PoolClient): Promise<void> {  const run = (client: PoolClient) =>
+export async function revokeAllSessions(userId: string, tx?: PoolClient): Promise<void> {
+  const run = (client: PoolClient) =>
     client.query(`update sessions set revoked_at = now() where user_id = $1 and revoked_at is null`, [
       userId,
     ])
@@ -158,13 +160,47 @@ export async function revokeSessionById(userId: string, sessionId: string): Prom
   })
 }
 
-/** The "sign out everywhere else" verb; the current device survives. */
-export async function revokeOtherSessions(userId: string, exceptId: string): Promise<void> {
-  await withService((tx) =>
-    tx.query(
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * The "sign out everywhere else" verb; the current device survives.
+ *
+ * Pass `tx` when the caller is already inside a transaction: opening a second
+ * connection from inside one is how a handful of parallel password changes
+ * used to hold every pool slot and wedge the whole process.
+ */
+export async function revokeOtherSessions(
+  userId: string,
+  exceptId: string,
+  tx?: PoolClient,
+): Promise<number> {
+  if (!UUID.test(exceptId)) {
+    // A stale cookie has no id; revoking everything would sign the caller out
+    // of the browser they are using without telling them.
+    const expired = new Error('invalid_params: your session has expired; sign in again')
+    throw Object.assign(expired, { code: 'invalid_params' })
+  }
+
+  const run = async (client: PoolClient) => {
+    const { rowCount } = await client.query(
       `update sessions set revoked_at = now()
         where user_id = $1 and id <> $2 and revoked_at is null`,
       [userId, exceptId],
-    ),
+    )
+    return rowCount ?? 0
+  }
+
+  const revoked = tx ? await run(tx) : await withService(run)
+  await audit(
+    {
+      actorType: 'user',
+      actorId: userId,
+      action: 'auth.session_revoke',
+      targetType: 'user',
+      targetId: userId,
+      detail: { all: true, except: exceptId, revoked },
+    },
+    tx,
   )
+  return revoked
 }

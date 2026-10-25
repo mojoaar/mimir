@@ -1,8 +1,15 @@
 import { withUser } from '@/lib/db/tx'
 import { hashPassword, verifyPassword } from '@/lib/auth/password'
 import { MIN_PASSWORD_LENGTH } from '@/lib/auth/tokens'
-import { listSessions, revokeOtherSessions, revokeSessionById } from '@/lib/auth/session'
+import {
+  listSessions,
+  revokeOtherSessions,
+  revokeSessionById,
+} from '@/lib/auth/session'
+import { checkLoginRateLimit, clearLoginRateLimit, recordLoginFailure } from '@/lib/auth/rate-limit'
 import { audit } from '@/lib/audit'
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export type Profile = { id: string; email: string; name: string }
 
@@ -40,7 +47,7 @@ export async function updateProfile(userId: string, patch: ProfilePatch): Promis
   if (name !== undefined && (name === '' || name.length > 200)) {
     throw fail('invalid_params', 'a name is required and must be at most 200 characters')
   }
-  if (email !== undefined && (!email.includes('@') || email.length > 320)) {
+  if (email !== undefined && (!EMAIL.test(email) || email.length > 320)) {
     throw fail('invalid_params', 'that does not look like an email address')
   }
 
@@ -53,17 +60,24 @@ export async function updateProfile(userId: string, patch: ProfilePatch): Promis
     const row = current.rows[0]
     if (!row) throw fail('not_found', 'no such account')
 
-    const changesEmail = email !== undefined && email !== row.email.toLowerCase()
+    // A different address needs the password. A difference in case alone is the
+    // same address, so it is a plain rename and needs nothing.
+    const movesAddress = email !== undefined && email.toLowerCase() !== row.email.toLowerCase()
+    const changesEmail = email !== undefined && email !== row.email
 
-    // An email is the login key, so it is not changed without the password.
-    if (changesEmail) {
+    if (movesAddress) {
       if (!row.password_hash) {
         throw fail('invalid_params', 'you have not set a password yet; use a reset link first')
       }
+      await assertPasswordThrottle(row.email)
       const ok = patch.currentPassword
         ? await verifyPassword(row.password_hash, patch.currentPassword)
         : false
-      if (!ok) throw fail('invalid_params', 'your current password is wrong')
+      if (!ok) {
+        recordLoginFailure(row.email)
+        throw fail('invalid_params', 'your current password is wrong')
+      }
+      clearLoginRateLimit(row.email)
     }
 
     const changed: string[] = []
@@ -114,22 +128,29 @@ export async function changePassword(
   }
 
   await withUser(userId, async (client) => {
-    const found = await client.query<{ password_hash: string | null }>(
-      'select password_hash from users where id = $1',
+    const found = await client.query<{ email: string; password_hash: string | null }>(
+      'select email::text as email, password_hash from users where id = $1',
       [userId],
     )
     const hash = found.rows[0]?.password_hash
-    if (!hash) {
+    const email = found.rows[0]?.email
+    if (!hash || !email) {
       throw fail('invalid_params', 'you have not set a password yet; use a reset link')
     }
+    await assertPasswordThrottle(email)
     const ok = await verifyPassword(hash, current)
-    if (!ok) throw fail('invalid_params', 'your current password is wrong')
+    if (!ok) {
+      recordLoginFailure(email)
+      throw fail('invalid_params', 'your current password is wrong')
+    }
+    clearLoginRateLimit(email)
 
     await client.query('update users set password_hash = $2 where id = $1', [
       userId,
       await hashPassword(next),
     ])
-    await revokeOtherSessions(userId, currentSessionId)
+    // Same transaction: one connection, and the revocation cannot outlive a rollback.
+    await revokeOtherSessions(userId, currentSessionId, client)
     await audit(
       {
         actorType: 'user',
@@ -162,4 +183,16 @@ export async function revokeOwnSession(userId: string, sessionId: string): Promi
     targetType: 'session',
     targetId: sessionId,
   })
+}
+
+/**
+ * The change forms check a password just like the login form does, so they use
+ * the same bucket: someone holding a stolen cookie gets five guesses, not
+ * unlimited ones, and a restart does not hand them a fresh budget.
+ */
+async function assertPasswordThrottle(email: string): Promise<void> {
+  const limit = checkLoginRateLimit(email)
+  if (limit.allowed) return
+  const minutes = Math.max(1, Math.ceil(limit.retryAfter / 60))
+  throw fail('invalid_params', `too many attempts; try again in ${minutes} minutes`)
 }

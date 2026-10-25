@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
     mfaEnabled: false,
   },
   sessions: [] as unknown[],
+  profileCalls: [] as Record<string, unknown>[],
+  passwordCalls: 0,
 }))
 
 vi.mock('next/headers', () => ({
@@ -19,14 +21,21 @@ vi.mock('next/headers', () => ({
 vi.mock('@/lib/auth/context', () => ({ requireUser: async () => mocks.user }))
 vi.mock('@/lib/auth/session', () => ({ sessionIdFor: async () => 's1' }))
 vi.mock('@/lib/auth/cookie-name', () => ({ SESSION_COOKIE: 'mimir_session' }))
+vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
 vi.mock('@/lib/users/self', () => ({
   listMySessions: async () => mocks.sessions,
-  updateProfile: async () => mocks.user,
-  changePassword: async () => {},
+  updateProfile: async (_id: string, patch: Record<string, unknown>) => {
+    mocks.profileCalls.push(patch)
+    return mocks.user
+  },
+  changePassword: async () => {
+    mocks.passwordCalls += 1
+  },
   revokeOwnSession: async () => {},
 }))
 
 import ProfilePage from './page'
+import { changePasswordAction, updateProfileAction } from './actions'
 
 async function render() {
   return renderToStaticMarkup(
@@ -140,5 +149,53 @@ describe('the sessions list', () => {
     expect(html).toContain('value="s3"')
     expect(html).not.toContain('value="s1"')
     expect(html.match(/name="sessionId"/g)).toHaveLength(2)
+  })
+})
+
+describe('the profile action', () => {
+  function form(fields: Record<string, string>): FormData {
+    const data = new FormData()
+    for (const [key, value] of Object.entries(fields)) data.set(key, value)
+    return data
+  }
+
+  it('asks for the current password before moving the address', async () => {
+    mocks.profileCalls = []
+
+    const state = await updateProfileAction(
+      {},
+      form({ name: 'Alice', email: 'new@example.test', currentPassword: '' }),
+    )
+
+    expect(state.error).toContain('current password')
+    expect(mocks.profileCalls).toHaveLength(0)
+  })
+
+  it('passes the new address and the password that allows it', async () => {
+    mocks.profileCalls = []
+
+    const state = await updateProfileAction(
+      {},
+      form({ name: 'Alice', email: 'new@example.test', currentPassword: 'correct-password' }),
+    )
+
+    expect(state.ok).toBe('Saved.')
+    expect(mocks.profileCalls[0]).toMatchObject({
+      name: 'Alice',
+      email: 'new@example.test',
+      currentPassword: 'correct-password',
+    })
+  })
+
+  it('refuses a password change whose confirmation differs', async () => {
+    mocks.passwordCalls = 0
+
+    const state = await changePasswordAction(
+      {},
+      form({ current: 'old', new: 'a-brand-new-pass', confirm: 'a-brand-new-pas' }),
+    )
+
+    expect(state.error).toContain('do not match')
+    expect(mocks.passwordCalls).toBe(0)
   })
 })

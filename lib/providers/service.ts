@@ -37,7 +37,7 @@ export type ProviderSecret = {
   id: string
   baseUrl: string
   model: string
-  preset: string
+  preset: PresetId
   kind: ProviderKind
   dim: number | null
   apiKey: string | null
@@ -258,6 +258,19 @@ export async function setDefaultProvider(userId: string, id: string): Promise<vo
   })
 }
 
+/** Records the outcome of a connection probe. Scoped by user_id, so it cannot touch another user's row. */
+export async function recordVerification(userId: string, id: string, error: string | null): Promise<void> {
+  await withUser(userId, async (tx) => {
+    await tx.query(
+      `update providers
+          set last_verified_at = case when $3::text is null then now() else last_verified_at end,
+              last_error = $3
+        where id = $1 and user_id = $2`,
+      [id, userId, error],
+    )
+  })
+}
+
 /** Plaintext, for the provider client only. Never hand this to a page. */
 export async function getProviderSecret(userId: string, id: string): Promise<ProviderSecret> {
   const row = await withUser(userId, async (tx) => {
@@ -269,7 +282,8 @@ export async function getProviderSecret(userId: string, id: string): Promise<Pro
     id: row.id,
     baseUrl: row.base_url,
     model: row.model,
-    preset: row.preset,
+    // The column is text; every write path validates it against PRESETS.
+    preset: row.preset as PresetId,
     kind: row.kind,
     dim: row.dim,
     apiKey: row.api_key_enc ? decrypt(keyEncryptionKey(), row.api_key_enc) : null,

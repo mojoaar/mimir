@@ -3,6 +3,7 @@ import type { AuthUser } from '@/lib/auth/types'
 import { audit } from '@/lib/audit'
 import { getConfig } from '@/lib/config'
 import { toResponse } from './errors'
+import { blockedResponse, isRequestAllowed } from './allowlist'
 import { clientIp } from './ip'
 import { rejectOversized } from './limit'
 
@@ -20,6 +21,9 @@ export async function withAudit(
   action: string,
   run: (user: AuthUser) => Promise<Response>,
 ): Promise<Response> {
+  // Before authentication, so a blocked caller learns nothing about keys.
+  if (!(await isRequestAllowed(request))) return blockedResponse()
+
   const tooLarge = rejectOversized(request)
   if (tooLarge) return tooLarge
 

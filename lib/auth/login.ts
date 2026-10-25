@@ -1,5 +1,6 @@
 import { audit } from '../audit'
 import { withService } from '../db/tx'
+import { mfaEnabled, verifyMfaCode } from './mfa'
 import { verifyPassword, verifyPasswordForTiming } from './password'
 import { checkLoginRateLimit, clearLoginRateLimit, recordLoginFailure } from './rate-limit'
 import { createSession } from './session'
@@ -8,7 +9,15 @@ export { resetLoginRateLimit } from './rate-limit'
 
 export type LoginResult =
   | { ok: true; cookieValue: string }
+  | { ok: false; reason: 'invalid' | 'pending' | 'disabled' | 'locked' | 'mfa_required' }
+
+export type PasswordResult =
+  | { ok: true; userId: string; mfaRequired: boolean }
   | { ok: false; reason: 'invalid' | 'pending' | 'disabled' | 'locked' }
+
+export type MfaResult =
+  | { ok: true; cookieValue: string }
+  | { ok: false; reason: 'invalid_code' | 'replayed' | 'not_enrolled' }
 
 type UserRow = {
   id: string
@@ -21,12 +30,14 @@ type UserRow = {
 const MAX_FAILED_LOGINS = 5
 const LOCK_MINUTES = 15
 
+export type RequestMeta = { ip: string | null; userAgent?: string | null }
+
 /** One failure, one audit row, one counter increment. */
 async function fail(
   reason: 'invalid' | 'pending' | 'disabled' | 'locked',
   detail: Record<string, unknown>,
   meta: RequestMeta,
-): Promise<LoginResult> {
+): Promise<PasswordResult> {
   await audit({
     actorType: 'user',
     actorId: null,
@@ -38,13 +49,34 @@ async function fail(
   return { ok: false, reason }
 }
 
-export type RequestMeta = { ip: string | null; userAgent?: string | null }
+async function startSession(userId: string, meta: RequestMeta, detail?: Record<string, unknown>) {
+  const { cookieValue } = await createSession(userId, {
+    ip: meta.ip ?? undefined,
+    userAgent: meta.userAgent ?? undefined,
+  })
 
-export async function authenticate(
+  await audit({
+    actorType: 'user',
+    actorId: userId,
+    action: 'auth.login',
+    detail,
+    ip: meta.ip,
+    userAgent: meta.userAgent,
+  })
+
+  return { ok: true as const, cookieValue }
+}
+
+/**
+ * Step one: prove the password. No session is created here — an enrolled user
+ * still owes a code, and handing out a session first would make the second
+ * step decorative.
+ */
+export async function authenticatePassword(
   email: string,
   password: string,
   meta: RequestMeta,
-): Promise<LoginResult> {
+): Promise<PasswordResult> {
   const normalised = email.trim().toLowerCase()
   if (!checkLoginRateLimit(meta.ip, normalised).allowed) {
     return fail('locked', { email: normalised, source: 'rate_limit' }, meta)
@@ -109,18 +141,37 @@ export async function authenticate(
   )
   clearLoginRateLimit(meta.ip, normalised)
 
-  const { cookieValue } = await createSession(user.id, {
-    ip: meta.ip ?? undefined,
-    userAgent: meta.userAgent ?? undefined,
-  })
+  return { ok: true, userId: user.id, mfaRequired: await mfaEnabled(user.id) }
+}
 
-  await audit({
-    actorType: 'user',
-    actorId: user.id,
-    action: 'auth.login',
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  })
+/** Step two: the code, then the session. */export async function completeMfaLogin(
+  userId: string,
+  code: string,
+  meta: RequestMeta,
+): Promise<MfaResult> {
+  const checked = await verifyMfaCode(userId, code)
+  if (!checked.ok) return checked
 
-  return { ok: true, cookieValue }
+  return startSession(userId, meta, { mfa: true })
+}
+
+/** The session half of a successful login, for callers that split the steps. */
+export async function createLoginSession(
+  userId: string,
+  meta: RequestMeta,
+): Promise<{ ok: true; cookieValue: string }> {
+  return startSession(userId, meta)
+}
+
+/** Password only, for callers that do not want to know about MFA. */
+export async function authenticate(
+  email: string,
+  password: string,
+  meta: RequestMeta,
+): Promise<LoginResult> {
+  const result = await authenticatePassword(email, password, meta)
+  if (!result.ok) return result
+  if (result.mfaRequired) return { ok: false, reason: 'mfa_required' }
+
+  return startSession(result.userId, meta)
 }

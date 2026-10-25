@@ -37,6 +37,17 @@ export default async function SettingsPage() {
           .
         </p>
       </section>
+
+      <section className="space-y-2">
+        <h2 className="text-lg font-medium">Two-factor authentication</h2>
+        <p className="text-sm text-[var(--text-muted)]">
+          Add a code from an authenticator app to your password on the{' '}
+          <a href="/app/settings/mfa" className="underline">
+            security page
+          </a>
+          .
+        </p>
+      </section>
     </main>
   )
 }

@@ -17,13 +17,14 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 # pg_dump ships for operators and for the backup job that arrives in 0.3.0.
-RUN apk add --no-cache postgresql-client
+# The dump client major must match the server, or pg_dump refuses to run.
+RUN apk add --no-cache postgresql18-client
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
 # The migration runner reads these from the working directory at boot.
 COPY --from=build --chown=node:node /app/lib/db/migrations ./lib/db/migrations
-COPY --from=build --chown=node:node /app/scripts/restore.sh ./scripts/restore.sh
+COPY --from=build --chown=node:node /app/scripts/restore.sh /app/scripts/decrypt-backup.mjs ./scripts/
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \

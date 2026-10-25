@@ -10,9 +10,9 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.2.0` — boots from one container, authenticates a user, stores and retrieves memory over MCP and REST, learns a title and a summary for every memory with your own model, and searches by keyword and by meaning.
+`0.3.0` — boots from one container, authenticates a user, stores and retrieves memory over MCP and REST, learns a title and a summary for every memory with your own model, searches by keyword and by meaning, backs itself up on a schedule, and gives an admin users, MFA, an IP allowlist, an audit log and stats.
 
-Not yet: backups, MFA, the admin user and audit pages, a memory browser, i18n, the docs site, and importing an existing repository. The schema and seams for all of them are in place; see the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
+Not yet: a memory browser, i18n, the docs site, importing an existing repository, and Teams. The schema and seams for all of them are in place; see the [design](docs/superpowers/specs/2026-10-25-mimir-design.md).
 
 ## Quick start
 
@@ -32,6 +32,8 @@ MIMIR_APP_PASSWORD=...
 ```bash
 docker compose up -d
 ```
+
+An install created before 0.3.0 runs PostgreSQL 17. Moving it needs a dump from a 17 client (`pg_dump -Fc`) and a `pg_restore` into the 18 volume — the new image will not start on the old data directory. There is no automatic migration; a fresh volume with re-entered settings is the alternative.
 
 Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASSWORD`, then create an API key under **Settings**. Point an agent at `http://localhost:3000/mcp`:
 
@@ -90,6 +92,67 @@ ollama pull nomic-embed-text
 Changing the embedding model invalidates every stored vector, so **Admin → Settings → Re-embed everything** rebuilds the index. Search keeps working on keywords while it runs.
 
 For extraction, pick an instruct model. A reasoning model can spend its whole token budget thinking and reply with nothing, and Mimir will skip that memory rather than guess.
+
+## Backups
+
+Admin → Backups sets a target and a schedule. A run produces two encrypted
+artifacts: `mimir-YYYYMMDD-HHMMSS.dump.enc` (the whole database, `pg_dump -Fc`)
+and `settings-YYYYMMDD-HHMMSS.json.enc` (settings, project metadata and provider
+labels — never keys). Both are AES-256-GCM under a key derived from
+`MIMIR_SECRET`, uploaded, then read back: a run is only recorded as successful
+once every object reports the size that was uploaded. The newest N runs are kept
+(14 by default) and older artifacts under the prefix are pruned.
+
+Targets: any S3-compatible bucket (path-style supported for MinIO), or WebDAV —
+`https://webdav.pcloud.com` with a pCloud app password.
+
+Without `MIMIR_SECRET` a backup cannot be decrypted. Store it outside the
+machine that holds the backups; it is the whole recovery story.
+
+Restore is a command, not a button, because a restore over a live database
+deserves a human:
+
+```bash
+docker cp mimir-20261026-030000.dump.enc mimir-mimir-1:/tmp/
+docker compose exec mimir sh /app/scripts/restore.sh /tmp/mimir-20261026-030000.dump.enc --yes
+```
+
+`--clean` drops existing objects first. A plain `pg_dump` file works the same
+way. To inspect an artifact without touching a database:
+
+```bash
+node scripts/decrypt-backup.mjs mimir-20261026-030000.dump.enc out.dump
+pg_restore --list out.dump
+```
+
+## Accounts
+
+The first admin comes from `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASSWORD`, once,
+on an empty install. After that, Admin → Users creates, verifies, disables,
+re-roles, resets and deletes users.
+
+- An invited user sets a password at `/set-password/<token>` and stays `pending`
+  until an admin verifies them.
+- Disabling revokes every session and API key in the same transaction, so access
+  ends on the next request, not at the next login.
+- The last admin cannot be demoted, disabled or deleted, and nobody can disable
+  or delete themselves.
+- Two-factor is optional per user. Set `require_mfa` (Admin → Site) to force it;
+  the bootstrap admin is exempt, so a misconfigured install cannot lock its only
+  operator out. Admin → Users can reset a user's MFA, which is the recovery path
+  when email is not configured.
+- The IP allowlist (Admin → Site) takes CIDR blocks and applies to `/api/v1`,
+  `/mcp`, the login page and the app. `/health` stays open for monitors. With an
+  empty `MIMIR_TRUSTED_PROXIES` no client address can be read and a non-empty
+  allowlist denies everything — set the proxy's address range first.
+
+## Email
+
+Optional. Set a Resend key and a From address in Admin → Site's email settings;
+invites, password resets, MFA resets and backup failures are then emailed.
+Without it those links are shown to the admin to copy, which is the expected
+mode for a homelab. Resend requires a verified domain before it will send to
+anyone other than your own account address.
 
 ## Development
 

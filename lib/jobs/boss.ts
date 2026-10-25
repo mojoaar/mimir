@@ -1,7 +1,7 @@
 import { PgBoss } from 'pg-boss'
 import { getConfig } from '../config'
 
-export type JobName = 'extract' | 'backfill' | 'reembed'
+export type JobName = 'extract' | 'backfill' | 'reembed' | 'backup' | 'prune'
 
 // `short` keeps one queued job per singletonKey, which is what makes the
 // extract debounce work: the tenth write in a minute reuses the first job.
@@ -9,6 +9,8 @@ const POLICIES: Record<JobName, 'short' | 'standard'> = {
   extract: 'short',
   backfill: 'standard',
   reembed: 'standard',
+  backup: 'standard',
+  prune: 'standard',
 }
 
 const JOB_NAMES = Object.keys(POLICIES) as JobName[]
@@ -72,6 +74,16 @@ export async function startJobs(): Promise<void> {
     }
 
     jobs.boss = instance
+    // Imported lazily: the job module imports getBoss from this file.
+    const { scheduleBackups } = await import('./backup')
+    try {
+      await scheduleBackups()
+    } catch (error) {
+      // A rejected cron would otherwise abort startJobs and leave every job
+      // unscheduled, including the audit prune.
+      console.error(`mimir: could not schedule backups (${(error as Error).message})`)
+    }
+    await instance.schedule('prune', '15 3 * * *', {})
     process.once('SIGTERM', () => void stopJobs())
     process.once('SIGINT', () => void stopJobs())
   })()
@@ -98,6 +110,12 @@ export function getBoss(): PgBoss {
     throw error
   }
   return jobs.boss
+}
+
+/** Re-reads the backup schedule after settings change. A no-op when jobs are not running. */
+export async function rescheduleBackups(): Promise<void> {
+  const { scheduleBackups } = await import('./backup')
+  await scheduleBackups()
 }
 
 /** Returns null when the job was throttled away or the queue is not running. */

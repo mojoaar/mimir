@@ -1,6 +1,6 @@
 services:
   db:
-    image: pgvector/pgvector:pg17
+    image: pgvector/pgvector:pg18
     restart: unless-stopped
     environment:
       POSTGRES_USER: mimir_owner
@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: mimir
       MIMIR_APP_PASSWORD: ${MIMIR_APP_PASSWORD:?set MIMIR_APP_PASSWORD in .env}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
       - ./scripts/initdb/prod:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U mimir_owner -d mimir']
@@ -17,7 +17,7 @@ services:
       retries: 30
 
   mimir:
-    image: ghcr.io/mojoaar/mimir:0.2.0
+    image: ghcr.io/mojoaar/mimir:0.3.0
     build: .
     restart: unless-stopped
     ports:

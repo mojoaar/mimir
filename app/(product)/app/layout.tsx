@@ -44,6 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <header className="mb-8 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 text-sm">
         <nav className="flex gap-4">
           <Link href="/app">Projects</Link>
+          <Link href="/app/teams">Teams</Link>
           <Link href="/app/settings">Settings</Link>
           <Link href="/app/settings/providers">Providers</Link>
         </nav>

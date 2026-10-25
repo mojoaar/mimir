@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { withAudit } from '@/lib/http/audited'
 import { resolveProject } from '@/lib/projects/service'
-import { ingestFiles, type IngestFile } from '@/lib/memory/ingest'
+import { MAX_INGEST_BYTES, ingestFiles, type IngestFile } from '@/lib/memory/ingest'
 
 type Params = { params: Promise<{ slug: string }> }
 
@@ -23,5 +23,5 @@ export async function POST(request: NextRequest, { params }: Params) {
         prefix: typeof input.prefix === 'string' ? input.prefix : undefined,
       }),
     )
-  })
+  }, { maxBytes: MAX_INGEST_BYTES + 4096 })
 }

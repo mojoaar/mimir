@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Public surface: the parts a stranger meets first.
 
+### Fixed (review pass)
+
+- The marketing pages emit absolute canonical and `hreflang` URLs and a link-preview image; the docs no longer advertise Danish or German alternates that do not exist.
+- An ingest batch over 1 MiB is accepted up to its documented 2 MB, and one oversized or malformed file refuses the whole batch instead of writing the rest.
+- The OpenCode plugin reads the git remote under ESM, and its docs no longer claim a session-start digest it does not do.
+- The OpenCode plugin gains a build and a guarded publish step in the release workflow, so the package can actually be installed.
+- The login page is marked `noindex`.
+
 ### Added
 
 - The marketing page is localised: English at `/`, Danish at `/da`, German at `/de`, with the reader's choice remembered.

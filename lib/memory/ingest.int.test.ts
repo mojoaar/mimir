@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { Fixtures, resetFixtures, seedTwoUsersWithProjects } from '../db/seed'
-import { ingestFiles, MAX_INGEST_BYTES, MAX_INGEST_FILES } from './ingest'
+import { ingestFiles, MAX_INGEST_BYTES, MAX_INGEST_FILES, type IngestFile } from './ingest'
 import { readMemory } from './service'
 import { searchMemories } from './search'
 
@@ -62,6 +62,28 @@ describe('ingestFiles', () => {
         userId: f.alice,
         projectId: f.aliceProjectId,
         files: [file('big/one', big), file('big/two', big)],
+      }),
+    ).rejects.toMatchObject({ code: 'invalid_params' })
+  })
+
+  it('refuses the whole batch when one file is over the per-memory limit', async () => {
+    await expect(
+      ingestFiles({
+        userId: f.alice,
+        projectId: f.aliceProjectId,
+        files: [file('big/one', 'x'.repeat(300 * 1024)), file('small/two', 'ok')],
+      }),
+    ).rejects.toMatchObject({ code: 'invalid_params' })
+
+    expect(await readMemory(f.alice, f.aliceProjectId, 'import/small/two')).toBeNull()
+  })
+
+  it('refuses a file without a string body instead of writing part of the batch', async () => {
+    await expect(
+      ingestFiles({
+        userId: f.alice,
+        projectId: f.aliceProjectId,
+        files: [{ path: 'no-body' } as unknown as IngestFile],
       }),
     ).rejects.toMatchObject({ code: 'invalid_params' })
   })

@@ -54,7 +54,9 @@ export default async function AgentPage({ params }: { params: Promise<{ agent: s
 
       {doc.tier === 1 ? (
         <Callout kind="tip">
-          {doc.name} also supports a session-start hook, so memory arrives before the first prompt instead of after it.
+          {doc.id === 'claude-code'
+            ? 'Claude Code also supports a session-start hook, so memory arrives before the first prompt instead of after it.'
+            : null}
           See the hooks directory.
         </Callout>
       ) : (

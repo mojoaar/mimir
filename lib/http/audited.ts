@@ -20,11 +20,12 @@ export async function withAudit(
   request: NextRequest,
   action: string,
   run: (user: AuthUser) => Promise<Response>,
+  options: { maxBytes?: number } = {},
 ): Promise<Response> {
   // Before authentication, so a blocked caller learns nothing about keys.
   if (!(await isRequestAllowed(request))) return blockedResponse()
 
-  const tooLarge = rejectOversized(request)
+  const tooLarge = rejectOversized(request, options.maxBytes)
   if (tooLarge) return tooLarge
 
   let user: AuthUser

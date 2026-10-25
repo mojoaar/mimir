@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 export type CallResult = { ok: true; result: unknown } | { ok: false; error: string }
 
 export type CallOptions = {

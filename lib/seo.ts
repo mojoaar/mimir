@@ -16,6 +16,8 @@ export async function publicMetadata(input: {
   title: string
   description: string
   path: string
+  /** Set on pages that really exist in every locale (marketing); docs are English only. */
+  locales?: boolean
 }): Promise<Metadata> {
   const [origin, settings] = await Promise.all([canonicalFor('/'), getSiteSettings()])
   const canonical = await canonicalFor(input.path)
@@ -30,7 +32,7 @@ export async function publicMetadata(input: {
     metadataBase: new URL(origin),
     title: input.title,
     description: input.description,
-    alternates: { canonical, languages },
+    alternates: input.locales ? { canonical, languages } : { canonical },
     openGraph: {
       type: 'website',
       siteName: settings.siteName,

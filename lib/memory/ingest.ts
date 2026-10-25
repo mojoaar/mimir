@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer'
-import { InvalidInput, normalisePath } from './path'
+import { InvalidInput, MAX_BODY_BYTES, normalisePath } from './path'
 import { writeMemory } from './service'
 
 export const MAX_INGEST_FILES = 100
@@ -30,7 +30,17 @@ export async function ingestFiles(input: IngestInput): Promise<IngestResult> {
   }
 
   let bytes = 0
-  for (const file of files) bytes += Buffer.byteLength(file.body)
+  for (const file of files) {
+    const entry = file as Partial<IngestFile> | null | undefined
+    if (!entry || typeof entry.path !== 'string' || typeof entry.body !== 'string') {
+      throw new InvalidInput('every file needs a string path and a string body')
+    }
+    const size = Buffer.byteLength(entry.body)
+    if (size > MAX_BODY_BYTES) {
+      throw new InvalidInput(`"${entry.path}" is ${size} bytes; the limit is ${MAX_BODY_BYTES}`)
+    }
+    bytes += size
+  }
   if (bytes > MAX_INGEST_BYTES) {
     throw new InvalidInput(`a batch may hold at most ${MAX_INGEST_BYTES} bytes`)
   }

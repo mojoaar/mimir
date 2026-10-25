@@ -1,26 +1,49 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getSiteSettings } from '@/lib/settings/site';
-import { isLocale, localeAlternates, t, type Locale } from '@/lib/i18n';
+import { getSiteSettings, getPublicUrl } from '@/lib/settings/site';
+import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i18n';
+import { connection } from 'next/server';
 import { ThemeSwitcher } from '@/app/theme-switcher';
 import { THEME_COOKIE, parseTheme } from '@/lib/theme';
 import { cookies } from 'next/headers';
+
+export const instant = false;
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  await connection();
   const { locale: raw } = await params;
   const locale: Locale = isLocale(raw) ? raw : 'en';
-  const site = await getSiteSettings();
+  const [site, origin] = await Promise.all([getSiteSettings(), getPublicUrl()]);
+  const base = origin.replace(/\/+$/, '');
+  const path = withLocale('/', locale);
   const title = t(locale, 'hero.title');
   const description = t(locale, 'hero.subtitle');
   return {
+    metadataBase: new URL(base),
     title,
     description,
-    alternates: { canonical: localeAlternates('/')[locale] ?? '/', languages: localeAlternates('/') },
-    openGraph: { title: `${site.siteName} — ${title}`, description, type: 'website' },
+    alternates: {
+      canonical: `${base}${path === '/' ? '' : path}`,
+      languages: Object.fromEntries(
+        Object.entries(localeAlternates('/')).map(([key, value]) => [
+          key,
+          `${base}${value === '/' ? '' : value}`,
+        ]),
+      ),
+    },
+    openGraph: {
+      type: 'website',
+      siteName: site.siteName,
+      title: `${site.siteName} — ${title}`,
+      description,
+      url: `${base}${path === '/' ? '' : path}`,
+      images: [{ url: `${base}/opengraph-image`, width: 1200, height: 630 }],
+    },
+    twitter: { card: 'summary_large_image' },
   };
 }
 

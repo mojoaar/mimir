@@ -43,7 +43,7 @@ export const AGENTS: AgentDoc[] = [
         2,
       ),
     notes: [
-      'The plugin package adds a session-start digest automatically; the MCP config above is enough to use the tools by hand.',
+      'The plugin package registers mimir_digest and mimir_remember; ask the agent to call mimir_digest first, or use the MCP config above by hand.',
       'Set MIMIR_TOKEN in your shell before starting OpenCode.',
     ],
   },

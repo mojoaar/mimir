@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { callTool } from '../src/client'
+import { callTool, detectRepo } from '../src/client'
 
 function response(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -67,5 +67,13 @@ describe('callTool', () => {
     })
 
     expect(result).toEqual({ ok: false, error: 'boom' })
+  })
+})
+
+describe('detectRepo', () => {
+  it('reads the git remote under a real ESM import, not a require()', () => {
+    // The package ships as ESM; a require() inside it returns null when OpenCode loads it.
+    const repo = detectRepo(process.cwd())
+    expect(repo).toMatch(/mojoaar\/mimir|^local:/)
   })
 })

@@ -250,7 +250,7 @@ export async function resetMfaForUser(actorId: string, userId: string): Promise<
   await withAdmin(async (client) => {
     await target(client, userId)
     await client.query(
-      'update users set totp_secret_enc = null, totp_last_step = null where id = $1',
+      'update users set totp_secret_enc = null, totp_pending_enc = null, totp_last_step = null where id = $1',
       [userId],
     )
     await revokeAllSessions(userId, client)

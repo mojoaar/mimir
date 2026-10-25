@@ -27,6 +27,26 @@ describe('loadConfig', () => {
       .toThrow(/MIMIR_TRUSTED_PROXIES/)
   })
 
+  it('accepts an ipv6 cidr block as a trusted proxy', () => {
+    expect(loadConfig({ ...base, MIMIR_TRUSTED_PROXIES: '2001:db8::/32' }).trustedProxies)
+      .toEqual(['2001:db8::/32'])
+  })
+
+  it('accepts a bare ipv6 address as a trusted proxy', () => {
+    expect(loadConfig({ ...base, MIMIR_TRUSTED_PROXIES: 'fd00::1' }).trustedProxies)
+      .toEqual(['fd00::1'])
+  })
+
+  it('rejects an ipv6 prefix longer than 128', () => {
+    expect(() => loadConfig({ ...base, MIMIR_TRUSTED_PROXIES: '::1/129' }))
+      .toThrow(/MIMIR_TRUSTED_PROXIES/)
+  })
+
+  it('rejects a non-numeric ipv6 prefix', () => {
+    expect(() => loadConfig({ ...base, MIMIR_TRUSTED_PROXIES: '2001:db8::/abc' }))
+      .toThrow(/MIMIR_TRUSTED_PROXIES/)
+  })
+
   it('defaults trusted proxies to empty', () => {
     expect(loadConfig(base).trustedProxies).toEqual([])
   })

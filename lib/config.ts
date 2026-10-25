@@ -36,15 +36,13 @@ function parseTrustedProxies(raw: string | undefined): string[] {
     .filter((entry) => entry !== '')
     .map((entry) => {
       if (isIP(entry)) return entry
-      const cidr = /^(\d{1,3}(?:\.\d{1,3}){3})\/(\d{1,2})$/.exec(entry)
-      const octets = (cidr?.[1] ?? '').split('.').map(Number)
-      const prefix = Number(cidr?.[2])
-      const validV4 =
-        octets.length === 4 &&
-        octets.every((octet) => octet <= 255) &&
-        prefix >= 0 &&
-        prefix <= 32
-      if (validV4) return entry
+      const slash = entry.lastIndexOf('/')
+      const host = slash > 0 ? entry.slice(0, slash) : ''
+      const prefixText = slash > 0 ? entry.slice(slash + 1) : ''
+      const family = isIP(host)
+      const max = family === 4 ? 32 : family === 6 ? 128 : -1
+      const prefix = Number(prefixText)
+      if (max > 0 && /^\d{1,3}$/.test(prefixText) && prefix <= max) return entry
       throw new ConfigError(
         `MIMIR_TRUSTED_PROXIES contains "${entry}", which is not an IP address or CIDR block.`
       )

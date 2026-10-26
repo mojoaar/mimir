@@ -11,6 +11,7 @@ import {
   deleteProvider,
   listProviders,
   setDefaultProvider,
+  setProviderPrices,
 } from '@/lib/providers/service'
 import { verifyProvider } from '@/lib/providers/verify'
 
@@ -72,6 +73,37 @@ export async function createProviderAction(
       dim: kind === 'embedding' ? preset.defaultDim : undefined,
       isDefault,
     })
+  } catch (error) {
+    return { error: messageOf(error, t, t('app.providers.saveFailed')) }
+  }
+
+  revalidatePath(PATH)
+  return { ok: true }
+}
+
+export async function savePricesAction(
+  _prev: ProviderFormState,
+  formData: FormData,
+): Promise<ProviderFormState> {
+  const user = await requireUser()
+  const t = await translator()
+  const id = String(formData.get('id') ?? '')
+  if (!id) return { error: t('app.error.generic') }
+
+  const read = (name: string): number | null | undefined => {
+    const raw = String(formData.get(name) ?? '').trim()
+    if (raw === '') return null
+    const value = Number(raw)
+    return Number.isFinite(value) && value >= 0 ? value : undefined
+  }
+  const input = read('inputPrice')
+  const output = read('outputPrice')
+  if (input === undefined || output === undefined) {
+    return { error: t('app.providers.priceInvalid') }
+  }
+
+  try {
+    await setProviderPrices(user.id, id, { input, output })
   } catch (error) {
     return { error: messageOf(error, t, t('app.providers.saveFailed')) }
   }

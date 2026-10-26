@@ -15,6 +15,9 @@ export type ProviderSummary = {
   baseUrl: string
   model: string
   dim: number | null
+  /** USD per million tokens. Null means unpriced: the call is still counted. */
+  inputPrice: number | null
+  outputPrice: number | null
   hasKey: boolean
   keyHint: string | null
   isDefault: boolean
@@ -41,6 +44,8 @@ export type ProviderSecret = {
   preset: PresetId
   kind: ProviderKind
   dim: number | null
+  inputPrice: number | null
+  outputPrice: number | null
   apiKey: string | null
 }
 
@@ -52,6 +57,8 @@ type Row = {
   base_url: string
   model: string
   dim: number | null
+  input_price: string | null
+  output_price: string | null
   api_key_hint: string | null
   api_key_enc: Buffer | null
   is_default: boolean
@@ -60,6 +67,11 @@ type Row = {
 }
 
 const KEY_INFO = 'mimir/provider-key'
+
+/** numeric arrives as a string from pg; the rest of the app wants a number. */
+function money(value: string | null): number | null {
+  return value === null ? null : Number(value)
+}
 
 function keyEncryptionKey(): Buffer {
   return deriveKey(getConfig().secret, KEY_INFO)
@@ -74,6 +86,8 @@ function toSummary(row: Row): ProviderSummary {
     baseUrl: row.base_url,
     model: row.model,
     dim: row.dim,
+    inputPrice: money(row.input_price),
+    outputPrice: money(row.output_price),
     hasKey: row.api_key_enc !== null,
     keyHint: row.api_key_hint,
     isDefault: row.is_default,
@@ -119,6 +133,9 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
   }
   const dim = input.kind === 'embedding' ? (input.dim ?? preset.defaultDim ?? null) : null
   const apiKey = input.apiKey?.trim() ? input.apiKey.trim() : null
+  // The provider starts with its list price; an admin can correct it later and
+  // the cost of calls already made stays as it was.
+  const price = preset.models?.[input.kind]?.find((m) => m.id === input.model)?.price ?? null
 
   const row = await withUser(input.userId, async (tx) => {
     if (input.isDefault) {
@@ -129,8 +146,9 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
     }
     const { rows } = await tx.query<Row>(
       `insert into providers
-         (user_id, kind, preset, label, base_url, model, api_key_enc, api_key_hint, dim, is_default)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         (user_id, kind, preset, label, base_url, model, api_key_enc, api_key_hint, dim, is_default,
+          input_price, output_price)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        returning *`,
       [
         input.userId,
@@ -143,6 +161,8 @@ export async function createProvider(input: ProviderInput): Promise<ProviderSumm
         apiKey ? hintFor(apiKey) : null,
         dim,
         input.isDefault ?? false,
+        price?.input ?? null,
+        price?.output ?? null,
       ],
     )
     return rows[0] as Row
@@ -217,6 +237,39 @@ export async function setDefaultProvider(userId: string, id: string): Promise<vo
   })
 }
 
+/** The only edit path a saved provider has, so an unpriced one can be filled in. */
+export async function setProviderPrices(
+  userId: string,
+  id: string,
+  price: { input: number | null; output: number | null },
+): Promise<void> {
+  for (const value of [price.input, price.output]) {
+    if (value !== null && (!Number.isFinite(value) || value < 0)) {
+      throw invalid('a price must be zero or more')
+    }
+  }
+
+  const changed = await withUser(userId, async (tx) => {
+    const { rows } = await tx.query<{ preset: string; model: string }>(
+      `update providers set input_price = $3, output_price = $4
+        where id = $1 and user_id = $2
+        returning preset, model`,
+      [id, userId, price.input, price.output],
+    )
+    return rows[0] ?? null
+  })
+  if (!changed) throw notFound()
+
+  await audit({
+    actorType: 'user',
+    actorId: userId,
+    action: 'provider.prices',
+    targetType: 'provider',
+    targetId: id,
+    detail: { preset: changed.preset, model: changed.model, ...price },
+  })
+}
+
 /** Records the outcome of a connection probe. Scoped by user_id, so it cannot touch another user's row. */
 export async function recordVerification(userId: string, id: string, error: string | null): Promise<void> {
   await withUser(userId, async (tx) => {
@@ -245,6 +298,8 @@ export async function getProviderSecret(userId: string, id: string): Promise<Pro
     preset: row.preset as PresetId,
     kind: row.kind,
     dim: row.dim,
+    inputPrice: money(row.input_price),
+    outputPrice: money(row.output_price),
     apiKey: row.api_key_enc ? decrypt(keyEncryptionKey(), row.api_key_enc) : null,
   }
 }

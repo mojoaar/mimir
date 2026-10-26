@@ -37,6 +37,8 @@ describe('providers page', () => {
         baseUrl: 'https://api.deepseek.com',
         model: 'deepseek-chat',
         dim: null,
+        inputPrice: 0.15,
+        outputPrice: 0.6,
         hasKey: true,
         keyHint: '********1234',
         isDefault: true,
@@ -50,6 +52,10 @@ describe('providers page', () => {
     expect(html).toContain('work')
     expect(html).toContain('********1234')
     expect(html).not.toContain('sk-')
+    // The price the provider started with can be corrected in place.
+    expect(html).toContain('name="inputPrice"')
+    expect(html).toContain('name="outputPrice"')
+    expect(html).toContain('value="0.15"')
   })
 
   it('offers the preset models in a dropdown', async () => {

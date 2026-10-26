@@ -1,5 +1,11 @@
 import { beforeAll, expect, test } from 'vitest'
-import { createProvider, deleteProvider, getProviderSecret, listProviders } from './service'
+import {
+  createProvider,
+  deleteProvider,
+  getProviderSecret,
+  listProviders,
+  setProviderPrices,
+} from './service'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '../db/seed'
 import { adminPool } from '../db/pool'
 
@@ -144,4 +150,36 @@ test('keeps the last four characters and hides the rest', async () => {
 
   expect(created.keyHint?.endsWith('1234')).toBe(true)
   expect(created.keyHint).not.toContain('sk-abcdefgh')
+})
+
+test('starts at the preset price and can be corrected afterwards', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'embedding',
+    preset: 'octen',
+    label: 'emb',
+    model: 'octen-embedding-4b',
+  })
+  expect(created.inputPrice).toBe(0.04)
+  expect(created.outputPrice).toBeNull()
+
+  await setProviderPrices(fixtures.alice, created.id, { input: 0.05, output: null })
+
+  const secret = await getProviderSecret(fixtures.alice, created.id)
+  expect(secret.inputPrice).toBe(0.05)
+})
+
+test('leaves a provider without a list price unpriced, and refuses a negative one', async () => {
+  const created = await createProvider({
+    userId: fixtures.alice,
+    kind: 'embedding',
+    preset: 'ollama',
+    label: 'local',
+    model: 'nomic-embed-text',
+  })
+  expect(created.inputPrice).toBeNull()
+
+  await expect(
+    setProviderPrices(fixtures.alice, created.id, { input: -1, output: null }),
+  ).rejects.toMatchObject({ code: 'invalid_params' })
 })

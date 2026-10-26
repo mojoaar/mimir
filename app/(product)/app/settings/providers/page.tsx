@@ -3,6 +3,7 @@ import { translator } from '@/lib/i18n/request'
 import { availableModels } from '@/lib/providers/models'
 import { PRESETS, type PresetId, type PresetModel, type ProviderKind } from '@/lib/providers/presets'
 import { listProviders, type ProviderSummary } from '@/lib/providers/service'
+import { PriceForm } from './price-form'
 import { ProviderForm } from './provider-form'
 import { deleteProviderAction, setDefaultAction, verifyProviderAction } from './actions'
 
@@ -15,7 +16,17 @@ const secondary =
 
 type Translate = (key: string, vars?: Record<string, string | number>) => string
 
-function Card({ provider, t }: { provider: ProviderSummary; t: Translate }) {
+type PriceLabels = { in: string; out: string; save: string; saved: string; invalid: string }
+
+function Card({
+  provider,
+  t,
+  priceLabels,
+}: {
+  provider: ProviderSummary
+  t: Translate
+  priceLabels: PriceLabels
+}) {
   const verified = provider.lastVerifiedAt
     ? t('app.providers.tested', {
         date: new Date(provider.lastVerifiedAt).toLocaleDateString(),
@@ -52,6 +63,14 @@ function Card({ provider, t }: { provider: ProviderSummary; t: Translate }) {
         </p>
       )}
 
+      <PriceForm
+        id={provider.id}
+        kind={provider.kind}
+        inputPrice={provider.inputPrice}
+        outputPrice={provider.outputPrice}
+        labels={priceLabels}
+      />
+
       <div className="flex flex-wrap items-center gap-2">
         <form action={verifyProviderAction}>
           <input type="hidden" name="id" value={provider.id} />
@@ -83,11 +102,13 @@ function Section({
   note,
   providers,
   t,
+  priceLabels,
 }: {
   title: string
   note?: string
   providers: ProviderSummary[]
   t: Translate
+  priceLabels: PriceLabels
 }) {
   return (
     <section className="space-y-3">
@@ -98,7 +119,7 @@ function Section({
       ) : (
         <ul className="space-y-2">
           {providers.map((p) => (
-            <Card key={p.id} provider={p} t={t} />
+            <Card key={p.id} provider={p} t={t} priceLabels={priceLabels} />
           ))}
         </ul>
       )}
@@ -109,6 +130,14 @@ function Section({
 export default async function ProvidersPage() {
   const user = await requireUser()
   const t = await translator()
+  const priceLabels: PriceLabels = {
+    in: t('app.providers.priceIn'),
+    out: t('app.providers.priceOut'),
+    save: t('app.providers.priceSave'),
+    saved: t('app.providers.priceSaved'),
+    invalid: t('app.providers.priceInvalid'),
+  }
+
   const [providers, models] = await Promise.all([
     listProviders(user.id),
     Promise.all(
@@ -140,6 +169,7 @@ export default async function ProvidersPage() {
         note={t('app.providers.llmNote')}
         providers={providers.filter((p) => p.kind === 'llm')}
         t={t}
+        priceLabels={priceLabels}
       />
 
       <Section
@@ -147,6 +177,7 @@ export default async function ProvidersPage() {
         note={t('app.providers.embeddingNote')}
         providers={providers.filter((p) => p.kind === 'embedding')}
         t={t}
+        priceLabels={priceLabels}
       />
 
       <section className="space-y-3">

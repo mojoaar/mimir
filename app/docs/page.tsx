@@ -35,6 +35,13 @@ export default function DocsIndex() {
           straight from your install to the provider you chose, with your key.
         </P>
 
+        <H2>Why “Mimir”</H2>
+        <P>
+          Mímir was the Norse god whose well held wisdom and memory; Odin traded an eye for a single draught from it.
+          The name is the same word as <em>memory</em> and <em>remember</em> — and a memory worth an eye is the right
+          standard for one your agents drink from. The mark is that eye in the well, with an M in the pupil.
+        </P>
+
         <H2>The loop it fits into</H2>
         <Code language="text">{`memory_digest  what do I already know about this repo?
 memory_search  find the memory about token rotation

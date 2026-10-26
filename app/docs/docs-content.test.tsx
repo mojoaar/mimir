@@ -11,6 +11,7 @@ import BackupsPage from './backups/page'
 import ChangelogPage from './changelog/page'
 import HowItWorksPage from './how-it-works/page'
 import ProvidersPage from './providers/page'
+import DocsIndex from './page'
 import McpPage from './mcp/page'
 import SearchPage from './search/page'
 import SelfHostingPage from './self-hosting/page'
@@ -126,5 +127,15 @@ describe('the explanation pages', () => {
     }
     expect(html).toContain('vector(768)')
     expect(html).toContain('codestral-embed')
+  })
+})
+
+describe('the name', () => {
+  it('explains where it comes from on the overview', () => {
+    const html = renderToStaticMarkup(DocsIndex())
+
+    expect(html).toContain('Mímir')
+    expect(html).toContain('well')
+    expect(html).toContain('traded an eye')
   })
 })

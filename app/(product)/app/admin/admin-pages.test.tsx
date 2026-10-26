@@ -37,6 +37,26 @@ vi.mock('@/lib/db/tx', () => ({
     }),
 }))
 
+vi.mock('@/lib/usage/service', () => ({
+  spend: async () => ({ llmMicros: 300, embeddingMicros: 40, calls: 4, unpriced: 1 }),
+  daily: async () => [{ day: '2026-10-25', micros: 340 }],
+  hourly: async () => [{ hour: '2026-10-25T10:00', calls: 2 }],
+  breakdown: async () => [
+    { preset: 'deepseek', model: 'deepseek-flash', kind: 'llm', calls: 3, micros: 300 },
+  ],
+  people: async () => [{ email: 'alice@example.test', calls: 4, micros: 340 }],
+  failures: async () => [
+    {
+      at: '2026-10-25T10:00:00.000Z',
+      preset: 'deepseek',
+      model: 'deepseek-flash',
+      purpose: 'extract',
+      status: 500,
+      email: null,
+    },
+  ],
+}))
+
 vi.mock('@/lib/audit/query', () => ({
   listAudit: async () => ({ total: 0, rows: [] }),
 }))
@@ -75,6 +95,7 @@ vi.mock('@/lib/jobs/boss', () => ({
 
 import AdminLayout from './layout'
 import AdminOverviewPage from './page'
+import UsagePage from './usage/page'
 import AuditPage from './audit/page'
 import BackupsPage from './backups/page'
 import SiteSettingsPage from './settings/site/page'
@@ -88,6 +109,17 @@ describe('the admin nav', () => {
     expect(html).toContain('href="/app/admin/users"')
     expect(html).toContain('href="/app/admin/audit"')
     expect(html).toContain('rounded-md border border-[var(--border)]')
+  })
+})
+
+describe('the usage page', () => {
+  it('shows what the month cost, by model and by person', async () => {
+    const html = renderToStaticMarkup(await UsagePage())
+
+    expect(html).toContain('$0.0003')
+    expect(html).toContain('deepseek-flash')
+    expect(html).toContain('alice@example.test')
+    expect(html).toContain('500')
   })
 })
 

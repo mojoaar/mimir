@@ -37,6 +37,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/app/admin/settings/site" className={button}>
           {t('app.admin.nav.site')}
         </Link>
+        <Link href="/app/admin/usage" className={button}>
+          {t('app.admin.nav.usage')}
+        </Link>
       </nav>
       {children}
     </div>

@@ -17,6 +17,7 @@ Pick the model, not the name.
 
 - The model field in **Settings → Providers** is a dropdown of the models the chosen provider offers, not a text field: DeepSeek's two current models, the live OpenCode catalogue (cached for an hour), and Octen's three. A preset with no catalogue, such as Ollama or an OpenAI-compatible host, keeps the text field.
 - A preset only offers the kinds it supports, so DeepSeek and Octen show their kind as text instead of a dropdown with one real choice.
+- The footer credits the author with a link to his site, opens GitHub and Docs in a new tab, and no longer says MIT.
 
 ### Fixed
 

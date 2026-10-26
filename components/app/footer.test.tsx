@@ -34,12 +34,25 @@ describe('the footer', () => {
     const html = renderToStaticMarkup(<AppFooter />)
 
     expect(html).toContain('Crafted with')
+    expect(html).toContain('href="https://johansen.foo"')
     expect(html).toContain('Morten Johansen')
     expect(html).toContain('https://github.com/mojoaar/mimir')
     expect(html).toContain('href="/docs"')
-    expect(html).toContain('MIT')
+    expect(html).not.toContain('MIT')
     expect(html).toContain(`v${pkg.version}`)
     expect(html).toContain(`© ${new Date().getFullYear()}`)
+  })
+
+  it('sends the off-site links to a new tab', () => {
+    const html = renderToStaticMarkup(<AppFooter />)
+
+    const tags = html.match(/<a\b[^>]*>/g) ?? []
+    for (const href of ['https://johansen.foo', 'https://github.com/mojoaar/mimir', '/docs']) {
+      const tag = tags.find((candidate) => candidate.includes(`href="${href}"`))
+      expect(tag).toContain('target="_blank"')
+      expect(tag).toContain('rel="noreferrer"')
+    }
+    expect(tags).toHaveLength(3)
   })
 
   it('shows the same version the package carries, not a copy', () => {

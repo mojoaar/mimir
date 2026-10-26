@@ -1,4 +1,4 @@
-import { PRESETS, type PresetId, type PresetModel } from './presets'
+import { PRESETS, type PresetId, type PresetModel, type ProviderKind } from './presets'
 
 const REFRESH_SECONDS = 3600
 
@@ -10,10 +10,12 @@ const REFRESH_SECONDS = 3600
  */
 export async function availableModels(
   presetId: PresetId,
+  kind: ProviderKind,
   deps: { fetch?: typeof fetch } = {},
 ): Promise<PresetModel[]> {
   const preset = PRESETS[presetId]
-  if (preset.models) return preset.models
+  const fixed = preset.models?.[kind]
+  if (fixed) return fixed
   if (!preset.modelsUrl) return []
 
   const doFetch = deps.fetch ?? fetch

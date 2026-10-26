@@ -20,6 +20,12 @@ export type EmbedDeps = ClientDeps & {
 /** The schema stores vector(768), so that is what a provider must answer with. */
 const DEFAULT_DIMENSION = 768
 
+/**
+ * OpenAI calls the field `dimensions`; Mistral's embedding model calls it
+ * `output_dimension`. Both truncate to the first N values.
+ */
+const DIMENSION_FIELD: Partial<Record<PresetId, string>> = { mistral: 'output_dimension' }
+
 export class ProviderError extends Error {
   readonly code = 'provider_error'
   readonly status?: number
@@ -103,7 +109,8 @@ export async function embed(
     return vectors(rows.map((row) => row.embedding), input.length)
   }
 
-  const body = { model: target.model, input, dimensions: dimension }
+  const dimensionField = DIMENSION_FIELD[target.preset] ?? 'dimensions'
+  const body = { model: target.model, input, [dimensionField]: dimension }
   type EmbedResponse = { data?: { embedding?: number[] }[] }
   let json: EmbedResponse
   try {

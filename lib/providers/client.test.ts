@@ -63,6 +63,22 @@ test('an openai-compatible call asks for the stored dimension', async () => {
   expect(body).toMatchObject({ model: 'deepseek-chat', input: ['a'], dimensions: 768 })
 })
 
+test('mistral names the dimension field output_dimension', async () => {
+  let body: unknown
+  const fake = (async (_url: string, init: RequestInit) => {
+    body = JSON.parse(String(init.body))
+    return new Response(JSON.stringify({ data: [{ embedding: [1] }] }))
+  }) as unknown as typeof fetch
+
+  await embed({ ...target, preset: 'mistral', model: 'codestral-embed' }, ['a'], {
+    fetch: fake,
+    dimension: 768,
+  })
+
+  expect(body).toMatchObject({ model: 'codestral-embed', output_dimension: 768 })
+  expect(body).not.toHaveProperty('dimensions')
+})
+
 test('a provider that refuses dimensions gets one retry without it', async () => {
   const bodies: unknown[] = []
   const fake = (async (_url: string, init: RequestInit) => {

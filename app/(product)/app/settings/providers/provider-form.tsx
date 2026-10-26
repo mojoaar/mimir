@@ -33,13 +33,21 @@ function kindLabel(kind: ProviderKind, labels: ProviderFormLabels): string {
   return kind === 'llm' ? labels.kindLlm : labels.kindEmbedding
 }
 
+/** A preset's default model is for one kind; the other kind starts at its first. */
+function defaultModelFor(id: PresetId, kind: ProviderKind): string {
+  const preset = PRESETS[id]
+  const list = preset.models?.[kind] ?? []
+  if (list.some((option) => option.id === preset.defaultModel)) return preset.defaultModel
+  return list[0]?.id ?? preset.defaultModel
+}
+
 export function ProviderForm({
   labels,
   models,
 }: {
   labels: ProviderFormLabels
-  /** The catalogue per preset. An empty list means a free-text model field. */
-  models: Record<PresetId, PresetModel[]>
+  /** The catalogue per preset and kind. An empty list means a free-text model field. */
+  models: Record<PresetId, Partial<Record<ProviderKind, PresetModel[]>>>
 }) {
   const [state, action, pending] = useActionState(createProviderAction, initial)
   const [presetId, setPresetId] = useState<PresetId>('deepseek')
@@ -48,14 +56,21 @@ export function ProviderForm({
   const [kind, setKind] = useState<ProviderKind>(PRESETS.deepseek.kinds[0] as ProviderKind)
 
   const kinds = PRESETS[presetId].kinds
-  const catalogue = models[presetId] ?? []
+  const catalogue = models[presetId]?.[kind] ?? []
 
   function choose(id: PresetId) {
+    const nextKind = PRESETS[id].kinds.includes(kind)
+      ? kind
+      : (PRESETS[id].kinds[0] as ProviderKind)
     setPresetId(id)
-    setModel(PRESETS[id].defaultModel)
     setBaseUrl(PRESETS[id].baseUrl)
-    // A preset that does not provide the chosen kind must not submit it.
-    if (!PRESETS[id].kinds.includes(kind)) setKind(PRESETS[id].kinds[0] as ProviderKind)
+    setKind(nextKind)
+    setModel(defaultModelFor(id, nextKind))
+  }
+
+  function chooseKind(next: ProviderKind) {
+    setKind(next)
+    setModel(defaultModelFor(presetId, next))
   }
 
   return (
@@ -83,7 +98,7 @@ export function ProviderForm({
             <select
               name="kind"
               value={kind}
-              onChange={(e) => setKind(e.target.value as (typeof kinds)[number])}
+              onChange={(e) => chooseKind(e.target.value as ProviderKind)}
               className={field}
             >
               {kinds.map((value) => (

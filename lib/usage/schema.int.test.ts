@@ -29,8 +29,8 @@ describe('the usage tables', () => {
 
     expect(rows).toHaveLength(1)
     // bigint arrives as a string from pg; the service converts it.
-    expect(rows[0].cost_micros).toBe('2400')
-    expect(rows[0].ok).toBe(true)
+    expect(rows[0]?.cost_micros).toBe('2400')
+    expect(rows[0]?.ok).toBe(true)
   })
 
   it('start a provider unpriced', async () => {

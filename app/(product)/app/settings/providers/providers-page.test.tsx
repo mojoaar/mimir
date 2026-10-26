@@ -16,8 +16,8 @@ vi.mock('@/lib/providers/service', () => ({ listProviders: vi.fn() }))
 
 // The catalogue is a network call; only DeepSeek's fixed list is needed here.
 vi.mock('@/lib/providers/models', () => ({
-  availableModels: async (id: string) =>
-    id === 'deepseek'
+  availableModels: async (id: string, kind: string) =>
+    id === 'deepseek' && kind === 'llm'
       ? [{ id: 'deepseek-flash' }, { id: 'deepseek-v4-pro', label: '$0.28 per 1M' }]
       : [],
 }))
@@ -72,7 +72,7 @@ describe('providers page', () => {
     ) as ProviderFormLabels
 
     const html = renderToStaticMarkup(
-      <ProviderForm labels={labels} models={{ deepseek: [], ollama: [] } as never} />,
+      <ProviderForm labels={labels} models={{ deepseek: {}, ollama: {} } as never} />,
     )
 
     expect(html).toContain('name="model" value="deepseek-flash"')

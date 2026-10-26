@@ -1,7 +1,7 @@
 import { requireUser } from '@/lib/auth/context'
 import { translator } from '@/lib/i18n/request'
 import { availableModels } from '@/lib/providers/models'
-import { PRESETS, type PresetId, type PresetModel } from '@/lib/providers/presets'
+import { PRESETS, type PresetId, type PresetModel, type ProviderKind } from '@/lib/providers/presets'
 import { listProviders, type ProviderSummary } from '@/lib/providers/service'
 import { ProviderForm } from './provider-form'
 import { deleteProviderAction, setDefaultAction, verifyProviderAction } from './actions'
@@ -111,8 +111,20 @@ export default async function ProvidersPage() {
   const t = await translator()
   const [providers, models] = await Promise.all([
     listProviders(user.id),
-    Promise.all(PRESET_IDS.map(async (id) => [id, await availableModels(id)] as const)).then(
-      (entries) => Object.fromEntries(entries) as Record<PresetId, PresetModel[]>,
+    Promise.all(
+      PRESET_IDS.map(async (id) => {
+        const kinds = PRESETS[id].kinds
+        const lists = await Promise.all(
+          kinds.map(async (kind) => [kind, await availableModels(id, kind)] as const),
+        )
+        return [id, Object.fromEntries(lists)] as const
+      }),
+    ).then(
+      (entries) =>
+        Object.fromEntries(entries) as Record<
+          PresetId,
+          Partial<Record<ProviderKind, PresetModel[]>>
+        >,
     ),
   ])
 

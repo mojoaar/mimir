@@ -17,7 +17,10 @@ Everything in the [design](docs/superpowers/specs/2026-10-25-mimir-design.md) ha
 
 ## Documentation
 
-The running install serves its own docs at `/docs`, including a page per agent
+The running install serves its own docs at `/docs`. Start with **How Mimir works**
+for the model (projects, paths, versions, digest, search, teams, audit) and
+**Providers and embeddings** for which model does what and what a call costs.
+There is also a page per agent
 (OpenCode, Claude Code, Codex, Cursor, Gemini CLI, Pi, Antigravity, Hermes,
 Muse) with the exact config file each one reads. The OpenCode plugin is
 `@mojoaar/opencode-mimir`; the Claude Code session-start hook is
@@ -89,11 +92,23 @@ The client sends the repo key (`X-Mimir-Repo: github.com/owner/repo`), so two ag
 
 Two independent settings, because they answer different questions.
 
-**Learning** (title and summary for each memory) is per user: **Settings → Providers**, add DeepSeek or OpenCode Go with your key, press **Test connection**. Extraction reads the project owner's provider, so whoever owns the memory pays for it.
+**Learning** (title and summary for each memory) is per user: **Settings → Providers**, add DeepSeek, OpenCode, Mistral or any OpenAI-compatible
+endpoint with your key, press **Test connection**. Extraction reads the project
+owner's provider, so whoever owns the memory pays for it.
 
 **Search** is install-wide and set by an admin: **Admin → Settings**, point it at an embedding model. Until one is configured, search works on keywords alone — you lose nothing, you just get no semantic matches.
 
-Ollama is the homelab default (`nomic-embed-text`, 768 dimensions). Octen is a hosted alternative — add it in **Settings → Providers**, pick one of its three models, and give it a key. Both answer at the 768 dimensions the schema stores. The base URL depends on where Ollama runs:
+Ollama is the homelab default (`nomic-embed-text`, 768 dimensions). Octen is a
+hosted alternative — add it in **Settings → Providers**, pick one of its three
+models, and give it a key. Mistral's `codestral-embed` works the same way. All of
+them answer at the 768 dimensions the schema stores.
+
+Every provider call is recorded with its tokens and its cost at the price the
+provider carried at the time; **Admin → Usage** shows the month split between
+language and embedding spend, per-model and per-person breakdowns, failures, and
+a dismissible warning when an hour runs far above the recent baseline. Providers
+start at their list price and can be repriced per row; an unpriced provider still
+counts calls, it just shows under **Unpriced**. The base URL depends on where Ollama runs:
 
 | Where Ollama runs | Base URL |
 |---|---|
@@ -175,7 +190,7 @@ anyone other than your own account address.
 ## Development
 
 ```bash
-./scripts/test-db.sh up      # Postgres 17 + pgvector on 127.0.0.1:5433
+./scripts/test-db.sh up      # Postgres 18 + pgvector on 127.0.0.1:5433
 npm install
 npm run dev
 npm test                     # unit

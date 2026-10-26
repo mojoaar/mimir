@@ -3,9 +3,6 @@ import { notFound } from 'next/navigation';
 import { getSiteSettings, getPublicUrl } from '@/lib/settings/site';
 import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i18n';
 import { connection } from 'next/server';
-import { ThemeSwitcher } from '@/app/theme-switcher';
-import { THEME_COOKIE, parseTheme } from '@/lib/theme';
-import { cookies } from 'next/headers';
 
 export const instant = false;
 
@@ -47,12 +44,35 @@ export async function generateMetadata({
   };
 }
 
-export default async function MarketingPage({ params }: { params: Promise<{ locale: string }> }) {
+/**
+ * Two copies of the same page, differing only in how the hero sells: `?variant=b`
+ * is the loud one. Both share the features, the closing call to action and the
+ * footer, so a pick between them is a pick about the opening, nothing else.
+ */
+const COPY = {
+  quiet: {
+    title: 'hero.title',
+    subtitle: 'hero.subtitle',
+  },
+  bold: {
+    title: 'heroB.title',
+    subtitle: 'heroB.subtitle',
+  },
+} as const;
+
+export default async function MarketingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ variant?: string }>;
+}) {
   const { locale: raw } = await params;
   if (!isLocale(raw)) notFound();
   const locale: Locale = raw;
+  const bold = (await searchParams).variant === 'b';
   const site = await getSiteSettings();
-  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const copy = COPY[bold ? 'bold' : 'quiet'];
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -65,9 +85,17 @@ export default async function MarketingPage({ params }: { params: Promise<{ loca
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   };
 
+  const primary =
+    'rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]';
+  const secondary =
+    'rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]';
+
   return (
     <div lang={locale} className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 sm:px-6">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       <header className="flex flex-wrap items-center justify-between gap-3 py-6">
         <span className="text-lg font-semibold tracking-tight">{site.siteName}</span>
@@ -75,39 +103,84 @@ export default async function MarketingPage({ params }: { params: Promise<{ loca
           <a className="text-[var(--text-muted)] hover:text-[var(--fg)]" href="/docs">
             {t(locale, 'hero.docs')}
           </a>
-          <a className="text-[var(--text-muted)] hover:text-[var(--fg)]" href="https://github.com/mojoaar/mimir">
+          <a
+            className="text-[var(--text-muted)] hover:text-[var(--fg)]"
+            href="https://github.com/mojoaar/mimir"
+          >
             {t(locale, 'hero.github')}
           </a>
-          <ThemeSwitcher value={theme} />
+          <a className={secondary} href="/app">
+            {t(locale, 'hero.signIn')}
+          </a>
         </nav>
       </header>
 
       <main className="flex flex-1 flex-col gap-16 py-10 sm:py-16">
-        <section className="flex max-w-2xl flex-col gap-5">
-          <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            {t(locale, 'hero.title')}
-          </h1>
-          <p className="text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
-            {t(locale, 'hero.subtitle')}
-          </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <a
-              href="/docs"
-              className="rounded-md bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-            >
-              {t(locale, 'hero.docs')}
-            </a>
-            <a
-              href="https://github.com/mojoaar/mimir"
-              className="rounded-md border border-[var(--border)] px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-            >
-              {t(locale, 'hero.github')}
-            </a>
-          </div>
-          <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-4 py-3 text-sm">
-            <code>{t(locale, 'hero.docker')}</code>
-          </pre>
-        </section>
+        {bold ? (
+          <section className="flex flex-col gap-6 border-b border-[var(--border)] pb-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+              {t(locale, 'heroB.eyebrow')}
+            </p>
+            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+              {t(locale, copy.title)}
+            </h1>
+            <p className="max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
+              {t(locale, copy.subtitle)}
+            </p>
+            <ul className="flex flex-wrap gap-2 text-xs">
+              {(['heroB.chip1', 'heroB.chip2', 'heroB.chip3'] as const).map((key) => (
+                <li
+                  key={key}
+                  className="rounded-full border border-[var(--border)] px-3 py-1 text-[var(--text-muted)]"
+                >
+                  {t(locale, key)}
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap items-center gap-3">
+              <a href="/app" className={primary}>
+                {t(locale, 'hero.signIn')}
+              </a>
+              <a href="/docs" className={secondary}>
+                {t(locale, 'hero.docs')}
+              </a>
+            </div>
+            <div className="max-w-xl rounded-md border border-[var(--border)] bg-[var(--bg-raised)] p-3">
+              <p className="mb-1 text-xs uppercase tracking-wide text-[var(--text-muted)]">
+                {t(locale, 'heroB.dockerLabel')}
+              </p>
+              <pre className="overflow-x-auto text-sm">
+                <code>{t(locale, 'hero.docker')}</code>
+              </pre>
+            </div>
+          </section>
+        ) : (
+          <section className="flex max-w-2xl flex-col gap-5">
+            <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
+              {t(locale, copy.title)}
+            </h1>
+            <p className="text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
+              {t(locale, copy.subtitle)}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <a href="/docs" className={primary}>
+                {t(locale, 'hero.docs')}
+              </a>
+              <a
+                href="https://github.com/mojoaar/mimir"
+                className={secondary}
+              >
+                {t(locale, 'hero.github')}
+              </a>
+              <a href="/app" className={secondary}>
+                {t(locale, 'hero.signIn')}
+              </a>
+            </div>
+            <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-4 py-3 text-sm">
+              <code>{t(locale, 'hero.docker')}</code>
+            </pre>
+          </section>
+        )}
 
         <section className="flex flex-col gap-6">
           <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'features.title')}</h2>
@@ -127,6 +200,21 @@ export default async function MarketingPage({ params }: { params: Promise<{ loca
                 <p className="text-sm leading-relaxed text-[var(--text-muted)]">{t(locale, body)}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] p-6">
+          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'cta.title')}</h2>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'cta.body')}
+          </p>
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <a href="/app" className={primary}>
+              {t(locale, 'hero.signIn')}
+            </a>
+            <a href="/docs" className={secondary}>
+              {t(locale, 'hero.docs')}
+            </a>
           </div>
         </section>
       </main>

@@ -7,6 +7,19 @@ export const da: Messages = {
   'hero.docs': 'Læs dokumentationen',
   'hero.github': 'GitHub',
   'hero.docker': 'docker compose up -d',
+  'hero.signIn': 'Log ind',
+  'heroB.eyebrow': 'Langtidsukommelse til kodeagenter',
+  'heroB.title': 'Dine agenter glemmer alt. Ret det på fem minutter.',
+  'heroB.subtitle':
+    'Mimir gemmer det, en agent lærer, i din egen Postgres — stier, versioner, et overblik at starte fra og søgning efter betydning — og giver det tilbage, når næste session begynder.',
+  'heroB.chip1': 'Én container',
+  'heroB.chip2': 'Din Postgres',
+  'heroB.chip3': 'Dine nøgler',
+  'heroB.dockerLabel': 'Kom i gang på fem minutter',
+  'cta.title': 'Giv dine agenter en hukommelse.',
+  'cta.body':
+    'Kør det på din egen maskine, peg én agent på det, og næste session starter, hvor den sidste sluttede.',
+
   'features.title': 'Hvad den rummer',
   'features.path.title': 'Hukommelse er en sti',
   'features.path.body':

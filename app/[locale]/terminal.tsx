@@ -1,6 +1,6 @@
 /**
- * A transcript, not a screenshot: the landing has to show what Mimir does for
- * an agent, and a terminal is the place an agent lives. English is intentional
+ * A mock of an OpenCode session, not a screenshot: the landing has to show what
+ * Mimir does for an agent, and the agent lives in a TUI. English is intentional
  * — it is a code sample, like the docker command, not interface copy.
  */
 export function MimirTerminal() {
@@ -10,54 +10,90 @@ export function MimirTerminal() {
 
   return (
     <figure
-      aria-label="An OpenCode session: the agent asks Mimir what the project already knows, then searches it before answering."
+      aria-label="An OpenCode session: the agent asks Mimir what the project already knows, searches it, and answers from the memory it found."
       className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-sunken)] shadow-sm"
     >
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
         <span className="flex gap-1.5">
           {dot('#ff5f57')}
           {dot('#febc2e')}
           {dot('#28c840')}
         </span>
-        <span className="mx-auto font-mono text-xs text-[var(--text-muted)]">
-          opencode — ~/dev/mimir
+        <span className="font-mono text-[10px] text-[var(--text-muted)]">|</span>
+        <span className="truncate text-xs">
+          <span className="font-semibold">OC</span>{' '}
+          <span className="text-[var(--text-muted)]">|</span> Mimir memory platform setup
         </span>
-        <span className="w-12" aria-hidden="true" />
       </div>
 
-      <div className="overflow-x-auto px-4 py-4 font-mono text-xs leading-relaxed sm:text-[13px]">
-        <div className="min-w-[34rem] whitespace-pre">
+      <div className="flex min-h-[20rem] text-xs">
+        <aside className="hidden w-40 shrink-0 flex-col gap-3 border-r border-[var(--border)] p-3 sm:flex">
           <div>
-            <span className="text-[var(--accent)]">❯</span> opencode
+            <p className="font-medium">Mimir memory platform setup</p>
+            <p className="text-[10px] text-[var(--text-muted)]">mimir</p>
           </div>
-          <div className="text-[var(--text-muted)]">
-            {'  '}repo: mimir · mcp: mimir <span className="text-[var(--accent)]">connected</span>
+          <p className="text-[var(--text-muted)]">+ New session</p>
+        </aside>
+
+        <div className="min-w-0 flex-1 space-y-2 overflow-hidden p-2">
+          <div className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-2 py-1.5">
+            <p className="text-[11px]">
+              <span className="text-[var(--accent)]">❯</span> what do we know about token rotation?
+            </p>
           </div>
-          <div> </div>
-          <div>
-            <span className="text-[var(--accent)]">❯</span> what do we know about token rotation?
+
+          <div className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-2 py-1.5">
+            <p className="text-[10px] text-[var(--text-muted)]">+ Thought · 0.4s</p>
           </div>
-          <div> </div>
-          <div className="text-[var(--accent)]">{'  ✻'} memory_digest</div>
-          <div className="text-[var(--text-muted)]">
-            {'  ✓'} 12 memories · auth, deploys, conventions
+
+          <div className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-2 py-1.5 font-mono text-[11px]">
+            <p className="text-[var(--accent)]">✓ memory_digest</p>
+            <p className="text-[var(--text-muted)]">{'>'} repo: mimir</p>
+            <p className="text-[var(--text-muted)]">12 memories · auth, deploys, conventions</p>
           </div>
-          <div> </div>
-          <div className="text-[var(--accent)]">
-            {'  ✻'} memory_search <span className="text-[var(--text-muted)]">&quot;token rotation&quot;</span>
+
+          <div className="rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-2 py-1.5 font-mono text-[11px]">
+            <p className="text-[var(--accent)]">✓ memory_search</p>
+            <p className="text-[var(--text-muted)]">{'>'} query: &quot;token rotation&quot;</p>
+            <p className="text-[var(--text-muted)]">auth/token-rotation · auth/session-expiry</p>
           </div>
-          <div className="text-[var(--text-muted)]">{'  ✓'} auth/token-rotation</div>
-          <div> </div>
-          <div>Tokens rotate from Settings → API keys. The old key keeps working</div>
-          <div>for 24 hours, so deploy first and revoke after.</div>
-          <div> </div>
-          <div>
-            <span className="text-[var(--accent)]">❯</span>{' '}
-            <span className="bg-[var(--fg)] text-[var(--bg)]" aria-hidden="true">
-              {' '}
-            </span>
+
+          <div className="rounded-md border border-[var(--border)] px-2 py-1.5 leading-relaxed">
+            <p>
+              Tokens rotate from <span className="text-[var(--fg)]">Settings → API keys</span>. The old key keeps
+              working for 24 hours, so deploy first and revoke after.
+            </p>
+            <p className="mt-1 text-[10px] text-[var(--text-muted)]">read 2 memories · 1.1s</p>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-1 text-[10px] text-[var(--text-muted)]">
+            <span className="text-[var(--text-muted)]">{'>'}</span>
+            <span className="inline-block h-3 w-1.5 bg-[var(--fg)]" aria-hidden="true" />
           </div>
         </div>
+
+        <aside className="hidden w-44 shrink-0 flex-col gap-3 border-l border-[var(--border)] p-3 lg:flex">
+          <p className="text-[10px] text-[var(--text-muted)]">Context</p>
+          <div className="space-y-0.5 text-[10px] text-[var(--text-muted)]">
+            <p>1.9K tokens</p>
+            <p>2% used</p>
+            <p>$0.002 spent</p>
+          </div>
+          <div>
+            <p className="mb-1 text-[10px] uppercase tracking-wide text-[var(--text-muted)]">MCP</p>
+            <p className="flex items-center justify-between gap-2 text-[10px]">
+              <span className="truncate">
+                <span className="text-[var(--accent)]">•</span> mimir
+              </span>
+              <span className="text-[var(--text-muted)]">Connected</span>
+            </p>
+          </div>
+        </aside>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] px-3 py-1.5 font-mono text-[10px] text-[var(--text-muted)]">
+        <span>~/Development/mimir:main</span>
+        <span>1.9K (2%) · $0.002 ctrl+p commands</span>
       </div>
     </figure>
   )

@@ -54,6 +54,14 @@ describe('the marketing page', () => {
     expect(html).toContain(t('en', 'cta.title'));
   });
 
+  test('shows an agent using Mimir over mcp', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('memory_digest');
+    expect(html).toContain('memory_search');
+    expect(html).toContain('Connected');
+  });
+
   test('publishes structured data without a localhost url', async () => {
     const html = renderToStaticMarkup(await page('en'));
     expect(html).toContain('application/ld+json');

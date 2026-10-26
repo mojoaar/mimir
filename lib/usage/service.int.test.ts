@@ -1,7 +1,18 @@
 import { beforeEach, expect, test } from 'vitest'
 import { withAdmin } from '@/lib/db/tx'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
-import { breakdown, daily, dismissed, dismiss, failures, hourly, people, spend, spike } from './service'
+import {
+  breakdown,
+  daily,
+  dismissed,
+  dismiss,
+  failures,
+  hourly,
+  people,
+  pruneUsage,
+  spend,
+  spike,
+} from './service'
 
 let f: Fixtures
 
@@ -124,4 +135,14 @@ test('breaks the month down by model and by person, and lists failures', async (
   const failed = await failures()
   expect(failed).toHaveLength(1)
   expect(failed[0]).toMatchObject({ status: 500, model: 'deepseek-flash' })
+})
+
+test('prunes only the calls older than the window', async () => {
+  await seed([{ minutesAgo: 100 * 24 * 60 }, { minutesAgo: 5 }])
+
+  expect(await pruneUsage(90)).toBe(1)
+  const { rows } = await withAdmin((tx) =>
+    tx.query<{ count: string }>('select count(*)::text as count from provider_calls'),
+  )
+  expect(rows[0]?.count).toBe('1')
 })

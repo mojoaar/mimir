@@ -221,3 +221,14 @@ export async function dismiss(userId: string): Promise<void> {
     ),
   )
 }
+
+/**
+ * Deletes call history older than the window. Only the meter is pruned; the
+ * audit log holds the trail and ages itself out on its own schedule.
+ */
+export async function pruneUsage(days: number): Promise<number> {
+  const { rowCount } = await withAdmin((tx) =>
+    tx.query(`delete from provider_calls where at < now() - ($1 || ' days')::interval`, [days]),
+  )
+  return rowCount ?? 0
+}

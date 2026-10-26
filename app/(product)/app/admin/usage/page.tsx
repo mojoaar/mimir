@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/admin'
 import { translator } from '@/lib/i18n/request'
 import { breakdown, daily, failures, hourly, people, spend } from '@/lib/usage/service'
+import { pruneUsageAction } from './actions'
 
 export const instant = false
 
@@ -33,9 +34,14 @@ function Stat({ label, value, note }: { label: string; value: string; note?: str
   )
 }
 
-export default async function UsagePage() {
+export default async function UsagePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ pruned?: string; days?: string }>
+}) {
   await requireAdmin()
   const t = await translator()
+  const search = await searchParams
   const [month, days, hours, models, users, failed] = await Promise.all([
     spend(),
     daily(),
@@ -167,6 +173,35 @@ export default async function UsagePage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="space-y-2 border-t border-[var(--border)] pt-4">
+        <h2 className="text-lg font-medium">{t('app.usage.prune')}</h2>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.usage.pruneHint')}</p>
+        {search.pruned && (
+          <p className="text-sm text-[var(--text-muted)]">
+            {t('app.usage.pruned', { count: Number(search.pruned), days: Number(search.days ?? 90) })}
+          </p>
+        )}
+        <form action={pruneUsageAction} className="flex flex-wrap items-end gap-2">
+          <label className="flex flex-col gap-1 text-sm">
+            <span>{t('app.usage.pruneDays')}</span>
+            <input
+              name="days"
+              type="number"
+              min="1"
+              max="3650"
+              defaultValue={90}
+              className="w-28 rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[var(--fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+            />
+          </label>
+          <button
+            type="submit"
+            className="rounded border border-[var(--border)] px-3 py-2 text-sm hover:bg-[var(--bg-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+          >
+            {t('app.usage.pruneButton')}
+          </button>
+        </form>
       </section>
     </main>
   )

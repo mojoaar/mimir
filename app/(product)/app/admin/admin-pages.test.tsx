@@ -47,6 +47,7 @@ vi.mock('@/lib/usage/service', () => ({
     { preset: 'deepseek', model: 'deepseek-flash', kind: 'llm', calls: 3, micros: 300 },
   ],
   people: async () => [{ email: 'alice@example.test', calls: 4, micros: 340 }],
+  pruneUsage: async () => 0,
   failures: async () => [
     {
       at: '2026-10-25T10:00:00.000Z',
@@ -118,12 +119,22 @@ describe('the admin nav', () => {
 
 describe('the usage page', () => {
   it('shows what the month cost, by model and by person', async () => {
-    const html = renderToStaticMarkup(await UsagePage())
+    const html = renderToStaticMarkup(await UsagePage({ searchParams: Promise.resolve({}) }))
 
     expect(html).toContain('$0.0003')
     expect(html).toContain('deepseek-flash')
     expect(html).toContain('alice@example.test')
     expect(html).toContain('500')
+  })
+
+  it('offers a manual prune and reports what it removed', async () => {
+    const html = renderToStaticMarkup(
+      await UsagePage({ searchParams: Promise.resolve({ pruned: '12', days: '90' }) }),
+    )
+
+    expect(html).toContain('name="days"')
+    expect(html).toContain('Delete older calls')
+    expect(html).toContain('Removed 12 calls older than 90 days.')
   })
 })
 

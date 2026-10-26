@@ -20,6 +20,8 @@ Pick the model, not the name.
 - A dismissible `Usage spike` pill in the admin row and the header when the current hour has at least twenty calls and
   more than five times the median of the previous week. Dismissing it hides it for that admin until a new hour spikes.
 - Octen is a new embedding preset (`https://api.octen.ai`), offering `octen-embedding-0.6b`, `-4b` and `-8b` at 768 dimensions, each shown with its price. Embeddings sent to it are marked as a query or a document, which is what the model expects.
+- **Admin → Usage** can prune the call log: delete everything older than the number of days you choose, and it tells
+  you how many rows went. The audit trail is untouched — it ages itself out on its own schedule.
 
 ### Changed
 

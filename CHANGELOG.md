@@ -24,13 +24,15 @@ Pick the model, not the name.
   you how many rows went. The audit trail is untouched — it ages itself out on its own schedule.
 - Two documentation pages that explain the product rather than the commands: **How Mimir works** (projects, paths,
   versions, digest, hybrid search, teams, audit, backups, accounts) and **Providers and embeddings** (which model does
-  what, the preset table, why the column is 768, prices and the usage page). The overview now says what is in the box.
+  what, the preset table, why the column is 768, prices and the usage page). The overview now says what is in the box,
+  and why the project is called Mimir.
 - The HTTP API and MCP pages show request *and* response for a full walkthrough — projects, tree, read, write, search,
   digest as text, versions and restore, ingest, and a raw JSON-RPC call — with a fuller error catalogue.
 - Documentation code blocks are syntax highlighted with Prism, coloured from the theme variables so both themes work.
-- The landing page says what it is selling: a bold opening, three proof chips, a sign-in link in the header and the
-  hero, and a closing call to action. The theme switcher is gone from it; appearance stays under **Settings →
-  Appearance**.
+- The landing page says what it is selling: a bold opening, three proof chips, an entry link in the header and the
+  hero, and a closing call to action. Instead of a lone `docker compose` line it shows a mock OpenCode session where
+  the agent calls `memory_digest` and `memory_search` over MCP and answers from the result. The theme switcher is gone
+  from it; appearance stays under **Settings → Appearance**.
 - A real icon set — an eye in the well with an M in the pupil — as `icon.svg`, a 192 and 512 png, an Apple touch icon,
   a regenerated `favicon.ico`, and a web app manifest that opens at `/app` when installed.
 
@@ -44,12 +46,16 @@ Pick the model, not the name.
 - The footer credits the author with a link to his site, opens GitHub and Docs in a new tab, and no longer says MIT.
 - The README's test database line says Postgres 18, which is what the compose files actually run, and its provider
   section now names Mistral and points at the usage page.
+- The mark sits before the name in the landing, app and docs headers, and the public pages say **Open app** rather
+  than **Sign in** when a session already exists.
 
 ### Fixed
 
 - DeepSeek's default model was `deepseek-chat`, which the provider no longer lists. It is `deepseek-flash`.
 - A model list belonged to the preset rather than to the kind it was for; Mistral's chat and embedding models now
   each get their own list, so picking Embeddings no longer offers a chat model.
+- A stalled release build used to leave the run in progress forever; the job now fails after thirty minutes, so it can
+  be retried instead of hanging.
 
 ## [0.12.0] - 2026-10-25
 

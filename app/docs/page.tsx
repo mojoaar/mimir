@@ -25,10 +25,58 @@ export default function DocsIndex() {
       <H1>Mimir documentation</H1>
       <Prose>
         <P>
-          Mimir is long-term memory for coding agents. It stores what an agent learned as a tree of
-          paths, gives back one line per memory at session start, and searches the full text when the
-          agent asks a question.
+          Mimir is long-term memory for coding agents. It stores what an agent learned as a tree of paths in your own
+          Postgres, gives back one line per memory at session start, and searches the full text when the agent asks a
+          question.
         </P>
+        <P>
+          It is one container and one database. Agents reach it over MCP, or over a small REST API; both use the same
+          bearer token and both write the same audit row. There is no hosted service behind it — the model calls go
+          straight from your install to the provider you chose, with your key.
+        </P>
+
+        <H2>The loop it fits into</H2>
+        <Code language="text">{`memory_digest  what do I already know about this repo?
+memory_search  find the memory about token rotation
+memory_write   remember that deploys run from main`}</Code>
+        <P>
+          An agent calls the digest once at session start, searches before re-deriving something the project already
+          knows, and writes when it learns something durable: a convention, a gotcha, a decision and its reason. The
+          OpenCode plugin does the first call for it; every other agent is configured with the same two values and told
+          the same habit.
+        </P>
+
+        <H2>What is in the box</H2>
+        <Ul>
+          <li>
+            <strong>A store, not a chat log</strong> — projects, paths, 20 versions per path, soft delete, restore.
+          </li>
+          <li>
+            <strong>Hybrid search</strong> — PostgreSQL full-text plus pgvector, fused by reciprocal rank fusion, with a
+            path prefix to scope it. Keyword search works with no model configured at all.
+          </li>
+          <li>
+            <strong>Your models</strong> — DeepSeek, OpenCode, Ollama, Octen, Mistral or any OpenAI-compatible endpoint,
+            per person for chat and install-wide for embeddings. See{' '}
+            <Link className="text-[var(--accent)] underline" href="/docs/providers">
+              Providers and embeddings
+            </Link>
+            .
+          </li>
+          <li>
+            <strong>A web app</strong> — browse the tree, read a memory, diff its versions, manage members, and see what
+            the agents have been writing.
+          </li>
+          <li>
+            <strong>Operations</strong> — users, teams, grants, MFA, an IP allowlist, an audit log, encrypted scheduled
+            backups, and a usage page that shows what the model calls cost.
+          </li>
+          <li>
+            <strong>A localised interface</strong> — English, Danish and German, per account for the app and by URL for
+            the public pages.
+          </li>
+        </Ul>
+
         <H2>Start here</H2>
         <Ul>
           <li>
@@ -36,6 +84,12 @@ export default function DocsIndex() {
               Self-hosting
             </Link>{' '}
             — one container, one database, five minutes.
+          </li>
+          <li>
+            <Link className="text-[var(--accent)] underline" href="/docs/how-it-works">
+              How Mimir works
+            </Link>{' '}
+            — projects, paths, versions, digest, search, teams and audit.
           </li>
           <li>
             <Link className="text-[var(--accent)] underline" href="/docs/mcp">
@@ -49,14 +103,17 @@ export default function DocsIndex() {
             </Link>{' '}
             — copy-paste configs for OpenCode, Claude Code, Codex and the rest.
           </li>
+          <li>
+            <Link className="text-[var(--accent)] underline" href="/docs/api">
+              HTTP API
+            </Link>{' '}
+            — the same operations without MCP, with request and response examples.
+          </li>
         </Ul>
-        <H2>The three commands an agent uses</H2>
-        <Code language="text">{`memory_digest  what do I already know about this repo?
-memory_search  find the memory about token rotation
-memory_write   remember that deploys run from main`}</Code>
+
         <Callout kind="tip">
-          Point an agent at Mimir once and it will use these on its own. The plugin does the first
-          call for it at session start.
+          Point an agent at Mimir once and it will use these on its own. If you only read one page after this one, read
+          How Mimir works.
         </Callout>
       </Prose>
     </>

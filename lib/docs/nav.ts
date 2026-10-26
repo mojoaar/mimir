@@ -6,6 +6,8 @@ export const DOCS_NAV: DocGroup[] = [
     title: 'Start',
     links: [
       { href: '/docs', title: 'Overview' },
+      { href: '/docs/how-it-works', title: 'How Mimir works' },
+      { href: '/docs/providers', title: 'Providers and embeddings' },
       { href: '/docs/self-hosting', title: 'Self-hosting' },
       { href: '/docs/backups', title: 'Backups' },
     ],

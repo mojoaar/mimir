@@ -9,12 +9,16 @@ const pkg = JSON.parse(readFileSync(path.join(process.cwd(), 'package.json'), 'u
 import ApiPage from './api/page'
 import BackupsPage from './backups/page'
 import ChangelogPage from './changelog/page'
+import HowItWorksPage from './how-it-works/page'
+import ProvidersPage from './providers/page'
 import McpPage from './mcp/page'
 import SearchPage from './search/page'
 import SelfHostingPage from './self-hosting/page'
 import ToolsPage from './tools/page'
 
 const pages = [
+  ['how-it-works', HowItWorksPage],
+  ['providers', ProvidersPage],
   ['self-hosting', SelfHostingPage],
   ['backups', BackupsPage],
   ['mcp', McpPage],
@@ -90,5 +94,25 @@ describe('the language section', () => {
     expect(html).toContain('English, Danish and German')
     expect(html).toContain('saved on the account')
     expect(html).toContain('/da')
+  })
+})
+
+describe('the explanation pages', () => {
+  it('explains the memory model without a model configured', async () => {
+    const html = renderToStaticMarkup(await HowItWorksPage())
+
+    expect(html).toContain('Paths are the index')
+    expect(html).toContain('20 versions')
+    expect(html).toContain('800 tokens')
+  })
+
+  it('names every provider preset and the dimension rule', async () => {
+    const html = renderToStaticMarkup(await ProvidersPage())
+
+    for (const preset of ['DeepSeek', 'OpenCode Go', 'Ollama', 'Octen', 'Mistral', 'OpenAI-compatible']) {
+      expect(html).toContain(preset)
+    }
+    expect(html).toContain('vector(768)')
+    expect(html).toContain('codestral-embed')
   })
 })

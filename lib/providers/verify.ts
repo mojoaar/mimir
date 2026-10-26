@@ -20,6 +20,8 @@ export async function verifyProvider(
     // another would pass at 768 and then embed at 1024 forever.
     model: overrides.model ?? secret.model,
     apiKey: secret.apiKey,
+    ownerId: userId,
+    price: { input: secret.inputPrice, output: secret.outputPrice },
   }
 
   try {
@@ -37,6 +39,6 @@ export async function verifyProvider(
 }
 
 async function probeEmbedding(target: ProviderTarget): Promise<VerifyResult> {
-  const [vector] = await embed(target, ['ping'], { timeoutMs: PROBE_TIMEOUT_MS })
+  const [vector] = await embed(target, ['ping'], { timeoutMs: PROBE_TIMEOUT_MS, purpose: 'probe' })
   return { ok: true, dim: vector?.length ?? 0 }
 }

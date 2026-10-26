@@ -1,7 +1,18 @@
-import { expect, test } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 
 import pkg from '../../package.json'
+import { recordCall } from '@/lib/usage/record'
 import { chatComplete, embed, type ProviderTarget } from './client'
+
+// The recorder writes to Postgres; here it only has to be told what happened.
+vi.mock('@/lib/usage/record', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/usage/record')>()
+  return { ...actual, recordCall: vi.fn(async () => {}) }
+})
+
+beforeEach(() => {
+  vi.mocked(recordCall).mockClear()
+})
 
 const target: ProviderTarget = {
   id: 'p1',
@@ -134,4 +145,79 @@ test('octen uses its own path, shape and input type', async () => {
     dimension: 768,
     input_type: 'query',
   })
+})
+
+const priced: ProviderTarget = {
+  ...target,
+  ownerId: 'u1',
+  price: { input: 0.15, output: 0.6 },
+}
+
+test('a call with a purpose leaves a priced row', async () => {
+  const fake = (async () =>
+    new Response(
+      JSON.stringify({
+        choices: [{ message: { content: 'hi' } }],
+        usage: { prompt_tokens: 1000, completion_tokens: 200 },
+      }),
+    )) as unknown as typeof fetch
+
+  await chatComplete(priced, [{ role: 'user', content: 'hey' }], {
+    fetch: fake,
+    purpose: 'extract',
+  })
+
+  expect(vi.mocked(recordCall).mock.calls[0]?.[0]).toMatchObject({
+    userId: 'u1',
+    providerId: 'p1',
+    kind: 'llm',
+    purpose: 'extract',
+    promptTokens: 1000,
+    completionTokens: 200,
+    costMicros: 270,
+    status: 200,
+    ok: true,
+  })
+})
+
+test('a failed call is recorded before the error is thrown', async () => {
+  const fake = (async () => new Response('nope', { status: 500 })) as unknown as typeof fetch
+
+  await expect(
+    embed(priced, ['a'], { fetch: fake, purpose: 'embed.search' }),
+  ).rejects.toMatchObject({ status: 500 })
+
+  expect(vi.mocked(recordCall).mock.calls[0]?.[0]).toMatchObject({
+    kind: 'embedding',
+    status: 500,
+    ok: false,
+  })
+})
+
+test('a provider that sends no usage is estimated from the text', async () => {
+  const fake = (async () =>
+    new Response(
+      JSON.stringify({
+        choices: [{ message: { content: 'x'.repeat(40) } }],
+      }),
+    )) as unknown as typeof fetch
+
+  await chatComplete(priced, [{ role: 'user', content: 'y'.repeat(80) }], {
+    fetch: fake,
+    purpose: 'extract',
+  })
+
+  expect(vi.mocked(recordCall).mock.calls[0]?.[0]).toMatchObject({
+    promptTokens: 20,
+    completionTokens: 10,
+  })
+})
+
+test('an unnamed call leaves no row', async () => {
+  const fake = (async () =>
+    new Response(JSON.stringify({ data: [{ embedding: [1] }] }))) as unknown as typeof fetch
+
+  await embed(priced, ['a'], { fetch: fake })
+
+  expect(vi.mocked(recordCall)).not.toHaveBeenCalled()
 })

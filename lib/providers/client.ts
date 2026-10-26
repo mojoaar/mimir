@@ -1,4 +1,6 @@
-import type { PresetId } from './presets'
+import { costMicros, type Price } from '@/lib/usage/cost'
+import { recordCall, tokensOf, type Purpose } from '@/lib/usage/record'
+import type { PresetId, ProviderKind } from './presets'
 import pkg from '../../package.json'
 
 export type ProviderTarget = {
@@ -7,9 +9,17 @@ export type ProviderTarget = {
   baseUrl: string
   model: string
   apiKey: string | null
+  /** Whose key this is, so the usage row points at the right person. */
+  ownerId?: string
+  price?: Price
 }
 
-export type ClientDeps = { fetch?: typeof fetch; timeoutMs?: number }
+export type ClientDeps = {
+  fetch?: typeof fetch
+  timeoutMs?: number
+  /** Only a named purpose is recorded; an unnamed call leaves no row. */
+  purpose?: Purpose
+}
 
 /** Octen asks whether a text is a query or a document; the prompt differs. */
 export type EmbedDeps = ClientDeps & {
@@ -54,19 +64,74 @@ function headersFor(target: ProviderTarget): Record<string, string> {
   return headers
 }
 
-async function request(target: ProviderTarget, path: string, body: unknown, deps: ClientDeps | undefined): Promise<unknown> {
-  const doFetch = deps?.fetch ?? fetch
-  const response = await doFetch(`${target.baseUrl}${path}`, {
-    method: 'POST',
-    headers: headersFor(target),
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(deps?.timeoutMs ?? DEFAULT_TIMEOUT_MS),
-    // A public endpoint must not be able to redirect the server into the network.
-    redirect: 'manual',
+/** What the provider was asked to read; used only to estimate tokens. */
+function charsOf(body: unknown): number {
+  const parsed = (body ?? {}) as { input?: unknown; messages?: { content?: unknown }[] }
+  if (Array.isArray(parsed.input)) {
+    return parsed.input.reduce((sum: number, item) => sum + (typeof item === 'string' ? item.length : 0), 0)
+  }
+  return (parsed.messages ?? []).reduce(
+    (sum, message) => sum + (typeof message.content === 'string' ? message.content.length : 0),
+    0,
+  )
+}
+
+async function note(
+  target: ProviderTarget,
+  deps: ClientDeps | undefined,
+  kind: ProviderKind,
+  body: unknown,
+  status: number | null,
+  json: unknown,
+): Promise<void> {
+  if (!deps?.purpose) return
+  const tokens = tokensOf(json, charsOf(body))
+  await recordCall({
+    userId: target.ownerId ?? null,
+    providerId: target.id,
+    preset: target.preset,
+    model: target.model,
+    kind,
+    purpose: deps.purpose,
+    promptTokens: tokens.prompt,
+    completionTokens: tokens.completion,
+    costMicros: costMicros(tokens, target.price ?? { input: null, output: null }),
+    status,
+    ok: status !== null && status >= 200 && status < 300,
   })
+}
+
+async function request(
+  target: ProviderTarget,
+  path: string,
+  body: unknown,
+  deps: ClientDeps | undefined,
+  kind: ProviderKind,
+): Promise<unknown> {
+  const doFetch = deps?.fetch ?? fetch
+  let response: Response
+  try {
+    response = await doFetch(`${target.baseUrl}${path}`, {
+      method: 'POST',
+      headers: headersFor(target),
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(deps?.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+      // A public endpoint must not be able to redirect the server into the network.
+      redirect: 'manual',
+    })
+  } catch (error) {
+    // A timeout or a refused connection is a call that was made and failed.
+    await note(target, deps, kind, body, null, null)
+    throw error
+  }
   // The body can echo the prompt, so it never reaches the message or the audit log.
-  if (!response.ok) throw new ProviderError(`provider responded ${response.status}`, response.status)
-  return response.json()
+  if (!response.ok) {
+    await note(target, deps, kind, body, response.status, null)
+    throw new ProviderError(`provider responded ${response.status}`, response.status)
+  }
+  const json = await response.json()
+  await note(target, deps, kind, body, response.status, json)
+  return json
 }
 
 export async function chatComplete(
@@ -74,7 +139,7 @@ export async function chatComplete(
   messages: { role: 'system' | 'user'; content: string }[],
   deps?: ClientDeps,
 ): Promise<string> {
-  const json = (await request(target, '/v1/chat/completions', { model: target.model, messages }, deps)) as {
+  const json = (await request(target, '/v1/chat/completions', { model: target.model, messages }, deps, 'llm')) as {
     choices?: { message?: { content?: string } }[]
   }
   const content = json.choices?.[0]?.message?.content
@@ -104,6 +169,7 @@ export async function embed(
         input_type: deps?.inputType ?? 'document',
       },
       deps,
+      'embedding',
     )) as { data?: { results?: { index?: number; embedding?: number[] }[] } }
     const rows = [...(json.data?.results ?? [])].sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
     return vectors(rows.map((row) => row.embedding), input.length)
@@ -114,12 +180,12 @@ export async function embed(
   type EmbedResponse = { data?: { embedding?: number[] }[] }
   let json: EmbedResponse
   try {
-    json = (await request(target, '/v1/embeddings', body, deps)) as EmbedResponse
+    json = (await request(target, '/v1/embeddings', body, deps, 'embedding')) as EmbedResponse
   } catch (error) {
     // Some OpenAI-compatible shims refuse `dimensions` even though the field is
     // standard. One retry without it; anything but a 400 is a real failure.
     if (!(error instanceof ProviderError && error.status === 400)) throw error
-    json = (await request(target, '/v1/embeddings', { model: target.model, input }, deps)) as EmbedResponse
+    json = (await request(target, '/v1/embeddings', { model: target.model, input }, deps, 'embedding')) as EmbedResponse
   }
   return vectors((json.data ?? []).map((row) => row.embedding), input.length)
 }

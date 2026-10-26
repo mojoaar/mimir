@@ -1,7 +1,7 @@
 import { withAdmin } from '../db/tx'
 import { getEmbeddingConfig } from '../settings/embedding'
 import type { ProviderTarget } from './client'
-import { getProviderSecret, listProviders } from './service'
+import { getProviderSecret, listProviders, type ProviderSecret } from './service'
 
 /**
  * Extraction runs as background work with no user, so the owner has to be read
@@ -32,7 +32,7 @@ export async function resolveExtractionProvider(projectId: string): Promise<Prov
 async function ownedTarget(userId: string, providerId: string): Promise<ProviderTarget | null> {
   try {
     const secret = await getProviderSecret(userId, providerId)
-    return toTarget(secret)
+    return toTarget(secret, userId)
   } catch {
     return null
   }
@@ -45,14 +45,16 @@ async function defaultTarget(userId: string): Promise<ProviderTarget | null> {
   return ownedTarget(userId, chosen.id)
 }
 
-function toTarget(secret: {
-  id: string
-  preset: ProviderTarget['preset']
-  baseUrl: string
-  model: string
-  apiKey: string | null
-}): ProviderTarget {
-  return { id: secret.id, preset: secret.preset, baseUrl: secret.baseUrl, model: secret.model, apiKey: secret.apiKey }
+function toTarget(secret: ProviderSecret, ownerId: string): ProviderTarget {
+  return {
+    id: secret.id,
+    preset: secret.preset,
+    baseUrl: secret.baseUrl,
+    model: secret.model,
+    apiKey: secret.apiKey,
+    ownerId,
+    price: { input: secret.inputPrice, output: secret.outputPrice },
+  }
 }
 
 /**
@@ -81,7 +83,7 @@ export async function resolveEmbeddingProvider(): Promise<ProviderTarget | null>
   }
 
   const secret = await getProviderSecret(row.user_id, row.id)
-  const target = toTarget(secret)
+  const target = toTarget(secret, row.user_id)
   // The config pins the model; a row edited later must not silently change it.
   return { ...target, model: config.model }
 }

@@ -30,6 +30,7 @@ export async function runBackfill(data: BackfillData): Promise<BackfillResult> {
         const [first] = await embed(provider, [text], {
           dimension: EMBEDDING_DIM,
           inputType: 'document',
+          purpose: 'embed.backfill',
         })
         if (!first) throw new Error('provider returned no vector')
         vector = first

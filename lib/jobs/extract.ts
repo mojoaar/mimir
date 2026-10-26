@@ -80,7 +80,7 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
           { role: 'system', content: SYSTEM },
           { role: 'user', content: `path: ${row.path}\n\n${row.body.slice(0, BODY_LIMIT)}` },
         ],
-        { timeoutMs: EXTRACT_TIMEOUT_MS },
+        { timeoutMs: EXTRACT_TIMEOUT_MS, purpose: 'extract' },
       )
     } catch (error) {
       // A thinking model can spend its whole budget reasoning and reply with

@@ -1,6 +1,7 @@
 import { embed } from '@/lib/providers/client'
 import { resolveEmbeddingProvider } from '@/lib/providers/resolve'
 import { EMBEDDING_DIM } from '@/lib/settings/embedding'
+import type { Purpose } from '@/lib/usage/record'
 
 /**
  * nomic-embed-text has an 8192 token window and a memory body can exceed it.
@@ -19,7 +20,11 @@ export function toVectorLiteral(values: number[]): string {
  */
 export async function embedText(
   text: string,
-  options: { timeoutMs?: number; inputType?: 'query' | 'document' } = {},
+  options: {
+    timeoutMs?: number
+    inputType?: 'query' | 'document'
+    purpose?: Purpose
+  } = {},
 ): Promise<string | null> {
   // Everything, including provider resolution, is inside the try: a rotated
   // MIMIR_SECRET makes decryption throw, and that must not fail the write.
@@ -31,6 +36,7 @@ export async function embedText(
       timeoutMs: options.timeoutMs ?? 10_000,
       dimension: EMBEDDING_DIM,
       inputType: options.inputType,
+      purpose: options.purpose,
     })
 
     if (!values || values.length !== EMBEDDING_DIM) {

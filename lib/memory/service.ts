@@ -45,7 +45,10 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
 
   // Before the transaction: a provider round trip inside it would hold a
   // pooled connection for the duration of someone else's network call.
-  const embedding = await embedText([path, title, input.body].join('\n'), { inputType: 'document' })
+  const embedding = await embedText([path, title, input.body].join('\n'), {
+    inputType: 'document',
+    purpose: 'embed.ingest',
+  })
 
   const result = await withUser(input.userId, async (tx) => {
     const { rows } = await tx.query<{

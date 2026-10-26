@@ -22,6 +22,17 @@ Pick the model, not the name.
 - Octen is a new embedding preset (`https://api.octen.ai`), offering `octen-embedding-0.6b`, `-4b` and `-8b` at 768 dimensions, each shown with its price. Embeddings sent to it are marked as a query or a document, which is what the model expects.
 - **Admin → Usage** can prune the call log: delete everything older than the number of days you choose, and it tells
   you how many rows went. The audit trail is untouched — it ages itself out on its own schedule.
+- Two documentation pages that explain the product rather than the commands: **How Mimir works** (projects, paths,
+  versions, digest, hybrid search, teams, audit, backups, accounts) and **Providers and embeddings** (which model does
+  what, the preset table, why the column is 768, prices and the usage page). The overview now says what is in the box.
+- The HTTP API and MCP pages show request *and* response for a full walkthrough — projects, tree, read, write, search,
+  digest as text, versions and restore, ingest, and a raw JSON-RPC call — with a fuller error catalogue.
+- Documentation code blocks are syntax highlighted with Prism, coloured from the theme variables so both themes work.
+- The landing page says what it is selling: a bold opening, three proof chips, a sign-in link in the header and the
+  hero, and a closing call to action. The theme switcher is gone from it; appearance stays under **Settings →
+  Appearance**.
+- A real icon set — an eye in the well with an M in the pupil — as `icon.svg`, a 192 and 512 png, an Apple touch icon,
+  a regenerated `favicon.ico`, and a web app manifest that opens at `/app` when installed.
 
 ### Changed
 
@@ -31,6 +42,8 @@ Pick the model, not the name.
 - The model field in **Settings → Providers** is a dropdown of the models the chosen provider offers, not a text field: DeepSeek's two current models, the live OpenCode catalogue (cached for an hour), and Octen's three. A preset with no catalogue, such as Ollama or an OpenAI-compatible host, keeps the text field.
 - A preset only offers the kinds it supports, so DeepSeek and Octen show their kind as text instead of a dropdown with one real choice.
 - The footer credits the author with a link to his site, opens GitHub and Docs in a new tab, and no longer says MIT.
+- The README's test database line says Postgres 18, which is what the compose files actually run, and its provider
+  section now names Mistral and points at the usage page.
 
 ### Fixed
 

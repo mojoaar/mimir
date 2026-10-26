@@ -6,14 +6,14 @@ export const en = {
   'hero.github': 'GitHub',
   'hero.docker': 'docker compose up -d',
   'hero.signIn': 'Sign in',
-  'heroB.eyebrow': 'Long-term memory for coding agents',
-  'heroB.title': 'Your agents forget everything. Fix that in five minutes.',
-  'heroB.subtitle':
+  'hero.eyebrow': 'Long-term memory for coding agents',
+  'hero.headline': 'Your agents forget everything. Fix that in five minutes.',
+  'hero.lead':
     'Mimir keeps what an agent learns in your own Postgres — paths, versions, a digest to start from, and search by meaning — and hands it back at the start of the next session.',
-  'heroB.chip1': 'One container',
-  'heroB.chip2': 'Your Postgres',
-  'heroB.chip3': 'Your keys',
-  'heroB.dockerLabel': 'Start in five minutes',
+  'hero.chip1': 'One container',
+  'hero.chip2': 'Your Postgres',
+  'hero.chip3': 'Your keys',
+  'hero.dockerLabel': 'Start in five minutes',
   'cta.title': 'Give your agents a memory.',
   'cta.body':
     'Run it on your own machine, point one agent at it, and the next session starts where the last one ended.',

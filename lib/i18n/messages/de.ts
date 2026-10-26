@@ -8,14 +8,14 @@ export const de: Messages = {
   'hero.github': 'GitHub',
   'hero.docker': 'docker compose up -d',
   'hero.signIn': 'Anmelden',
-  'heroB.eyebrow': 'Langzeitgedächtnis für Coding-Agenten',
-  'heroB.title': 'Deine Agenten vergessen alles. Behebe das in fünf Minuten.',
-  'heroB.subtitle':
+  'hero.eyebrow': 'Langzeitgedächtnis für Coding-Agenten',
+  'hero.headline': 'Deine Agenten vergessen alles. Behebe das in fünf Minuten.',
+  'hero.lead':
     'Mimir speichert, was ein Agent lernt, in deinem eigenen Postgres — Pfade, Versionen, einen Überblick zum Start und Bedeutungssuche — und gibt es zu Beginn der nächsten Sitzung zurück.',
-  'heroB.chip1': 'Ein Container',
-  'heroB.chip2': 'Dein Postgres',
-  'heroB.chip3': 'Deine Schlüssel',
-  'heroB.dockerLabel': 'In fünf Minuten starten',
+  'hero.chip1': 'Ein Container',
+  'hero.chip2': 'Dein Postgres',
+  'hero.chip3': 'Deine Schlüssel',
+  'hero.dockerLabel': 'In fünf Minuten starten',
   'cta.title': 'Gib deinen Agenten ein Gedächtnis.',
   'cta.body':
     'Lauf es auf deiner eigenen Maschine, richte einen Agenten darauf aus, und die nächste Sitzung beginnt, wo die letzte aufgehört hat.',

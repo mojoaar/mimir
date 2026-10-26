@@ -44,35 +44,15 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Two copies of the same page, differing only in how the hero sells: `?variant=b`
- * is the loud one. Both share the features, the closing call to action and the
- * footer, so a pick between them is a pick about the opening, nothing else.
- */
-const COPY = {
-  quiet: {
-    title: 'hero.title',
-    subtitle: 'hero.subtitle',
-  },
-  bold: {
-    title: 'heroB.title',
-    subtitle: 'heroB.subtitle',
-  },
-} as const;
-
 export default async function MarketingPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ variant?: string }>;
 }) {
   const { locale: raw } = await params;
   if (!isLocale(raw)) notFound();
   const locale: Locale = raw;
-  const bold = (await searchParams).variant === 'b';
   const site = await getSiteSettings();
-  const copy = COPY[bold ? 'bold' : 'quiet'];
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -116,71 +96,43 @@ export default async function MarketingPage({
       </header>
 
       <main className="flex flex-1 flex-col gap-16 py-10 sm:py-16">
-        {bold ? (
-          <section className="flex flex-col gap-6 border-b border-[var(--border)] pb-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
-              {t(locale, 'heroB.eyebrow')}
-            </p>
-            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-              {t(locale, copy.title)}
-            </h1>
-            <p className="max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
-              {t(locale, copy.subtitle)}
-            </p>
-            <ul className="flex flex-wrap gap-2 text-xs">
-              {(['heroB.chip1', 'heroB.chip2', 'heroB.chip3'] as const).map((key) => (
-                <li
-                  key={key}
-                  className="rounded-full border border-[var(--border)] px-3 py-1 text-[var(--text-muted)]"
-                >
-                  {t(locale, key)}
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap items-center gap-3">
-              <a href="/app" className={primary}>
-                {t(locale, 'hero.signIn')}
-              </a>
-              <a href="/docs" className={secondary}>
-                {t(locale, 'hero.docs')}
-              </a>
-            </div>
-            <div className="max-w-xl rounded-md border border-[var(--border)] bg-[var(--bg-raised)] p-3">
-              <p className="mb-1 text-xs uppercase tracking-wide text-[var(--text-muted)]">
-                {t(locale, 'heroB.dockerLabel')}
-              </p>
-              <pre className="overflow-x-auto text-sm">
-                <code>{t(locale, 'hero.docker')}</code>
-              </pre>
-            </div>
-          </section>
-        ) : (
-          <section className="flex max-w-2xl flex-col gap-5">
-            <h1 className="text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">
-              {t(locale, copy.title)}
-            </h1>
-            <p className="text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
-              {t(locale, copy.subtitle)}
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <a href="/docs" className={primary}>
-                {t(locale, 'hero.docs')}
-              </a>
-              <a
-                href="https://github.com/mojoaar/mimir"
-                className={secondary}
+        <section className="flex flex-col gap-6 border-b border-[var(--border)] pb-12">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+            {t(locale, 'hero.eyebrow')}
+          </p>
+          <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+            {t(locale, 'hero.headline')}
+          </h1>
+          <p className="max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
+            {t(locale, 'hero.lead')}
+          </p>
+          <ul className="flex flex-wrap gap-2 text-xs">
+            {(['hero.chip1', 'hero.chip2', 'hero.chip3'] as const).map((key) => (
+              <li
+                key={key}
+                className="rounded-full border border-[var(--border)] px-3 py-1 text-[var(--text-muted)]"
               >
-                {t(locale, 'hero.github')}
-              </a>
-              <a href="/app" className={secondary}>
-                {t(locale, 'hero.signIn')}
-              </a>
-            </div>
-            <pre className="overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-4 py-3 text-sm">
+                {t(locale, key)}
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap items-center gap-3">
+            <a href="/app" className={primary}>
+              {t(locale, 'hero.signIn')}
+            </a>
+            <a href="/docs" className={secondary}>
+              {t(locale, 'hero.docs')}
+            </a>
+          </div>
+          <div className="max-w-xl rounded-md border border-[var(--border)] bg-[var(--bg-raised)] p-3">
+            <p className="mb-1 text-xs uppercase tracking-wide text-[var(--text-muted)]">
+              {t(locale, 'hero.dockerLabel')}
+            </p>
+            <pre className="overflow-x-auto text-sm">
               <code>{t(locale, 'hero.docker')}</code>
             </pre>
-          </section>
-        )}
+        </div>
+        </section>
 
         <section className="flex flex-col gap-6">
           <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'features.title')}</h2>

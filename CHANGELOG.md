@@ -11,10 +11,21 @@ Pick the model, not the name.
 
 ### Added
 
+- Mistral is a provider for both chat and embeddings. Its chat list is Large 4, Medium 3.5, Small 4 (the default) and
+  Codestral; for embeddings it offers Codestral Embed, which takes an `output_dimension` and so fits the stored 768.
+  `mistral-embed` is deliberately absent: it is fixed at 1024 dimensions.
+- **Admin → Usage** counts every remote provider call: the month's spend split between language models and embeddings,
+  thirty days of daily spend, twenty-four hours of calls, a breakdown by model and by person, and recent failures. A
+  provider with no price is still counted, and the page says how many calls that is.
+- A dismissible `Usage spike` pill in the admin row and the header when the current hour has at least twenty calls and
+  more than five times the median of the previous week. Dismissing it hides it for that admin until a new hour spikes.
 - Octen is a new embedding preset (`https://api.octen.ai`), offering `octen-embedding-0.6b`, `-4b` and `-8b` at 768 dimensions, each shown with its price. Embeddings sent to it are marked as a query or a document, which is what the model expects.
 
 ### Changed
 
+- Each provider carries its own price per million tokens, seeded from the preset's list price when it has one, and
+  editable in place under **Settings → Providers**. A call's cost is recorded when it happens, so changing a price
+  later does not rewrite history.
 - The model field in **Settings → Providers** is a dropdown of the models the chosen provider offers, not a text field: DeepSeek's two current models, the live OpenCode catalogue (cached for an hour), and Octen's three. A preset with no catalogue, such as Ollama or an OpenAI-compatible host, keeps the text field.
 - A preset only offers the kinds it supports, so DeepSeek and Octen show their kind as text instead of a dropdown with one real choice.
 - The footer credits the author with a link to his site, opens GitHub and Docs in a new tab, and no longer says MIT.
@@ -22,6 +33,8 @@ Pick the model, not the name.
 ### Fixed
 
 - DeepSeek's default model was `deepseek-chat`, which the provider no longer lists. It is `deepseek-flash`.
+- A model list belonged to the preset rather than to the kind it was for; Mistral's chat and embedding models now
+  each get their own list, so picking Embeddings no longer offers a chat model.
 
 ## [0.12.0] - 2026-10-25
 

@@ -84,8 +84,10 @@ export async function daily(days = 30): Promise<DaySpend[]> {
 /** The last twenty-four hours, in UTC, for the "is it looping" question. */
 export async function hourly(): Promise<HourCalls[]> {
   const { rows } = await withAdmin((tx) =>
-    tx.query<{ hour: Date; calls: number }>(
-      `select date_trunc('hour', at at time zone 'utc') as hour, count(*)::int as calls
+    tx.query<{ hour: string; calls: number }>(
+      // Format in SQL: a naive timestamp comes back through the server's zone.
+      `select to_char(date_trunc('hour', at at time zone 'utc'), 'YYYY-MM-DD"T"HH24') as hour,
+              count(*)::int as calls
          from provider_calls
         where at >= date_trunc('hour', now() at time zone 'utc') at time zone 'utc'
                    - interval '23 hours'
@@ -93,12 +95,7 @@ export async function hourly(): Promise<HourCalls[]> {
         order by 1`,
     ),
   )
-  const found = new Map(
-    rows.map((row) => [
-      row.hour.toISOString().slice(0, 13),
-      row.calls,
-    ]),
-  )
+  const found = new Map(rows.map((row) => [row.hour, row.calls]))
   const out: HourCalls[] = []
   const start = Date.now() - 23 * 60 * 60 * 1000
   for (let i = 0; i < 24; i += 1) {
@@ -213,7 +210,9 @@ export async function dismissed(userId: string, hourStart: string): Promise<bool
   return rows.length > 0
 }
 
-export async function dismiss(userId: string, hourStart: string): Promise<void> {
+export async function dismiss(userId: string): Promise<void> {
+  // Only "when" is stored: a dismissal always lands after the current hour
+  // began, so it covers that spike and any older one. A new hour is newer.
   await withAdmin((tx) =>
     tx.query(
       `insert into usage_dismissals (user_id, dismissed_at) values ($1, now())
@@ -221,7 +220,4 @@ export async function dismiss(userId: string, hourStart: string): Promise<void> 
       [userId],
     ),
   )
-  // The hour is not stored: a dismissal before the hour started is impossible,
-  // and one after it covers that hour and any earlier spike.
-  void hourStart
 }

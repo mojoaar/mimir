@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Pick the model, not the name.
+
+### Added
+
+- Octen is a new embedding preset (`https://api.octen.ai`), offering `octen-embedding-0.6b`, `-4b` and `-8b` at 768 dimensions, each shown with its price. Embeddings sent to it are marked as a query or a document, which is what the model expects.
+
+### Changed
+
+- The model field in **Settings → Providers** is a dropdown of the models the chosen provider offers, not a text field: DeepSeek's two current models, the live OpenCode catalogue (cached for an hour), and Octen's three. A preset with no catalogue, such as Ollama or an OpenAI-compatible host, keeps the text field.
+- A preset only offers the kinds it supports, so DeepSeek and Octen show their kind as text instead of a dropdown with one real choice.
+
+### Fixed
+
+- DeepSeek's default model was `deepseek-chat`, which the provider no longer lists. It is `deepseek-flash`.
+
 ## [0.12.0] - 2026-10-25
 
 Your face in the corner.

@@ -5,6 +5,12 @@ const state = vi.hoisted(() => ({
   role: 'user' as 'user' | 'admin',
   email: 'alice@example.test',
   locale: 'en',
+  spike: null as null | { calls: number; median: number; hourStart: string },
+}))
+
+vi.mock('@/lib/usage/service', () => ({
+  spike: async () => state.spike,
+  dismissed: async () => false,
 }))
 
 vi.mock('next/headers', () => ({
@@ -43,6 +49,7 @@ beforeEach(() => {
   state.role = 'user'
   state.email = 'alice@example.test'
   state.locale = 'en'
+  state.spike = null
 })
 
 describe('the app shell', () => {
@@ -99,5 +106,23 @@ describe('the app shell', () => {
     state.role = 'user'
     const asUser = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
     expect(asUser).not.toContain('href="/app/admin"')
+  })
+
+  it('warns an admin about a spike and lets them dismiss it', async () => {
+    state.role = 'admin'
+    state.spike = { calls: 40, median: 2, hourStart: '2026-10-26T09:00:00Z' }
+
+    const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
+
+    expect(html).toContain('Usage spike · 40 calls this hour')
+    expect(html).toContain('aria-label="Dismiss the spike"')
+  })
+
+  it('never shows the spike to a normal user', async () => {
+    state.spike = { calls: 40, median: 2, hourStart: '2026-10-26T09:00:00Z' }
+
+    const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
+
+    expect(html).not.toContain('Usage spike')
   })
 })

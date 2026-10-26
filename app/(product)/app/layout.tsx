@@ -8,6 +8,7 @@ import { getRequireMfa } from '@/lib/settings/security'
 import AppFooter from '@/components/app/footer'
 import { Enrolment } from './settings/mfa/enrolment'
 import { signOutAction } from './actions'
+import { UsageAlert } from '@/app/usage-alert'
 import { UserMenu } from '@/app/user-menu'
 import { avatarVersion } from '@/lib/users/avatar'
 import { translator } from '@/lib/i18n/request'
@@ -53,6 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             ) : null}
           </nav>
           <div className="ml-auto flex items-center gap-3">
+            {user.role === 'admin' ? await UsageAlert({ userId: user.id }) : null}
             <UserMenu
               email={user.email}
               avatarSrc={`/app/avatar?v=${await avatarVersion(user.id)}`}

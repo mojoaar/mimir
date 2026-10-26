@@ -555,6 +555,8 @@ export const de: Messages = {
   'app.usage.kind.embedding': 'Embedding',
   'app.usage.callsCount': '{count} Aufrufe',
   'app.usage.noStatus': 'keine Antwort',
+  'app.usage.alert': 'Verbrauchsspitze · {count} Aufrufe in dieser Stunde',
+  'app.usage.dismiss': 'Spitze ausblenden',
   'app.admin.nav.back': 'Zurück zur App',
   'footer.tagline': 'Der Brunnen der Erinnerung, für deine Agenten.',
   'footer.license': 'MIT-Lizenz',

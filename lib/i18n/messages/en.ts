@@ -541,6 +541,8 @@ export const en = {
   'app.usage.kind.embedding': 'Embedding',
   'app.usage.callsCount': '{count} calls',
   'app.usage.noStatus': 'no reply',
+  'app.usage.alert': 'Usage spike · {count} calls this hour',
+  'app.usage.dismiss': 'Dismiss the spike',
   'app.admin.nav.back': 'Back to app',
   'footer.tagline': 'The well of memory, for your agents.',
   'footer.license': 'MIT licensed',

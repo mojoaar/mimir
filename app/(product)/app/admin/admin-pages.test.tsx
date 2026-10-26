@@ -38,6 +38,8 @@ vi.mock('@/lib/db/tx', () => ({
 }))
 
 vi.mock('@/lib/usage/service', () => ({
+  spike: async () => ({ calls: 40, median: 2, hourStart: '2026-10-26T09:00:00Z' }),
+  dismissed: async () => false,
   spend: async () => ({ llmMicros: 300, embeddingMicros: 40, calls: 4, unpriced: 1 }),
   daily: async () => [{ day: '2026-10-25', micros: 340 }],
   hourly: async () => [{ hour: '2026-10-25T10:00', calls: 2 }],
@@ -108,7 +110,9 @@ describe('the admin nav', () => {
 
     expect(html).toContain('href="/app/admin/users"')
     expect(html).toContain('href="/app/admin/audit"')
+    expect(html).toContain('href="/app/admin/usage"')
     expect(html).toContain('rounded-md border border-[var(--border)]')
+    expect(html).toContain('Usage spike · 40 calls this hour')
   })
 })
 

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { UsageAlert } from '@/app/usage-alert'
 import { requireAdmin } from '@/lib/auth/admin'
 import { translator } from '@/lib/i18n/request'
 
@@ -10,7 +11,7 @@ export const instant = false
  * as a subsection of the page below it.
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin()
+  const admin = await requireAdmin()
   const t = await translator()
 
   const button =
@@ -41,6 +42,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           {t('app.admin.nav.usage')}
         </Link>
       </nav>
+      <div className="mx-auto flex max-w-5xl px-4 pb-3 sm:px-6">
+        {await UsageAlert({ userId: admin.id })}
+      </div>
       {children}
     </div>
   )

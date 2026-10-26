@@ -544,6 +544,8 @@ export const da: Messages = {
   'app.usage.kind.embedding': 'Embedding',
   'app.usage.callsCount': '{count} kald',
   'app.usage.noStatus': 'intet svar',
+  'app.usage.alert': 'Forbrugsstigning · {count} kald denne time',
+  'app.usage.dismiss': 'Skjul stigningen',
   'app.admin.nav.back': 'Tilbage til appen',
   'footer.tagline': 'Erindringens brønd, til dine agenter.',
   'footer.license': 'MIT-licens',

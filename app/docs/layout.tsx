@@ -41,7 +41,9 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
     <div data-theme={theme} className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)]">
       <header className="border-b border-[var(--border)]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 sm:px-6">
-          <Link href="/" className="font-semibold tracking-tight">
+          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
             Mimir
           </Link>
           <span className="text-sm text-[var(--text-muted)]">Documentation</span>

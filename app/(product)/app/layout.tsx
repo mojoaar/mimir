@@ -44,6 +44,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen flex-col">
       <header className="mb-8 border-b border-[var(--border)]">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-4 px-4 py-3 text-sm sm:px-6">
+          <Link href="/app" aria-label="Mimir" className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.svg" alt="" width={24} height={24} className="h-6 w-6" />
+          </Link>
           <nav className="flex flex-wrap gap-4">
             <Link href="/app">{t('app.nav.projects')}</Link>
             <Link href="/app/teams">{t('app.nav.teams')}</Link>

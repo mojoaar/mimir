@@ -84,6 +84,13 @@ describe('the app shell', () => {
     expect(html).toContain('href="/docs"')
   })
 
+  it('puts the mark beside the first destination', async () => {
+    const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
+
+    expect(html).toContain('src="/icon.svg"')
+    expect(html).toContain('aria-label="Mimir"')
+  })
+
 
 
   it('speaks the language saved on the account', async () => {

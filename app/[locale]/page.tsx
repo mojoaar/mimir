@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getSiteSettings, getPublicUrl } from '@/lib/settings/site';
 import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i18n';
 import { connection } from 'next/server';
+import { MimirTerminal } from './terminal';
 
 export const instant = false;
 
@@ -128,14 +129,7 @@ export default async function MarketingPage({
               {t(locale, 'hero.docs')}
             </a>
           </div>
-          <div className="max-w-xl rounded-md border border-[var(--border)] bg-[var(--bg-raised)] p-3">
-            <p className="mb-1 text-xs uppercase tracking-wide text-[var(--text-muted)]">
-              {t(locale, 'hero.dockerLabel')}
-            </p>
-            <pre className="overflow-x-auto text-sm">
-              <code>{t(locale, 'hero.docker')}</code>
-            </pre>
-        </div>
+          <MimirTerminal />
         </section>
 
         <section className="flex flex-col gap-6">
@@ -171,6 +165,14 @@ export default async function MarketingPage({
             <a href="/docs" className={secondary}>
               {t(locale, 'hero.docs')}
             </a>
+          </div>
+          <div className="pt-1">
+            <p className="mb-1 text-xs uppercase tracking-wide text-[var(--text-muted)]">
+              {t(locale, 'hero.dockerLabel')}
+            </p>
+            <pre className="w-fit max-w-full overflow-x-auto rounded border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm">
+              <code>{t(locale, 'hero.docker')}</code>
+            </pre>
           </div>
         </section>
       </main>

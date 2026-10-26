@@ -36,6 +36,60 @@ MIMIR_TOKEN=mimir_...        # mint one under Settings → API keys`}</Code>
         never sees a working directory, so the client is the only thing that can compute this.
       </P>
 
+      <H2>Raw HTTP</H2>
+      <P>
+        MCP here is JSON-RPC 2.0 over a plain <code>POST</code>. A client library hides this, but seeing it once makes
+        debugging a token or a header much quicker.
+      </P>
+      <Code language="bash">{`curl -s "$MIMIR_URL/mcp" \\
+  -H "Authorization: Bearer $MIMIR_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -H "X-Mimir-Repo: github.com/owner/repo" \\
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "memory_search",
+      "arguments": { "query": "token rotation", "path_prefix": "auth" }
+    }
+  }'`}</Code>
+      <Code language="json">{`{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "results": [
+      {
+        "path": "auth/token-rotation",
+        "title": "Rotating the API token",
+        "summary": "Rotate in the admin panel, then redeploy.",
+        "score": 0.0328
+      }
+    ],
+    "content": [{ "type": "text", "text": "[{\\"path\\":\\"auth/token-rotation\\",…}]" }],
+    "isError": false
+  }
+}`}</Code>
+      <Ul>
+        <li>
+          <code>initialize</code> answers with protocol version <code>2025-06-18</code> and{' '}
+          <code>tools.listChanged: false</code>; <code>ping</code> answers with an empty result.
+        </li>
+        <li>
+          <code>tools/list</code> returns each tool’s name, description and JSON schema. No token scope narrows the
+          list; a grant narrows what a call may touch.
+        </li>
+        <li>
+          A tool result carries the payload twice: as fields on <code>result</code> for a script, and as{' '}
+          <code>content[0].text</code> for a standard MCP client.
+        </li>
+        <li>
+          A failed call is a JSON-RPC error with a service code in <code>error.data.code</code>, and still writes one
+          audit row. An expired token is HTTP 401 with <code>{'{"jsonrpc":"2.0","id":null,"error":{…}}'}</code>;
+          a rate limit is 429 with <code>Retry-After</code>.
+        </li>
+      </Ul>
+
       <H2>Tools</H2>
       <Table head={['Tool', 'Purpose']} rows={TOOL_NAMES.map((name) => [name, purpose(name)])} />
 

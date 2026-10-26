@@ -34,7 +34,9 @@ describe('agent page', () => {
   it('renders the opencode config as json', async () => {
     const html = renderToStaticMarkup(await AgentPage({ params: Promise.resolve({ agent: 'opencode' }) }));
     expect(html).toContain('opencode.json');
-    expect(html).toContain('&quot;type&quot;: &quot;remote&quot;');
+    // Highlighting splits the JSON into spans, so compare the text it renders.
+    const text = html.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"');
+    expect(text).toContain('"type": "remote"');
   });
 
   it('404s an unknown agent', async () => {

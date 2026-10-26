@@ -36,6 +36,14 @@ describe('docs content', () => {
     expect(html).not.toContain('TODO')
   })
 
+  it('shows a raw mcp call and its envelope', async () => {
+    const html = renderToStaticMarkup(await McpPage())
+
+    expect(html).toContain('tools/call')
+    expect(html).toContain('jsonrpc')
+    expect(html).toContain('2025-06-18')
+  })
+
   it('names every mcp tool', async () => {
     const html = renderToStaticMarkup(await McpPage())
 
@@ -49,6 +57,10 @@ describe('docs content', () => {
 
     expect(html).toContain('/api/v1/projects')
     expect(html).toContain('/api/v1/projects/:slug/search')
+    // A route table alone does not teach; the page carries request and response.
+    expect(html).toContain('&quot;memoryCount&quot;')
+    expect(html).toContain('restored')
+    expect(html).toContain('body_too_large')
   })
 
   it('renders the current version', async () => {

@@ -93,7 +93,7 @@ Two independent settings, because they answer different questions.
 
 **Search** is install-wide and set by an admin: **Admin → Settings**, point it at an embedding model. Until one is configured, search works on keywords alone — you lose nothing, you just get no semantic matches.
 
-Ollama is the homelab default (`nomic-embed-text`, 768 dimensions). The base URL depends on where Ollama runs:
+Ollama is the homelab default (`nomic-embed-text`, 768 dimensions). Octen is a hosted alternative — add it in **Settings → Providers**, pick one of its three models, and give it a key. Both answer at the 768 dimensions the schema stores. The base URL depends on where Ollama runs:
 
 | Where Ollama runs | Base URL |
 |---|---|

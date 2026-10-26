@@ -19,7 +19,7 @@ export function toVectorLiteral(values: number[]): string {
  */
 export async function embedText(
   text: string,
-  options: { timeoutMs?: number } = {},
+  options: { timeoutMs?: number; inputType?: 'query' | 'document' } = {},
 ): Promise<string | null> {
   // Everything, including provider resolution, is inside the try: a rotated
   // MIMIR_SECRET makes decryption throw, and that must not fail the write.
@@ -29,6 +29,8 @@ export async function embedText(
 
     const [values] = await embed(provider, [text.slice(0, EMBED_TEXT_LIMIT)], {
       timeoutMs: options.timeoutMs ?? 10_000,
+      dimension: EMBEDDING_DIM,
+      inputType: options.inputType,
     })
 
     if (!values || values.length !== EMBEDDING_DIM) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { PRESETS, type PresetId } from '@/lib/providers/presets'
+import { PRESETS, type PresetId, type PresetModel, type ProviderKind } from '@/lib/providers/presets'
 import { createProviderAction, type ProviderFormState } from './actions'
 
 const initial: ProviderFormState = {}
@@ -29,16 +29,33 @@ export type ProviderFormLabels = {
 const field =
   'rounded border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-[var(--fg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]'
 
-export function ProviderForm({ labels }: { labels: ProviderFormLabels }) {
+function kindLabel(kind: ProviderKind, labels: ProviderFormLabels): string {
+  return kind === 'llm' ? labels.kindLlm : labels.kindEmbedding
+}
+
+export function ProviderForm({
+  labels,
+  models,
+}: {
+  labels: ProviderFormLabels
+  /** The catalogue per preset. An empty list means a free-text model field. */
+  models: Record<PresetId, PresetModel[]>
+}) {
   const [state, action, pending] = useActionState(createProviderAction, initial)
   const [presetId, setPresetId] = useState<PresetId>('deepseek')
   const [model, setModel] = useState(PRESETS.deepseek.defaultModel)
   const [baseUrl, setBaseUrl] = useState(PRESETS.deepseek.baseUrl)
+  const [kind, setKind] = useState<ProviderKind>(PRESETS.deepseek.kinds[0] as ProviderKind)
+
+  const kinds = PRESETS[presetId].kinds
+  const catalogue = models[presetId] ?? []
 
   function choose(id: PresetId) {
     setPresetId(id)
     setModel(PRESETS[id].defaultModel)
     setBaseUrl(PRESETS[id].baseUrl)
+    // A preset that does not provide the chosen kind must not submit it.
+    if (!PRESETS[id].kinds.includes(kind)) setKind(PRESETS[id].kinds[0] as ProviderKind)
   }
 
   return (
@@ -62,10 +79,25 @@ export function ProviderForm({ labels }: { labels: ProviderFormLabels }) {
 
         <label className="flex flex-col gap-1 text-sm">
           <span>{labels.kind}</span>
-          <select name="kind" defaultValue="llm" className={field}>
-            <option value="llm">{labels.kindLlm}</option>
-            <option value="embedding">{labels.kindEmbedding}</option>
-          </select>
+          {kinds.length > 1 ? (
+            <select
+              name="kind"
+              value={kind}
+              onChange={(e) => setKind(e.target.value as (typeof kinds)[number])}
+              className={field}
+            >
+              {kinds.map((value) => (
+                <option key={value} value={value}>
+                  {value === 'llm' ? labels.kindLlm : labels.kindEmbedding}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <>
+              <input type="hidden" name="kind" value={kinds[0]} />
+              <span className={field}>{kindLabel(kinds[0] as ProviderKind, labels)}</span>
+            </>
+          )}
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
@@ -75,12 +107,27 @@ export function ProviderForm({ labels }: { labels: ProviderFormLabels }) {
 
         <label className="flex flex-col gap-1 text-sm">
           <span>{labels.model}</span>
-          <input
-            name="model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className={field}
-          />
+          {catalogue.length > 0 ? (
+            <select
+              name="model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className={field}
+            >
+              {catalogue.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label ? `${option.id} — ${option.label}` : option.id}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              name="model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className={field}
+            />
+          )}
         </label>
 
         <label className="flex flex-col gap-1 text-sm sm:col-span-2">

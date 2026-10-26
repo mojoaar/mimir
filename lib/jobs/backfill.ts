@@ -27,7 +27,10 @@ export async function runBackfill(data: BackfillData): Promise<BackfillResult> {
       const text = [row.path, row.title ?? '', row.body].join('\n').slice(0, EMBED_TEXT_LIMIT)
       let vector: number[]
       try {
-        const [first] = await embed(provider, [text])
+        const [first] = await embed(provider, [text], {
+          dimension: EMBEDDING_DIM,
+          inputType: 'document',
+        })
         if (!first) throw new Error('provider returned no vector')
         vector = first
       } catch (error) {

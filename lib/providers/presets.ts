@@ -5,7 +5,14 @@ export type PresetId =
   | 'opencode_go'
   | 'opencode_console'
   | 'ollama'
+  | 'octen'
   | 'openai_compatible'
+
+export type PresetModel = {
+  id: string
+  /** Shown after the id, for a list whose entries need a price. */
+  label?: string
+}
 
 export type Preset = {
   label: string
@@ -14,6 +21,10 @@ export type Preset = {
   kinds: ProviderKind[]
   defaultModel: string
   defaultDim?: number
+  /** A catalogue that never changes, such as the two DeepSeek models. */
+  models?: PresetModel[]
+  /** A public list fetched at page load; it is not below `baseUrl`. */
+  modelsUrl?: string
 }
 
 export const PRESETS: Record<PresetId, Preset> = {
@@ -21,19 +32,22 @@ export const PRESETS: Record<PresetId, Preset> = {
     label: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com',
     kinds: ['llm'],
-    defaultModel: 'deepseek-chat',
+    defaultModel: 'deepseek-flash',
+    models: [{ id: 'deepseek-flash' }, { id: 'deepseek-v4-pro' }],
   },
   opencode_go: {
     label: 'OpenCode Go',
     baseUrl: 'https://opencode.ai/inference/go/openai',
     kinds: ['llm'],
     defaultModel: 'deepseek-v4.1-flash',
+    modelsUrl: 'https://opencode.ai/inference/v1/models',
   },
   opencode_console: {
     label: 'OpenCode Console',
     baseUrl: 'https://opencode.ai/inference/openai',
     kinds: ['llm'],
     defaultModel: 'deepseek-v4.1-flash',
+    modelsUrl: 'https://opencode.ai/inference/v1/models',
   },
   ollama: {
     label: 'Ollama',
@@ -41,6 +55,18 @@ export const PRESETS: Record<PresetId, Preset> = {
     kinds: ['llm', 'embedding'],
     defaultModel: 'nomic-embed-text',
     defaultDim: 768,
+  },
+  octen: {
+    label: 'Octen',
+    baseUrl: 'https://api.octen.ai',
+    kinds: ['embedding'],
+    defaultModel: 'octen-embedding-4b',
+    defaultDim: 768,
+    models: [
+      { id: 'octen-embedding-0.6b', label: '$0.01 per 1M tokens' },
+      { id: 'octen-embedding-4b', label: '$0.04 per 1M tokens' },
+      { id: 'octen-embedding-8b', label: '$0.07 per 1M tokens' },
+    ],
   },
   openai_compatible: {
     label: 'OpenAI-compatible',

@@ -11,6 +11,15 @@ export type ProviderTarget = {
 
 export type ClientDeps = { fetch?: typeof fetch; timeoutMs?: number }
 
+/** Octen asks whether a text is a query or a document; the prompt differs. */
+export type EmbedDeps = ClientDeps & {
+  dimension?: number
+  inputType?: 'query' | 'document'
+}
+
+/** The schema stores vector(768), so that is what a provider must answer with. */
+const DEFAULT_DIMENSION = 768
+
 export class ProviderError extends Error {
   readonly code = 'provider_error'
   readonly status?: number
@@ -69,15 +78,50 @@ export async function chatComplete(
   return content
 }
 
-export async function embed(target: ProviderTarget, input: string[], deps?: ClientDeps): Promise<number[][]> {
-  const json = (await request(target, '/v1/embeddings', { model: target.model, input }, deps)) as {
-    data?: { embedding?: number[] }[]
+export async function embed(
+  target: ProviderTarget,
+  input: string[],
+  deps?: EmbedDeps,
+): Promise<number[][]> {
+  const dimension = deps?.dimension ?? DEFAULT_DIMENSION
+
+  // Octen is not OpenAI-shaped: another path, a `results` array and a dimension
+  // that must be named, since its models answer at 1024 or more otherwise.
+  if (target.preset === 'octen') {
+    const json = (await request(
+      target,
+      '/embedding',
+      {
+        model: target.model,
+        input,
+        dimension,
+        input_type: deps?.inputType ?? 'document',
+      },
+      deps,
+    )) as { data?: { results?: { index?: number; embedding?: number[] }[] } }
+    const rows = [...(json.data?.results ?? [])].sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+    return vectors(rows.map((row) => row.embedding), input.length)
   }
-  const vectors = (json.data ?? []).map((row) => row.embedding)
-  if (vectors.length !== input.length || vectors.some((v) => !Array.isArray(v))) {
+
+  const body = { model: target.model, input, dimensions: dimension }
+  type EmbedResponse = { data?: { embedding?: number[] }[] }
+  let json: EmbedResponse
+  try {
+    json = (await request(target, '/v1/embeddings', body, deps)) as EmbedResponse
+  } catch (error) {
+    // Some OpenAI-compatible shims refuse `dimensions` even though the field is
+    // standard. One retry without it; anything but a 400 is a real failure.
+    if (!(error instanceof ProviderError && error.status === 400)) throw error
+    json = (await request(target, '/v1/embeddings', { model: target.model, input }, deps)) as EmbedResponse
+  }
+  return vectors((json.data ?? []).map((row) => row.embedding), input.length)
+}
+
+function vectors(values: (number[] | undefined)[], expected: number): number[][] {
+  if (values.length !== expected || values.some((v) => !Array.isArray(v))) {
     throw new ProviderError('embedding count did not match the input')
   }
-  return vectors as number[][]
+  return values as number[][]
 }
 
 export async function listModels(target: ProviderTarget, deps?: ClientDeps): Promise<string[]> {

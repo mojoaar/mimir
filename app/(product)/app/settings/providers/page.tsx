@@ -1,10 +1,14 @@
 import { requireUser } from '@/lib/auth/context'
 import { translator } from '@/lib/i18n/request'
+import { availableModels } from '@/lib/providers/models'
+import { PRESETS, type PresetId, type PresetModel } from '@/lib/providers/presets'
 import { listProviders, type ProviderSummary } from '@/lib/providers/service'
 import { ProviderForm } from './provider-form'
 import { deleteProviderAction, setDefaultAction, verifyProviderAction } from './actions'
 
 export const instant = false
+
+const PRESET_IDS = Object.keys(PRESETS) as PresetId[]
 
 const secondary =
   'rounded border border-[var(--border)] px-2 py-1 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]'
@@ -105,7 +109,12 @@ function Section({
 export default async function ProvidersPage() {
   const user = await requireUser()
   const t = await translator()
-  const providers = await listProviders(user.id)
+  const [providers, models] = await Promise.all([
+    listProviders(user.id),
+    Promise.all(PRESET_IDS.map(async (id) => [id, await availableModels(id)] as const)).then(
+      (entries) => Object.fromEntries(entries) as Record<PresetId, PresetModel[]>,
+    ),
+  ])
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-8 sm:px-6">
@@ -131,6 +140,7 @@ export default async function ProvidersPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-medium">{t('app.providers.add')}</h2>
         <ProviderForm
+          models={models}
           labels={{
             provider: t('app.providers.fieldProvider'),
             kind: t('app.providers.fieldKind'),

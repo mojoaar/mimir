@@ -549,7 +549,7 @@ export const da: Messages = {
   'app.usage.pruneHint': 'Slet kaldshistorik ældre end så mange dage. Revisionsloggen er separat og udløber af sig selv.',
   'app.usage.pruneDays': 'Behold de sidste (dage)',
   'app.usage.pruneButton': 'Slet ældre kald',
-  'app.usage.pruned': 'Fjernede {count} kald ældre end {days} dage.',
+  'app.usage.pruned': 'Ryddede kald ældre end {days} dage: {count}.',
   'app.usage.dismiss': 'Skjul stigningen',
   'app.admin.nav.back': 'Tilbage til appen',
   'footer.tagline': 'Erindringens brønd, til dine agenter.',

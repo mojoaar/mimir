@@ -560,7 +560,7 @@ export const de: Messages = {
   'app.usage.pruneHint': 'Ruftverlauf löschen, der älter als diese Anzahl von Tagen ist. Das Audit-Protokoll ist getrennt und läuft von selbst aus.',
   'app.usage.pruneDays': 'Die letzten behalten (Tage)',
   'app.usage.pruneButton': 'Ältere Aufrufe löschen',
-  'app.usage.pruned': '{count} Aufrufe älter als {days} Tage entfernt.',
+  'app.usage.pruned': 'Aufrufe älter als {days} Tage entfernt: {count}.',
   'app.usage.dismiss': 'Spitze ausblenden',
   'app.admin.nav.back': 'Zurück zur App',
   'footer.tagline': 'Der Brunnen der Erinnerung, für deine Agenten.',

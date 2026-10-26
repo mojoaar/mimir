@@ -134,7 +134,7 @@ describe('the usage page', () => {
 
     expect(html).toContain('name="days"')
     expect(html).toContain('Delete older calls')
-    expect(html).toContain('Removed 12 calls older than 90 days.')
+    expect(html).toContain('Pruned calls older than 90 days: 12.')
   })
 })
 

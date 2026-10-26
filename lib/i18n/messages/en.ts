@@ -546,7 +546,7 @@ export const en = {
   'app.usage.pruneHint': 'Delete call history older than this many days. The audit trail is separate and ages itself out.',
   'app.usage.pruneDays': 'Keep the last (days)',
   'app.usage.pruneButton': 'Delete older calls',
-  'app.usage.pruned': 'Removed {count} calls older than {days} days.',
+  'app.usage.pruned': 'Pruned calls older than {days} days: {count}.',
   'app.usage.dismiss': 'Dismiss the spike',
   'app.admin.nav.back': 'Back to app',
   'footer.tagline': 'The well of memory, for your agents.',

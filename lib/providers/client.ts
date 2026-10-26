@@ -196,17 +196,3 @@ function vectors(values: (number[] | undefined)[], expected: number): number[][]
   }
   return values as number[][]
 }
-
-export async function listModels(target: ProviderTarget, deps?: ClientDeps): Promise<string[]> {
-  const doFetch = deps?.fetch ?? fetch
-  const response = await doFetch(`${target.baseUrl}/v1/models`, {
-    method: 'GET',
-    headers: headersFor(target),
-    signal: AbortSignal.timeout(deps?.timeoutMs ?? DEFAULT_TIMEOUT_MS),
-    // A public endpoint must not be able to redirect the server into the network.
-    redirect: 'manual',
-  })
-  if (!response.ok) throw new ProviderError(`provider responded ${response.status}`, response.status)
-  const json = (await response.json()) as { data?: { id?: string }[] }
-  return (json.data ?? []).map((row) => row.id).filter((id): id is string => typeof id === 'string')
-}

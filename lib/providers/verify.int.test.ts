@@ -42,6 +42,25 @@ test('records success and the probed dimension', async () => {
   expect(row?.lastVerifiedAt).not.toBeNull()
 })
 
+test('an LLM provider with no model list still verifies', async () => {
+  // OpenCode Go answers chat but has no /v1/models route, so listing models
+  // reported a 404 against a key that works.
+  const p = await createProvider({
+    userId: fixtures.admin,
+    kind: 'llm',
+    preset: 'opencode_go',
+    label: 'go',
+    model: 'deepseek-v4.1-flash',
+    apiKey: 'sk-go-key',
+  })
+  vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+    if (init.method === 'GET') return new Response('not found', { status: 404 })
+    return new Response(JSON.stringify({ choices: [{ message: { content: 'pong' } }] }))
+  })
+
+  expect(await verifyProvider(fixtures.admin, p.id)).toEqual({ ok: true })
+})
+
 test('probes the model it is about to save, not the stored one', async () => {
   const p = await createProvider({
     userId: fixtures.admin,

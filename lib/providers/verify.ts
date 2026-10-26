@@ -1,7 +1,7 @@
-import { embed, listModels, ProviderError, type ProviderTarget } from './client'
+import { chatComplete, embed, ProviderError, type ProviderTarget } from './client'
 import { getProviderSecret, recordVerification } from './service'
 
-export type VerifyResult = { ok: true; models?: string[]; dim?: number } | { ok: false; error: string }
+export type VerifyResult = { ok: true; dim?: number } | { ok: false; error: string }
 
 const PROBE_TIMEOUT_MS = 15_000
 
@@ -26,9 +26,7 @@ export async function verifyProvider(
 
   try {
     const result =
-      secret.kind === 'embedding'
-        ? await probeEmbedding(target)
-        : { ok: true as const, models: await listModels(target, { timeoutMs: PROBE_TIMEOUT_MS }) }
+      secret.kind === 'embedding' ? await probeEmbedding(target) : await probeChat(target)
     await recordVerification(userId, id, null)
     return result
   } catch (error) {
@@ -41,4 +39,18 @@ export async function verifyProvider(
 async function probeEmbedding(target: ProviderTarget): Promise<VerifyResult> {
   const [vector] = await embed(target, ['ping'], { timeoutMs: PROBE_TIMEOUT_MS, purpose: 'probe' })
   return { ok: true, dim: vector?.length ?? 0 }
+}
+
+/**
+ * An LLM is probed with the thing Mimir does with it: one short completion.
+ * Listing models instead failed on every provider without a models endpoint
+ * (OpenCode Go and Console among them), reporting a broken key when the key
+ * was fine.
+ */
+async function probeChat(target: ProviderTarget): Promise<VerifyResult> {
+  await chatComplete(target, [{ role: 'user', content: 'ping' }], {
+    timeoutMs: PROBE_TIMEOUT_MS,
+    purpose: 'probe',
+  })
+  return { ok: true }
 }

@@ -78,7 +78,11 @@ export default async function MarketingPage({
       />
 
       <header className="flex flex-wrap items-center justify-between gap-3 py-6">
-        <span className="text-lg font-semibold tracking-tight">{site.siteName}</span>
+        <span className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
+          {site.siteName}
+        </span>
         <nav className="flex items-center gap-4 text-sm">
           <a className="text-[var(--text-muted)] hover:text-[var(--fg)]" href="/docs">
             {t(locale, 'hero.docs')}

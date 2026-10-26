@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import './prism-bash';
 import { Highlight, type Language, type PrismTheme } from 'prism-react-renderer';
 
 /**
@@ -20,6 +21,11 @@ const COLOR: Record<string, string> = {
   builtin: 'var(--accent)',
   boolean: 'var(--accent)',
   number: 'var(--accent)',
+  // Shell: the name on the left of an assignment, and a `$variable` in a line.
+  variable: 'var(--accent)',
+  'assign-left': 'var(--accent)',
+  parameter: 'var(--accent)',
+  environment: 'var(--accent)',
   function: 'var(--fg)',
   'class-name': 'var(--fg)',
   property: 'var(--fg)',
@@ -27,7 +33,8 @@ const COLOR: Record<string, string> = {
   tag: 'var(--fg)',
 };
 
-const HIGHLIGHTED = new Set(['bash', 'json', 'ts', 'typescript', 'js', 'javascript']);
+// The languages the docs actually use; anything else stays plain text.
+const HIGHLIGHTED = new Set(['bash', 'json']);
 
 /** No built-in palette: every colour comes from the CSS variables above. */
 const THEME: PrismTheme = {

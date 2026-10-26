@@ -7,6 +7,7 @@ export const da: Messages = {
   'hero.docs': 'Læs dokumentationen',
   'hero.github': 'GitHub',
   'hero.docker': 'docker compose up -d',
+  'hero.openApp': 'Åbn appen',
   'hero.signIn': 'Log ind',
   'hero.eyebrow': 'Langtidsukommelse til kodeagenter',
   'hero.headline': 'Dine agenter glemmer alt. Ret det på fem minutter.',

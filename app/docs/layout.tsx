@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { DOCS_NAV } from '@/lib/docs/nav';
 import { parseTheme } from '@/lib/theme';
+import { getCurrentUser } from '@/lib/auth/context';
 import AppFooter from '@/components/app/footer';
 
 function Sidebar() {
@@ -35,7 +36,10 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
   // Reading the theme cookie makes docs dynamic, which they must be: canonical
   // URLs and the OG image come from the database, and a prerendered copy would
   // bake in a localhost origin.
-  const theme = parseTheme((await cookies()).get('mimir_theme')?.value);
+  const [theme, user] = await Promise.all([
+    cookies().then((store) => parseTheme(store.get('mimir_theme')?.value)),
+    getCurrentUser(),
+  ]);
 
   return (
     <div data-theme={theme} className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)]">
@@ -51,7 +55,7 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
             href="/app"
             className="ml-auto text-sm text-[var(--text-muted)] hover:text-[var(--fg)]"
           >
-            Sign in
+            {user ? 'Open app' : 'Sign in'}
           </Link>
         </div>
       </header>

@@ -5,6 +5,7 @@ export const en = {
   'hero.docs': 'Read the docs',
   'hero.github': 'GitHub',
   'hero.docker': 'docker compose up -d',
+  'hero.openApp': 'Open app',
   'hero.signIn': 'Sign in',
   'hero.eyebrow': 'Long-term memory for coding agents',
   'hero.headline': 'Your agents forget everything. Fix that in five minutes.',

@@ -10,6 +10,8 @@ vi.mock('next/headers', () => ({
 }))
 
 vi.mock('@/lib/auth/context', () => ({
+  // The docs header asks whether there is a session to name the entry point.
+  getCurrentUser: async () => null,
   requireUser: async () => ({
     id: 'u1',
     email: 'alice@example.test',

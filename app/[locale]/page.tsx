@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getSiteSettings, getPublicUrl } from '@/lib/settings/site';
 import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i18n';
 import { connection } from 'next/server';
+import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
 
 export const instant = false;
@@ -53,7 +54,9 @@ export default async function MarketingPage({
   const { locale: raw } = await params;
   if (!isLocale(raw)) notFound();
   const locale: Locale = raw;
-  const site = await getSiteSettings();
+  const [site, user] = await Promise.all([getSiteSettings(), getCurrentUser()]);
+  // The same link, named for what it does: enter the app, or sign in first.
+  const entry = t(locale, user ? 'hero.openApp' : 'hero.signIn');
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -95,7 +98,7 @@ export default async function MarketingPage({
             {t(locale, 'hero.github')}
           </a>
           <a className={secondary} href="/app">
-            {t(locale, 'hero.signIn')}
+            {entry}
           </a>
         </nav>
       </header>
@@ -123,7 +126,7 @@ export default async function MarketingPage({
           </ul>
           <div className="flex flex-wrap items-center gap-3">
             <a href="/app" className={primary}>
-              {t(locale, 'hero.signIn')}
+              {entry}
             </a>
             <a href="/docs" className={secondary}>
               {t(locale, 'hero.docs')}
@@ -160,7 +163,7 @@ export default async function MarketingPage({
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <a href="/app" className={primary}>
-              {t(locale, 'hero.signIn')}
+              {entry}
             </a>
             <a href="/docs" className={secondary}>
               {t(locale, 'hero.docs')}

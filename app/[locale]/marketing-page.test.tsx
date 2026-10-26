@@ -13,6 +13,12 @@ vi.mock('@/lib/settings/site', () => ({
   }),
 }));
 
+vi.mock('@/lib/auth/context', () => ({
+  getCurrentUser: async () => session.user,
+}));
+
+const session = vi.hoisted(() => ({ user: null as null | { id: string } }));
+
 import { t } from '@/lib/i18n';
 import MarketingPage from './page';
 
@@ -52,6 +58,15 @@ describe('the marketing page', () => {
     expect(html).toContain(t('en', 'hero.chip1'));
     expect(html).toContain(t('en', 'hero.dockerLabel'));
     expect(html).toContain(t('en', 'cta.title'));
+  });
+
+  test('names the entry point for someone already signed in', async () => {
+    session.user = { id: 'u1' };
+    const html = renderToStaticMarkup(await page('en'));
+    session.user = null;
+
+    expect(html).toContain(t('en', 'hero.openApp'));
+    expect(html).not.toContain(t('en', 'hero.signIn'));
   });
 
   test('shows an agent using Mimir over mcp', async () => {

@@ -9,6 +9,8 @@ vi.mock('next/link', () => ({
 
 vi.mock('next/server', () => ({ connection: async () => {} }));
 
+vi.mock('@/lib/auth/context', () => ({ getCurrentUser: async () => null }));
+
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => ({ value: 'nordlys-dark' }) }),
 }));

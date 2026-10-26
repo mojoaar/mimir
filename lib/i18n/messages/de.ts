@@ -7,6 +7,7 @@ export const de: Messages = {
   'hero.docs': 'Dokumentation lesen',
   'hero.github': 'GitHub',
   'hero.docker': 'docker compose up -d',
+  'hero.openApp': 'App öffnen',
   'hero.signIn': 'Anmelden',
   'hero.eyebrow': 'Langzeitgedächtnis für Coding-Agenten',
   'hero.headline': 'Deine Agenten vergessen alles. Behebe das in fünf Minuten.',

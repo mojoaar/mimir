@@ -159,7 +159,11 @@ export default async function ProjectBrowser({
               </p>
               {canWrite ? (
                 <>
+                  {/* A client navigation keeps this element mounted, and the editor's
+                      textarea is uncontrolled: without the key it would keep the
+                      previous memory's text while the heading changed. */}
                   <MemoryEditor
+                    key={memory.path}
                     slug={slug}
                     projectId={project.id}
                     path={memory.path}

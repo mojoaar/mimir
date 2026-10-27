@@ -1,26 +1,42 @@
 # @mojoaar/opencode-mimir
 
-Mimir memory for [OpenCode](https://opencode.ai): two tools, no ceremony.
+Mimir memory for [OpenCode](https://opencode.ai) v2: two tools and an automatic
+digest, no ceremony.
+
+Install straight from the repository this package lives in:
 
 ```sh
-npm install @mojoaar/opencode-mimir
+opencode plugin add 'github:mojoaar/mimir#main::path:packages/opencode-plugin'
 ```
 
-Add it to `opencode.json` (or `~/.config/opencode/opencode.json`):
+Or point at it in `opencode.json` (or `~/.config/opencode/opencode.jsonc`):
 
-```json
+```jsonc
 {
-  "plugin": ["@mojoaar/opencode-mimir"]
+  "plugins": ["github:mojoaar/mimir#main::path:packages/opencode-plugin"]
 }
 ```
 
-Then export the two variables OpenCode runs with:
+The options form is the same entry with your settings attached:
 
-```sh
-export MIMIR_URL=https://mimir.example.com
-export MIMIR_TOKEN=mimir_...     # mint it at /app/settings
-export MIMIR_REPO=github.com/you/your-repo   # optional; otherwise read from git
+```jsonc
+{
+  "plugins": [
+    {
+      "package": "github:mojoaar/mimir#main::path:packages/opencode-plugin",
+      "options": {
+        "url": "https://mimir.example.com",
+        "tokenFile": "~/.config/opencode/.secrets/mimir-token",
+        "tools": "auto"
+      }
+    }
+  ]
+}
 ```
+
+`url`, `token` and `tokenFile` fall back to `MIMIR_URL` / `MIMIR_TOKEN`, and
+`MIMIR_REPO` overrides the repository read from git. The token file is the same
+one the MCP header can use.
 
 ## What you get
 
@@ -29,30 +45,27 @@ export MIMIR_REPO=github.com/you/your-repo   # optional; otherwise read from git
 | `mimir_digest` | Returns what this project already knows: paths, titles, and a summary of the newest memories. |
 | `mimir_remember` | Stores one durable fact at a path like `deploy/rollback`. Writing the same path again replaces it. |
 
-Ask the agent to call `mimir_digest` when a session starts as a belt-and-braces
-fallback, and put this in your `AGENTS.md`:
+`tools` decides whether they are added: `auto` (default) leaves them out when an
+MCP server already points at the same `/mcp` endpoint, `always` adds them
+anyway, `never` adds none. With only the plugin installed, `auto` gives you
+both.
 
-> Call `mimir_digest` before your first action. Store durable decisions with
-> `mimir_remember` as you make them.
-
-Both tools fail soft: if Mimir is down or the variables are missing, the tool
-says so and the session carries on.
+Both tools fail soft: if Mimir is down or unconfigured, the tool says so and the
+session carries on.
 
 ## The digest arrives on its own
 
-The plugin also uses OpenCode's `experimental.chat.system.transform` hook to put
-the project's digest at the top of the system prompt before the first turn. It
-asks for 800 tokens with a 1.5 second timeout, and does nothing at all when Mimir
-is unreachable, slow, or unconfigured — a session never waits on memory.
-
-The hook is named experimental because that is how the plugin API marks it. If a
-future OpenCode release renames or drops it, the plugin keeps working and you
-lose only the automatic part; `mimir_digest` still answers.
+The plugin registers a `context` hook that puts the project's digest at the top
+of the system prompt before the first turn, once per session. It asks for 800
+tokens with a 1.5 second timeout, and does nothing at all when Mimir is
+unreachable, slow, or unconfigured — a session never waits on memory.
 
 ## Import an existing project
 
-```
-npx @mojoaar/opencode-mimir ingest .
+Until the package is published, run the CLI from a checkout:
+
+```sh
+node packages/opencode-plugin/dist/bin.js ingest .
 ```
 
 Walks the folder and loads its **documentation and configuration** — READMEs,

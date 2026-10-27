@@ -15,7 +15,7 @@ const DEFAULT_TOKEN_FILE = join(homedir(), '.config/opencode/.secrets/mimir-toke
  */
 export function resolveConfig(
   options: Record<string, unknown>,
-  env: NodeJS.ProcessEnv = process.env,
+  env: Record<string, string | undefined> = process.env,
   readFile: (path: string) => string = (path) => readFileSync(path, 'utf8'),
 ): MimirConfig | null {
   const url = normaliseUrl(text(options.url) ?? text(env.MIMIR_URL))

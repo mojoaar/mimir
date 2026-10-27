@@ -23,7 +23,8 @@ for the model (projects, paths, versions, digest, search, teams, audit) and
 There is also a page per agent
 (OpenCode, Claude Code, Codex, Cursor, Gemini CLI, Pi, Antigravity, Hermes,
 Muse) with the exact config file each one reads. The OpenCode plugin is
-`@mojoaar/opencode-mimir`; the Claude Code session-start hook is
+`@mojoaar/opencode-mimir`, which runs on the OpenCode v2 plugin API and installs straight from this
+repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); the Claude Code session-start hook is
 `hooks/mimir-session-start.sh`.
 
 An existing project can be loaded in one command:

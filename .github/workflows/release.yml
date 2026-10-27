@@ -11,9 +11,10 @@ permissions:
 jobs:
   image:
     runs-on: ubuntu-26.04
-    # A normal build takes a few minutes. Without this, a stalled buildx step
-    # (or its cleanup) leaves the run "in progress" forever.
-    timeout-minutes: 30
+    # A warm build takes a few minutes; a cold multi-arch build under qemu has
+    # taken over thirty. Without a limit a stalled buildx step (or its cleanup)
+    # leaves the run "in progress" forever, so this is a backstop, not a target.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
 
@@ -34,6 +35,10 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          # Cold runs re-do every layer; the registry cache makes the next
+          # release a few minutes instead of half an hour.
+          cache-from: type=registry,ref=ghcr.io/mojoaar/mimir:buildcache
+          cache-to: type=registry,ref=ghcr.io/mojoaar/mimir:buildcache,mode=max
           tags: |
             ghcr.io/mojoaar/mimir:${{ steps.meta.outputs.version }}
             ghcr.io/mojoaar/mimir:latest

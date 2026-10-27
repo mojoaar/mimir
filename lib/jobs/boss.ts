@@ -16,7 +16,9 @@ const POLICIES: Record<JobName, 'short' | 'standard'> = {
 
 const JOB_NAMES = Object.keys(POLICIES) as JobName[]
 
-type Handler = (data: Record<string, unknown>) => Promise<void>
+// Whatever a handler returns is what pg-boss stores as the job's output, so a
+// finished job can say "12 embedded" instead of just "completed".
+type Handler = (data: Record<string, unknown>) => Promise<unknown>
 
 type JobState = {
   boss: PgBoss | null
@@ -69,9 +71,7 @@ export async function startJobs(): Promise<void> {
     }
     for (const [name, handler] of jobs.workers) {
       // pg-boss hands the worker an array of jobs; we process one at a time.
-      await instance.work(name, async ([job]) => {
-        await handler((job?.data ?? {}) as Record<string, unknown>)
-      })
+      await instance.work(name, async ([job]) => handler((job?.data ?? {}) as Record<string, unknown>))
     }
 
     jobs.boss = instance

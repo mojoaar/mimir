@@ -1,5 +1,7 @@
 import { requireAdmin } from '@/lib/auth/admin'
+import { hourStamp, stamp } from '@/lib/format/time'
 import { translator } from '@/lib/i18n/request'
+import { getTimeFormat } from '@/lib/settings/time'
 import { breakdown, daily, failures, hourly, people, spend } from '@/lib/usage/service'
 import { pruneUsageAction } from './actions'
 
@@ -41,13 +43,14 @@ export default async function UsagePage({
 }) {
   await requireAdmin()
   const t = await translator()
+  const { timeZone, clock } = await getTimeFormat()
   const search = await searchParams
   const [month, days, hours, models, users, failed] = await Promise.all([
-    spend(),
-    daily(),
-    hourly(),
-    breakdown(),
-    people(),
+    spend(timeZone),
+    daily(timeZone),
+    hourly(timeZone),
+    breakdown(timeZone),
+    people(timeZone),
     failures(),
   ])
 
@@ -90,19 +93,19 @@ export default async function UsagePage({
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-lg font-medium">{t('app.usage.hourly')}</h2>
+        <h2 className="text-lg font-medium">{t('app.usage.hourly', { zone: timeZone })}</h2>
         <div className="flex items-end gap-1">
           {hours.map((hour) => (
             <Bar
               key={hour.hour}
               height={Math.round((hour.calls / hourPeak) * 100)}
-              label={`${hour.hour} UTC · ${t('app.usage.callsCount', { count: hour.calls })}`}
+              label={`${hourStamp(hour.hour.slice(0, 13), clock)} · ${t('app.usage.callsCount', { count: hour.calls })}`}
             />
           ))}
         </div>
         <div className="flex justify-between text-xs text-[var(--text-muted)]">
-          <span>{hours[0]?.hour} UTC</span>
-          <span>{hours.at(-1)?.hour} UTC</span>
+          <span>{hours[0] && hourStamp(hours[0].hour.slice(0, 13), clock)}</span>
+          <span>{hours.at(-1) && hourStamp(hours.at(-1)!.hour.slice(0, 13), clock)}</span>
         </div>
       </section>
 
@@ -166,7 +169,7 @@ export default async function UsagePage({
                 {row.model} · {row.purpose}
                 <span className="text-[var(--text-muted)]">
                   {' '}
-                  · {new Date(row.at).toISOString().slice(0, 16).replace('T', ' ')} UTC
+                  · {stamp(new Date(row.at), timeZone, { clock })}
                   {row.email ? ` · ${row.email}` : ''}
                 </span>
               </li>

@@ -1,5 +1,7 @@
 import { requireUser } from '@/lib/auth/context'
+import { stamp } from '@/lib/format/time'
 import { translator } from '@/lib/i18n/request'
+import { getTimeFormat } from '@/lib/settings/time'
 import { availableModels } from '@/lib/providers/models'
 import { PRESETS, type PresetId, type PresetModel, type ProviderKind } from '@/lib/providers/presets'
 import { listProviders, type ProviderSummary } from '@/lib/providers/service'
@@ -22,14 +24,16 @@ function Card({
   provider,
   t,
   priceLabels,
+  timeZone,
 }: {
   provider: ProviderSummary
   t: Translate
   priceLabels: PriceLabels
+  timeZone: string
 }) {
   const verified = provider.lastVerifiedAt
     ? t('app.providers.tested', {
-        date: new Date(provider.lastVerifiedAt).toLocaleDateString(),
+        date: stamp(new Date(provider.lastVerifiedAt), timeZone, { dateOnly: true }),
       })
     : t('app.providers.notTested')
 
@@ -103,12 +107,14 @@ function Section({
   providers,
   t,
   priceLabels,
+  timeZone,
 }: {
   title: string
   note?: string
   providers: ProviderSummary[]
   t: Translate
   priceLabels: PriceLabels
+  timeZone: string
 }) {
   return (
     <section className="space-y-3">
@@ -119,7 +125,7 @@ function Section({
       ) : (
         <ul className="space-y-2">
           {providers.map((p) => (
-            <Card key={p.id} provider={p} t={t} priceLabels={priceLabels} />
+            <Card key={p.id} provider={p} t={t} priceLabels={priceLabels} timeZone={timeZone} />
           ))}
         </ul>
       )}
@@ -130,6 +136,7 @@ function Section({
 export default async function ProvidersPage() {
   const user = await requireUser()
   const t = await translator()
+  const { timeZone } = await getTimeFormat()
   const priceLabels: PriceLabels = {
     in: t('app.providers.priceIn'),
     out: t('app.providers.priceOut'),
@@ -170,6 +177,7 @@ export default async function ProvidersPage() {
         providers={providers.filter((p) => p.kind === 'llm')}
         t={t}
         priceLabels={priceLabels}
+        timeZone={timeZone}
       />
 
       <Section
@@ -178,6 +186,7 @@ export default async function ProvidersPage() {
         providers={providers.filter((p) => p.kind === 'embedding')}
         t={t}
         priceLabels={priceLabels}
+        timeZone={timeZone}
       />
 
       <section className="space-y-3">

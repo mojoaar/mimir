@@ -26,7 +26,7 @@ export function isClock(value: unknown): value is Clock {
  * The zone an install starts with: whatever TZ says, so a container that already
  * has one keeps it. Once the owner picks a zone, that wins.
  */
-export function defaultTimezone(env: NodeJS.ProcessEnv = process.env): string {
+export function defaultTimezone(env: { TZ?: string | undefined } = process.env as { TZ?: string }): string {
   const tz = env.TZ
   return tz && isTimezone(tz) ? tz : 'UTC'
 }

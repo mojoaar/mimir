@@ -1,5 +1,6 @@
 import { requireAdmin } from '@/lib/auth/admin'
 import { listAudit, toCsv } from '@/lib/audit/query'
+import { getTimezone } from '@/lib/settings/time'
 
 export const instant = false
 
@@ -10,12 +11,14 @@ export async function GET(request: Request): Promise<Response> {
   await requireAdmin()
   const params = new URL(request.url).searchParams
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  const timeZone = await getTimezone()
 
   const { rows } = await listAudit({
     action: params.get('action')?.trim() || undefined,
     text: params.get('q')?.trim() || undefined,
-    from: params.get('from') ? new Date(`${params.get('from')}T00:00:00Z`) : undefined,
-    to: params.get('to') ? new Date(`${params.get('to')}T23:59:59Z`) : undefined,
+    fromDay: params.get('from') || undefined,
+    toDay: params.get('to') || undefined,
+    timeZone,
     limit: MAX_ROWS,
     offset: 0,
   })

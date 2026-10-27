@@ -8,7 +8,9 @@ import {
 } from '@/lib/settings/backup-settings'
 import { BackupForm } from './settings-form'
 import { runBackupAction } from './actions'
+import { stamp } from '@/lib/format/time'
 import { translator, type Translate } from '@/lib/i18n/request'
+import { getTimezone } from '@/lib/settings/time'
 
 export const instant = false
 
@@ -41,6 +43,7 @@ export default async function BackupsPage({
 }) {
   await requireAdmin()
   const t = await translator()
+  const timeZone = await getTimezone()
   const params = await searchParams
 
   const [settings, s3, webdav, runs] = await Promise.all([
@@ -166,7 +169,7 @@ export default async function BackupsPage({
                     {run.status} · {run.target} · {run.triggered_by}
                   </span>
                   <span className="text-[var(--text-muted)]">
-                    {new Date(run.started_at).toISOString().replace('T', ' ').slice(0, 16)} UTC
+                    {stamp(new Date(run.started_at), timeZone)}
                     {run.size_bytes ? ` · ${(Number(run.size_bytes) / 1024).toFixed(1)} KB` : ''}
                   </span>
                 </div>

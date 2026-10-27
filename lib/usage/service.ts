@@ -1,5 +1,7 @@
 import { cache } from 'react'
 import { withAdmin } from '@/lib/db/tx'
+import { dayKey, hourKey } from '@/lib/format/time'
+import { getTimezone } from '@/lib/settings/time'
 import { isSpike } from './cost'
 
 export type Kind = 'llm' | 'embedding'
@@ -26,12 +28,23 @@ export type Failure = {
 }
 export type Spike = { calls: number; median: number; hourStart: string }
 
+/** Y-M-D arithmetic on the calendar, not on milliseconds: a local day is not always 24 hours. */
+function shiftDay(key: string, delta: number): string {
+  const date = new Date(`${key}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() + delta)
+  return date.toISOString().slice(0, 10)
+}
+
 function amount(value: string | null | undefined): number {
   return value === null || value === undefined ? 0 : Number(value)
 }
 
+/**
+ * The zone decides where a day, an hour and a month begin. Postgres does the
+ * arithmetic so a 23-hour day and a repeated hour come out right.
+ */
 /** This month, split the only way that matters for a bill. */
-export async function spend(): Promise<Spend> {
+export async function spend(timeZone: string): Promise<Spend> {
   const { rows } = await withAdmin((tx) =>
     tx.query<{
       calls: number
@@ -44,7 +57,8 @@ export async function spend(): Promise<Spend> {
               coalesce(sum(cost_micros) filter (where kind = 'embedding'), 0)::text as embedding,
               count(*) filter (where cost_micros is null)::text as unpriced
          from provider_calls
-        where at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'`,
+        where at >= date_trunc('month', now() at time zone $1) at time zone $1`,
+      [timeZone],
     ),
   )
   const row = rows[0]
@@ -57,78 +71,81 @@ export async function spend(): Promise<Spend> {
 }
 
 /** One entry per day, including the quiet ones, so the bars keep their scale. */
-export async function daily(days = 30): Promise<DaySpend[]> {
+export async function daily(timeZone: string, days = 30): Promise<DaySpend[]> {
   const { rows } = await withAdmin((tx) =>
     tx.query<{ day: string; micros: string }>(
-      `select to_char(date_trunc('day', at at time zone 'utc'), 'YYYY-MM-DD') as day,
+      `select to_char(date_trunc('day', at at time zone $1), 'YYYY-MM-DD') as day,
               coalesce(sum(cost_micros), 0)::text as micros
          from provider_calls
-        where at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'
-                   - ($1::int - 1) * interval '1 day'
+        where at >= date_trunc('day', now() at time zone $1) at time zone $1
+                   - ($2::int - 1) * interval '1 day'
         group by 1
         order by 1`,
-      [days],
+      [timeZone, days],
     ),
   )
   const found = new Map(rows.map((row) => [row.day, amount(row.micros)]))
-  const today = new Date()
+  const today = dayKey(new Date(), timeZone)
   const out: DaySpend[] = []
   for (let i = days - 1; i >= 0; i -= 1) {
-    const date = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i))
-    const key = date.toISOString().slice(0, 10)
+    const key = shiftDay(today, -i)
     out.push({ day: key, micros: found.get(key) ?? 0 })
   }
   return out
 }
 
-/** The last twenty-four hours, in UTC, for the "is it looping" question. */
-export async function hourly(): Promise<HourCalls[]> {
+/** The last twenty-four hours, for the "is it looping" question. */
+export async function hourly(timeZone: string): Promise<HourCalls[]> {
   const { rows } = await withAdmin((tx) =>
     tx.query<{ hour: string; calls: number }>(
       // Format in SQL: a naive timestamp comes back through the server's zone.
-      `select to_char(date_trunc('hour', at at time zone 'utc'), 'YYYY-MM-DD"T"HH24') as hour,
+      `select to_char(date_trunc('hour', at at time zone $1), 'YYYY-MM-DD"T"HH24') as hour,
               count(*)::int as calls
          from provider_calls
-        where at >= date_trunc('hour', now() at time zone 'utc') at time zone 'utc'
+        where at >= date_trunc('hour', now() at time zone $1) at time zone $1
                    - interval '23 hours'
         group by 1
         order by 1`,
+      [timeZone],
     ),
   )
   const found = new Map(rows.map((row) => [row.hour, row.calls]))
   const out: HourCalls[] = []
-  const start = Date.now() - 23 * 60 * 60 * 1000
-  for (let i = 0; i < 24; i += 1) {
-    const key = new Date(start + i * 60 * 60 * 1000).toISOString().slice(0, 13)
+  // Instants, not milliseconds: a fall-back hour maps two instants to one key.
+  for (let i = 23; i >= 0; i -= 1) {
+    const key = hourKey(new Date(Date.now() - i * 60 * 60 * 1000), timeZone)
+    if (out.some((slot) => slot.hour === `${key}:00`)) continue
     out.push({ hour: `${key}:00`, calls: found.get(key) ?? 0 })
   }
   return out
 }
 
-export async function breakdown(): Promise<ModelSpend[]> {
+export async function breakdown(timeZone: string): Promise<ModelSpend[]> {
   const { rows } = await withAdmin((tx) =>
     tx.query<{ preset: string; model: string; kind: Kind; calls: number; micros: string }>(
       `select preset, model, kind, count(*)::int as calls, coalesce(sum(cost_micros), 0)::text as micros
          from provider_calls
-        where at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'
+        where at >= date_trunc('month', now() at time zone $1) at time zone $1
         group by preset, model, kind
         order by coalesce(sum(cost_micros), 0) desc, count(*) desc
         limit 20`,
+      [timeZone],
     ),
   )
   return rows.map((row) => ({ ...row, micros: amount(row.micros) }))
 }
 
-export async function people(): Promise<PersonSpend[]> {
+export async function people(timeZone: string): Promise<PersonSpend[]> {
   const { rows } = await withAdmin((tx) =>
     tx.query<{ email: string | null; calls: number; micros: string }>(
       `select u.email, count(*)::int as calls, coalesce(sum(c.cost_micros), 0)::text as micros
          from provider_calls c
          left join users u on u.id = c.user_id
-        where c.at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'
+        where c.at >= date_trunc('month', now() at time zone $1) at time zone $1
         group by u.email
         order by coalesce(sum(c.cost_micros), 0) desc, count(*) desc
         limit 20`,
+      [timeZone],
     ),
   )
   return rows.map((row) => ({
@@ -165,21 +182,22 @@ export async function failures(limit = 10): Promise<Failure[]> {
  * the header pill ask the same question on the same page load.
  */
 export const spike = cache(async (): Promise<Spike | null> => {
+  const timeZone = await getTimezone()
   const { rows } = await withAdmin((tx) =>
-    tx.query<{ calls: number; median: string; hour_start: string }>(
+    tx.query<{ calls: number; median: string; hour_start: Date }>(
       `with buckets as (
-         select date_trunc('hour', at at time zone 'utc') as hour, count(*)::int as calls
+         select date_trunc('hour', at at time zone $1) as hour, count(*)::int as calls
            from provider_calls
           where at >= now() - interval '7 days'
           group by 1
        ),
        current_hour as (
-         select date_trunc('hour', now() at time zone 'utc') as hour
+         select date_trunc('hour', now() at time zone $1) as hour
        ),
        recent as (
          select count(*)::int as calls
            from provider_calls, current_hour
-          where at >= current_hour.hour at time zone 'utc'
+          where at >= current_hour.hour at time zone $1
        ),
        median as (
          select coalesce(percentile_cont(0.5) within group (order by calls), 0) as median
@@ -188,15 +206,16 @@ export const spike = cache(async (): Promise<Spike | null> => {
        )
        select recent.calls,
               ceil(median.median)::text as median,
-              to_char(current_hour.hour, 'YYYY-MM-DD"T"HH24:00:00') || 'Z' as hour_start
+              (current_hour.hour at time zone $1) as hour_start
          from recent, median, current_hour`,
+      [timeZone],
     ),
   )
   const row = rows[0]
   if (!row) return null
   const median = Number(row.median)
   if (!isSpike(row.calls, median)) return null
-  return { calls: row.calls, median, hourStart: row.hour_start }
+  return { calls: row.calls, median, hourStart: row.hour_start.toISOString() }
 })
 
 /** A spike dismissed at or after its hour stays quiet until a new hour spikes. */

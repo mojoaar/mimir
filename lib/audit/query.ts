@@ -4,8 +4,10 @@ export type AuditFilters = {
   action?: string
   actorId?: string
   actorType?: string
-  from?: Date
-  to?: Date
+  /** A calendar day in the install's zone, `YYYY-MM-DD`. */
+  fromDay?: string
+  toDay?: string
+  timeZone: string
   text?: string
   limit?: number
   offset?: number
@@ -67,8 +69,19 @@ export async function listAudit(
   if (filters.action) add((i) => `a.action = $${i}`, filters.action)
   if (filters.actorId) add((i) => `a.actor_id = $${i}`, filters.actorId)
   if (filters.actorType) add((i) => `a.actor_type = $${i}`, filters.actorType)
-  if (filters.from) add((i) => `a.created_at >= $${i}`, filters.from)
-  if (filters.to) add((i) => `a.created_at <= $${i}`, filters.to)
+  // The day is a calendar day where the reader is, so the zone travels with it.
+  if (isDay(filters.fromDay)) {
+    values.push(filters.fromDay, filters.timeZone)
+    where.push(
+      `a.created_at >= ($${values.length - 1}::date::timestamp at time zone $${values.length})`,
+    )
+  }
+  if (isDay(filters.toDay)) {
+    values.push(filters.toDay, filters.timeZone)
+    where.push(
+      `a.created_at < (($${values.length - 1}::date + 1)::timestamp at time zone $${values.length})`,
+    )
+  }
   if (filters.text) {
     add((i) => `(a.action ilike $${i} or a.target_id ilike $${i} or a.detail::text ilike $${i})`,
       `%${filters.text}%`)
@@ -97,6 +110,20 @@ export async function listAudit(
     )
     return { rows: listed.rows.map(toRow), total: Number(counted.rows[0]?.count ?? 0) }
   })
+}
+
+function isDay(value: string | undefined): value is string {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
+
+/** Which actions exist, so the filter can offer them instead of demanding the exact name. */
+export async function listAuditActions(): Promise<{ action: string; count: number }[]> {
+  const { rows } = await withAdmin((tx) =>
+    tx.query<{ action: string; count: number }>(
+      'select action, count(*)::int as count from audit_log group by 1 order by 1',
+    ),
+  )
+  return rows
 }
 
 function quote(value: string): string {

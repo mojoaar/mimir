@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { adminPool, closePools } from '../db/pool'
 import { resetFixtures, seedTwoUsersWithProjects } from '../db/seed'
-import { listAudit, toCsv } from './query'
+import { listAudit, listAuditActions, toCsv } from './query'
 
 let alice = ''
 
@@ -24,32 +24,53 @@ describe('listAudit', () => {
   })
 
   it('filters by action and counts the whole match, not the page', async () => {
-    const result = await listAudit({ action: 'memory.read', limit: 1 })
+    const result = await listAudit({ timeZone: 'UTC', action: 'memory.read', limit: 1 })
     expect(result.rows).toHaveLength(1)
     expect(result.total).toBe(2)
   })
 
   it('searches free text across action, target and detail', async () => {
-    const result = await listAudit({ text: 'rotation' })
+    const result = await listAudit({ timeZone: 'UTC', text: 'rotation' })
     expect(result.rows).toHaveLength(1)
     expect(result.rows[0]?.detail).toMatchObject({ path: 'auth/rotation' })
   })
 
-  it('filters by date range', async () => {
-    const from = new Date(Date.now() - 12 * 60 * 60 * 1000)
-    const result = await listAudit({ from })
-    expect(result.total).toBe(1)
+  it('reads a day filter in the chosen zone', async () => {
+    const before = await listAudit({ timeZone: 'UTC', fromDay: '2026-10-26', toDay: '2026-10-26' })
+    await adminPool().query(
+      `insert into audit_log (actor_type, action, created_at)
+       values ('system', 'memory.read', timestamptz '2026-10-26 23:30:00+00')`,
+    )
+
+    const utc = await listAudit({ timeZone: 'UTC', fromDay: '2026-10-26', toDay: '2026-10-26' })
+    expect(utc.total).toBe(before.total + 1)
+
+    // 23:30 UTC is the next day in Auckland.
+    const auckland = await listAudit({
+      timeZone: 'Pacific/Auckland',
+      fromDay: '2026-10-27',
+      toDay: '2026-10-27',
+    })
+    expect(auckland.total).toBeGreaterThanOrEqual(1)
+  })
+
+  it('lists the actions that exist with their counts', async () => {
+    const actions = await listAuditActions()
+    expect(actions.find((entry) => entry.action === 'memory.read')?.count).toBe(2)
+    expect(actions.map((entry) => entry.action)).toEqual(
+      [...actions.map((entry) => entry.action)].sort(),
+    )
   })
 
   it('joins the actor email when there is one', async () => {
-    const result = await listAudit({ action: 'memory.read', limit: 1 })
+    const result = await listAudit({ timeZone: 'UTC', action: 'memory.read', limit: 1 })
     expect(result.rows[0]?.actorEmail).toBe('alice@example.test')
   })
 
   it('lets the csv export ask for more than a page', async () => {
     for (let i = 0; i < 250; i += 1) await add('memory.read', { i })
-    const page = await listAudit({ limit: 50 })
-    const exported = await listAudit({ limit: 10_000 })
+    const page = await listAudit({ timeZone: 'UTC', limit: 50 })
+    const exported = await listAudit({ timeZone: 'UTC', limit: 10_000 })
 
     expect(page.rows).toHaveLength(50)
     expect(exported.rows.length).toBeGreaterThan(200)

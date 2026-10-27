@@ -23,6 +23,16 @@ vi.mock('@/lib/db/tx', () => ({
     }),
 }))
 
+vi.mock('@/lib/settings/time', () => ({
+  getTimezone: async () => 'UTC',
+  getClock: async () => '24h',
+  getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }),
+  timezoneOptions: () => ['UTC', 'Europe/Copenhagen'],
+  defaultTimezone: () => 'UTC',
+  setTimezone: async () => {},
+  setClock: async () => {},
+}))
+
 describe('admin overview', () => {
   it('shows the counts and Never for a backup that has not run', async () => {
     mocks.requireAdmin.mockResolvedValue({ id: 'a', email: 'admin@example.test', role: 'admin' })

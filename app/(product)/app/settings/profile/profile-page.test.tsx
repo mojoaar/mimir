@@ -48,6 +48,16 @@ async function render() {
   )
 }
 
+vi.mock('@/lib/settings/time', () => ({
+  getTimezone: async () => 'UTC',
+  getClock: async () => '24h',
+  getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }),
+  timezoneOptions: () => ['UTC', 'Europe/Copenhagen'],
+  defaultTimezone: () => 'UTC',
+  setTimezone: async () => {},
+  setClock: async () => {},
+}))
+
 describe('the profile page', () => {
   it('speaks the language saved on the account', async () => {
     mocks.locale = 'da'

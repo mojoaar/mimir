@@ -60,7 +60,7 @@ test('splits this month by kind and counts what has no price', async () => {
     { minutesAgo: 8, cost: null },
   ])
 
-  expect(await spend()).toEqual({
+  expect(await spend('UTC')).toEqual({
     calls: 4,
     llmMicros: 300,
     embeddingMicros: 40,
@@ -71,17 +71,36 @@ test('splits this month by kind and counts what has no price', async () => {
 test('keeps a bar for every quiet day', async () => {
   await seed([{ minutesAgo: 5 }])
 
-  const days = await daily(30)
+  const days = await daily('UTC', 30)
 
   expect(days).toHaveLength(30)
   expect(days.at(-1)?.micros).toBe(100)
   expect(days.at(-2)?.micros).toBe(0)
 })
 
+test('puts a call on the day and hour of the chosen zone', async () => {
+  // 23:30 UTC is already tomorrow in Auckland.
+  await withAdmin((tx) =>
+    tx.query(
+      `insert into provider_calls (at, preset, model, kind, purpose, prompt_tokens, completion_tokens, cost_micros, status, ok)
+       values (timestamptz '2026-10-26 23:30:00+00', 'deepseek', 'deepseek-flash', 'llm', 'extract', 1, 1, 100, 200, true)`,
+    ),
+  )
+
+  const utc = await daily('UTC', 400)
+  const auckland = await daily('Pacific/Auckland', 400)
+  const find = (rows: { day: string; micros: number }[], day: string) =>
+    rows.find((row) => row.day === day)?.micros ?? 0
+
+  expect(find(utc, '2026-10-26')).toBe(100)
+  expect(find(utc, '2026-10-27')).toBe(0)
+  expect(find(auckland, '2026-10-27')).toBe(100)
+})
+
 test('keeps an hour slot for every quiet hour', async () => {
   await seed([{ minutesAgo: 5 }, { minutesAgo: 65 }])
 
-  const hours = await hourly()
+  const hours = await hourly('UTC')
 
   expect(hours).toHaveLength(24)
   expect(hours.at(-1)?.calls).toBe(1)
@@ -97,7 +116,7 @@ test('reports the current hour when it is far above the quiet week', async () =>
 
   expect(found?.calls).toBe(40)
   expect(found?.median).toBeGreaterThanOrEqual(1)
-  expect(found?.hourStart).toMatch(/T\d\d:00:00Z$/)
+  expect(found?.hourStart).toMatch(/T\d\d:00:00\.000Z$/)
 })
 
 test('stays quiet inside normal volume', async () => {
@@ -125,10 +144,10 @@ test('breaks the month down by model and by person, and lists failures', async (
     { minutesAgo: 8, ok: false },
   ])
 
-  const models = await breakdown()
+  const models = await breakdown('UTC')
   expect(models[0]).toMatchObject({ preset: 'deepseek', model: 'deepseek-v4-pro', calls: 1, micros: 500 })
 
-  const users = await people()
+  const users = await people('UTC')
   expect(users.find((row) => row.email === 'alice@example.test')?.calls).toBe(3)
   expect(users.find((row) => row.email === 'bob@example.test')?.calls).toBe(1)
 

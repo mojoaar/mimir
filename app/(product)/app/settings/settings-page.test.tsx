@@ -22,6 +22,16 @@ beforeEach(() => {
   mocks.locale = 'en'
 })
 
+vi.mock('@/lib/settings/time', () => ({
+  getTimezone: async () => 'UTC',
+  getClock: async () => '24h',
+  getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }),
+  timezoneOptions: () => ['UTC', 'Europe/Copenhagen'],
+  defaultTimezone: () => 'UTC',
+  setTimezone: async () => {},
+  setClock: async () => {},
+}))
+
 describe('the settings page', () => {
   it('carries both appearance controls instead of the header', async () => {
     const html = renderToStaticMarkup(await SettingsPage())

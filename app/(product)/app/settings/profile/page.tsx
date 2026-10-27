@@ -3,7 +3,9 @@ import { cookies } from 'next/headers'
 import { requireUser } from '@/lib/auth/context'
 import { SESSION_COOKIE } from '@/lib/auth/cookie-name'
 import { sessionIdFor } from '@/lib/auth/session'
+import { stamp } from '@/lib/format/time'
 import { translator } from '@/lib/i18n/request'
+import { getTimeFormat } from '@/lib/settings/time'
 import { listMySessions } from '@/lib/users/self'
 import { avatarVersion } from '@/lib/users/avatar'
 import { ProfileForm } from './profile-form'
@@ -20,6 +22,7 @@ export default async function ProfilePage({
 }) {
   const user = await requireUser()
   const t = await translator()
+  const { timeZone, clock } = await getTimeFormat()
   const { notice, error } = await searchParams
   const cookieValue = (await cookies()).get(SESSION_COOKIE)?.value ?? ''
   const currentSessionId = (await sessionIdFor(cookieValue)) ?? ''
@@ -124,7 +127,7 @@ export default async function ProfilePage({
                 <span className="text-xs text-[var(--text-muted)]">
                   {session.userAgent ?? t('app.profile.unknownDevice')} ·{' '}
                   {t('app.profile.lastSeen', {
-                    when: session.lastSeenAt.toISOString().slice(0, 16).replace('T', ' '),
+                    when: stamp(session.lastSeenAt, timeZone, { clock }),
                   })}
                 </span>
               </span>

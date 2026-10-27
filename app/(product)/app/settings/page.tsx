@@ -10,6 +10,8 @@ import { setLocaleAction } from '../actions'
 import { requireUser } from '@/lib/auth/context'
 import { listApiKeys } from '@/lib/auth/apikey'
 import { getConfig } from '@/lib/config'
+import { stamp } from '@/lib/format/time'
+import { getTimeFormat } from '@/lib/settings/time'
 import { KeyForm, KeyList } from './key-form'
 
 export const instant = false
@@ -17,6 +19,7 @@ export const instant = false
 export default async function SettingsPage() {
   const user = await requireUser()
   const t = await translator()
+  const { timeZone } = await getTimeFormat()
   const keys = await listApiKeys(user.id)
   const locale = await getRequestLocale()
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
@@ -66,7 +69,10 @@ export default async function SettingsPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-medium">{t('app.settings.yourKeys')}</h2>
         <KeyList
-          keys={keys}
+          keys={keys.map((key) => ({
+            ...key,
+            lastUsedAt: key.lastUsedAt ? stamp(key.lastUsedAt, timeZone, { dateOnly: true }) : null,
+          }))}
           labels={{
             empty: t('app.settings.keyEmpty'),
             revoked: t('app.settings.keyRevoked'),

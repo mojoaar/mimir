@@ -26,6 +26,16 @@ import { listProviders } from '@/lib/providers/service'
 import ProvidersPage from './page'
 import { ProviderForm, type ProviderFormLabels } from './provider-form'
 
+vi.mock('@/lib/settings/time', () => ({
+  getTimezone: async () => 'UTC',
+  getClock: async () => '24h',
+  getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }),
+  timezoneOptions: () => ['UTC', 'Europe/Copenhagen'],
+  defaultTimezone: () => 'UTC',
+  setTimezone: async () => {},
+  setClock: async () => {},
+}))
+
 describe('providers page', () => {
   it('lists a saved provider without its key', async () => {
     vi.mocked(listProviders).mockResolvedValue([

@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth/admin'
 import { withAdmin } from '@/lib/db/tx'
+import { stamp } from '@/lib/format/time'
 import { translator } from '@/lib/i18n/request'
+import { getTimeFormat } from '@/lib/settings/time'
 
 export const instant = false
 
@@ -76,11 +78,12 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
 export default async function AdminOverviewPage() {
   await requireAdmin()
   const t = await translator()
+  const { timeZone, clock } = await getTimeFormat()
   const stats = await getStats()
   const embeddedPercent =
     stats.memories === 0 ? 100 : Math.round((stats.embedded / stats.memories) * 100)
   const lastBackup = stats.lastBackupAt
-    ? `${stats.lastBackupAt.toISOString().replace('T', ' ').slice(0, 16)} UTC (${stats.lastBackupStatus})`
+    ? `${stamp(stats.lastBackupAt, timeZone, { clock })} (${stats.lastBackupStatus})`
     : t('app.admin.overview.never')
 
   return (

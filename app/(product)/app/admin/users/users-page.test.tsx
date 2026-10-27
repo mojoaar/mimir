@@ -43,6 +43,16 @@ vi.mock('@/lib/settings/site', () => ({
 
 import UsersPage from './page'
 
+vi.mock('@/lib/settings/time', () => ({
+  getTimezone: async () => 'UTC',
+  getClock: async () => '24h',
+  getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }),
+  timezoneOptions: () => ['UTC', 'Europe/Copenhagen'],
+  defaultTimezone: () => 'UTC',
+  setTimezone: async () => {},
+  setClock: async () => {},
+}))
+
 describe('the users page', () => {
   it('lists users with their status and offers to create one', async () => {
     mocks.listUsers.mockResolvedValue({

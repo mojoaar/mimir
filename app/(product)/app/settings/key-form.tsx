@@ -7,7 +7,7 @@ type Key = {
   id: string
   name: string
   prefix: string
-  lastUsedAt: Date | null
+  lastUsedAt: string | null
   revoked: boolean
 }
 
@@ -82,10 +82,7 @@ export function KeyList({ keys, labels }: { keys: Key[]; labels: KeyListLabels }
           <div className="flex items-center gap-3">
             <span className="text-[var(--text-muted)]">
               {k.lastUsedAt
-                ? labels.lastUsed.replace(
-                    '{date}',
-                    new Date(k.lastUsedAt).toLocaleDateString(),
-                  )
+                ? labels.lastUsed.replace('{date}', k.lastUsedAt)
                 : labels.neverUsed}
             </span>
             {!k.revoked && (

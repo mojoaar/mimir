@@ -1,5 +1,7 @@
 import { requireAdmin } from '@/lib/auth/admin'
+import { stamp } from '@/lib/format/time'
 import { translator, type Translate } from '@/lib/i18n/request'
+import { getTimezone } from '@/lib/settings/time'
 import { listUsers, type AdminUser, type UserStatus } from '@/lib/users/service'
 import { InviteForm } from './invite-form'
 import { ResetForm } from './reset-form'
@@ -32,11 +34,11 @@ function statusLabel(value: string, t: Translate): string {
   return key ? t(key) : value
 }
 
-function when(value: Date | null, t: Translate): string {
-  return value ? new Date(value).toLocaleDateString() : t('app.admin.users.never')
+function when(value: Date | null, timeZone: string, t: Translate): string {
+  return value ? stamp(new Date(value), timeZone, { dateOnly: true }) : t('app.admin.users.never')
 }
 
-function Row({ user, t }: { user: AdminUser; t: Translate }) {
+function Row({ user, t, timeZone }: { user: AdminUser; t: Translate; timeZone: string }) {
   return (
     <li className="space-y-2 rounded border border-[var(--border)] bg-[var(--bg-raised)] p-3 text-sm">
       <div className="flex flex-wrap items-center gap-2">
@@ -58,7 +60,7 @@ function Row({ user, t }: { user: AdminUser; t: Translate }) {
 
       <div className="text-[var(--text-muted)]">
         {t(user.mfaEnabled ? 'app.admin.users.mfaOn' : 'app.admin.users.mfaOff')} ·{' '}
-        {t('app.admin.users.lastLogin', { when: when(user.lastLoginAt, t) })} ·{' '}
+        {t('app.admin.users.lastLogin', { when: when(user.lastLoginAt, timeZone, t) })} ·{' '}
         {t(user.projectCount === 1 ? 'app.admin.users.projectOne' : 'app.admin.users.projectMany', {
           count: user.projectCount,
         })}
@@ -159,6 +161,7 @@ export default async function UsersPage({
 }) {
   await requireAdmin()
   const t = await translator()
+  const timeZone = await getTimezone()
   const params = await searchParams
   const status = STATUSES.includes(params.status as UserStatus) ? (params.status as UserStatus) : 'all'
   const { rows, total } = await listUsers({
@@ -213,7 +216,7 @@ export default async function UsersPage({
       ) : (
         <ul className="space-y-2">
           {rows.map((user) => (
-            <Row key={user.id} user={user} t={t} />
+            <Row key={user.id} user={user} t={t} timeZone={timeZone} />
           ))}
         </ul>
       )}

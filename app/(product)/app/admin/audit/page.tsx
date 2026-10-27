@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth/admin'
-import { listAudit, type AuditRow } from '@/lib/audit/query'
+import { listAudit, listAuditActions, type AuditRow } from '@/lib/audit/query'
+import { stamp } from '@/lib/format/time'
 import { translator } from '@/lib/i18n/request'
+import { getTimeFormat } from '@/lib/settings/time'
 
 export const instant = false
 
@@ -43,19 +45,30 @@ export default async function AuditPage({
 }) {
   await requireAdmin()
   const t = await translator()
+  const { timeZone, clock } = await getTimeFormat()
   const search = await searchParams
   const page = Math.max(Number(search.page ?? '1') || 1, 1)
 
-  const { rows, total } = await listAudit({
-    action: search.action?.trim() || undefined,
-    text: search.q?.trim() || undefined,
-    from: search.from ? new Date(`${search.from}T00:00:00Z`) : undefined,
-    to: search.to ? new Date(`${search.to}T23:59:59Z`) : undefined,
-    limit: PAGE_SIZE,
-    offset: (page - 1) * PAGE_SIZE,
-  })
+  const [{ rows, total }, actions] = await Promise.all([
+    listAudit({
+      action: search.action?.trim() || undefined,
+      text: search.q?.trim() || undefined,
+      fromDay: search.from || undefined,
+      toDay: search.to || undefined,
+      timeZone,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
+    }),
+    listAuditActions(),
+  ])
 
   const pages = Math.max(Math.ceil(total / PAGE_SIZE), 1)
+  const groups = new Map<string, { action: string; count: number }[]>()
+  for (const entry of actions) {
+    const group = entry.action.includes('.') ? entry.action.split('.')[0]! : 'other'
+    groups.set(group, [...(groups.get(group) ?? []), entry])
+  }
+  const kept = search.action && !actions.some((entry) => entry.action === search.action)
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6">
@@ -73,13 +86,24 @@ export default async function AuditPage({
       <form method="get" className="flex flex-wrap items-end gap-3 text-sm">
         <label className="flex flex-col gap-1">
           <span className="text-[var(--text-muted)]">{t('app.admin.audit.action')}</span>
-          <input
+          <select
             name="action"
             defaultValue={search.action ?? ''}
-            placeholder="memory.read"
             className="rounded border px-2 py-1.5"
             style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
-          />
+          >
+            <option value="">{t('app.admin.audit.allActions')}</option>
+            {kept && <option value={search.action}>{search.action}</option>}
+            {[...groups.entries()].map(([group, entries]) => (
+              <optgroup key={group} label={group}>
+                {entries.map((entry) => (
+                  <option key={entry.action} value={entry.action}>
+                    {entry.action} ({entry.count})
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-[var(--text-muted)]">{t('app.admin.audit.from')}</span>
@@ -141,7 +165,7 @@ export default async function AuditPage({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">{row.action}</span>
                 <span className="text-xs text-[var(--text-muted)]">
-                  {row.createdAt.toISOString().replace('T', ' ').slice(0, 19)} UTC
+                  {stamp(row.createdAt, timeZone, { clock, seconds: true })}
                 </span>
               </div>
               <span className="text-xs text-[var(--text-muted)]">

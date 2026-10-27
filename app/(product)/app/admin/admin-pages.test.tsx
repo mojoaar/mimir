@@ -62,6 +62,7 @@ vi.mock('@/lib/usage/service', () => ({
 
 vi.mock('@/lib/audit/query', () => ({
   listAudit: async () => ({ total: 0, rows: [] }),
+  listAuditActions: async () => [{ action: 'memory.read', count: 2 }],
 }))
 
 vi.mock('@/lib/settings/backup-settings', () => ({
@@ -104,6 +105,16 @@ import BackupsPage from './backups/page'
 import SiteSettingsPage from './settings/site/page'
 
 const nothing = Promise.resolve({})
+
+vi.mock('@/lib/settings/time', () => ({
+  getTimezone: async () => 'UTC',
+  getClock: async () => '24h',
+  getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }),
+  timezoneOptions: () => ['UTC', 'Europe/Copenhagen'],
+  defaultTimezone: () => 'UTC',
+  setTimezone: async () => {},
+  setClock: async () => {},
+}))
 
 describe('the admin nav', () => {
   it('offers every destination as a button', async () => {

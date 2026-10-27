@@ -27,7 +27,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@opencode-ai/plugin": "^1.19.4",
+    "@opencode/plugin": "^2.1.4",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",

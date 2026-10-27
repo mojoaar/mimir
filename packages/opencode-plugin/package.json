@@ -20,12 +20,17 @@
     "memory"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build"
   },
   "peerDependencies": {
-    "@opencode-ai/plugin": ">=1.0.0"
+    "@opencode/plugin": ">=2.1.4"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "^2.1.4",
+    "typescript": "^5.9.0"
   }
 }

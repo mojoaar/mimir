@@ -3,13 +3,13 @@
   "version": "0.13.1",
   "description": "Mimir long-term memory for OpenCode sessions",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "bin": {
     "mimir": "./dist/bin.js"
   },
   "files": [
-    "dist",
+    "src",
     "README.md"
   ],
   "license": "MIT",
@@ -20,8 +20,7 @@
     "memory"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "prepare": "npm run build"
+    "build": "tsc -p tsconfig.json"
   },
   "peerDependencies": {
     "@opencode/plugin": ">=2.1.4"

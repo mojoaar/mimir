@@ -33,7 +33,8 @@ function text(value: unknown): string | undefined {
 
 function readTokenFile(path: string | undefined, readFile: (path: string) => string): string | undefined {
   try {
-    return text(readFile(path ?? DEFAULT_TOKEN_FILE))
+    // readFileSync does not expand `~`, and every example we print uses one.
+    return text(readFile((path ?? DEFAULT_TOKEN_FILE).replace(/^~(?=$|\/)/, homedir())))
   } catch {
     return undefined
   }

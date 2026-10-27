@@ -15,7 +15,7 @@ type ToolsContext = {
   tool: { transform: (callback: (editor: { add: (tool: ToolDefinition) => void }) => void) => Promise<Registration> }
   mcp: {
     transform: (
-      callback: (editor: { list: () => readonly [string, { type?: string; url?: string }][] }) => void,
+      callback: (editor: { list: () => readonly [string, { type?: string; url?: string; disabled?: boolean }][] }) => void,
     ) => Promise<Registration>
   }
 }
@@ -43,12 +43,17 @@ const IDLE: Registration = { dispose: async () => {} }
 
 async function servedByMcp(ctx: ToolsContext, url: string): Promise<boolean> {
   let found = false
-  const registration = await ctx.mcp.transform((editor) => {
-    found = editor
-      .list()
-      .some(([, server]) => server.type === 'remote' && sameEndpoint(server.url, `${url}/mcp`))
-  })
-  await registration.dispose()
+  try {
+    const registration = await ctx.mcp.transform((editor) => {
+      found = editor
+        .list()
+        .some(([, server]) => server.type === 'remote' && !server.disabled && sameEndpoint(server.url, `${url}/mcp`))
+    })
+    await registration.dispose()
+  } catch {
+    // A broken MCP entry must not cost the session its tools.
+    return false
+  }
   return found
 }
 

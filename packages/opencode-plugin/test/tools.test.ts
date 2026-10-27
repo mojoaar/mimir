@@ -70,6 +70,25 @@ describe('the plugin tools', () => {
     expect(added).toHaveLength(0)
   })
 
+  it('adds them when the matching server is disabled', async () => {
+    const { fake, added } = context([])
+    const disabled = {
+      transform: async (cb: (editor: unknown) => void) => {
+        cb({ list: () => [['mimir', { type: 'remote', url: 'http://127.0.0.1:3000/mcp', disabled: true }]] })
+        return { dispose: async () => {} }
+      },
+    }
+    await registerTools({ tool: fake.tool, mcp: disabled } as never, config, mocks.repo)
+    expect(added).toHaveLength(2)
+  })
+
+  it('still adds them when the mcp probe throws', async () => {
+    const { fake, added } = context([])
+    const broken = { transform: async () => { throw new Error('mcp exploded') } }
+    await registerTools({ tool: fake.tool, mcp: broken } as never, config, mocks.repo)
+    expect(added).toHaveLength(2)
+  })
+
   it('adds them anyway when the policy is always', async () => {
     const { fake, added } = context([{ type: 'remote', url: 'http://127.0.0.1:3000/mcp' }])
     await registerTools(fake as never, { ...config, tools: 'always' }, mocks.repo)

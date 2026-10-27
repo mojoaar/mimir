@@ -21,6 +21,17 @@ describe('resolving the plugin config', () => {
     expect(config?.token).toBe('from-file')
   })
 
+  it('expands a tilde in the token file path', () => {
+    let asked = ''
+    const config = resolveConfig({ url: 'https://mimir.example', tokenFile: '~/.config/opencode/.secrets/mimir-token' }, {}, (path) => {
+      asked = path
+      return 'tok'
+    })
+    expect(asked).toContain('.config/opencode/.secrets/mimir-token')
+    expect(asked.startsWith('~')).toBe(false)
+    expect(config?.token).toBe('tok')
+  })
+
   it('returns null when the token file is missing or empty', () => {
     const missing = () => {
       throw new Error('ENOENT')

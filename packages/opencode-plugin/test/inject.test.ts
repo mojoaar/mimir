@@ -138,6 +138,29 @@ describe('the session-start digest', () => {
     expect(event.system).toHaveLength(0)
   })
 
+  it('tries only once per session when the call fails', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: false, error: 'mimir responded 500' }
+    mocks.reject = false
+    const { hook } = await setup()
+
+    await hook(transform('session-a'))
+    await hook(transform('session-a'))
+
+    expect(mocks.calls).toHaveLength(1)
+  })
+
+  it('keys a folder without a git remote by its path', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { text: 'anything' } }
+    mocks.repo = null
+    const { hook } = await setup()
+
+    await hook(transform())
+
+    expect(mocks.calls[0]?.args.repo).toBe('/tmp/project')
+  })
+
   it('does nothing when the digest is empty', async () => {
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { text: '   ' } }

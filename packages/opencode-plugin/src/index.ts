@@ -17,13 +17,18 @@ export default Plugin.define({
     const config = resolveConfig(ctx.options)
     if (!config) return
 
-    const repo = detectRepo(ctx.location.directory)
+    // A folder without a git remote still needs a stable key, or every write
+    // lands in a fresh project. The server maps absolute paths to `local:<hash>`.
+    const repo = detectRepo(ctx.location.directory) ?? ctx.location.directory
     const seen = new Set<string>()
 
     // The hook runs before every model dispatch, so a session is fetched once
     // and then left alone.
     const session = await ctx.session.hook('context', async (event) => {
       if (seen.has(event.sessionID)) return
+      // One attempt per session: a failed digest must not be re-paid before
+      // every model dispatch, which is how often this hook runs.
+      seen.add(event.sessionID)
 
       const result = await callTool(
         'memory_digest',
@@ -35,7 +40,6 @@ export default Plugin.define({
       const text = (result.result as { text?: string }).text?.trim()
       if (!text) return
 
-      seen.add(event.sessionID)
       event.system.push({ type: 'text', text: `${DIGEST_HEADER}${text}` })
     })
 

@@ -10,7 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The OpenCode plugin runs on the v2 plugin API and installs straight from this repository, so it works in OpenCode
-  2.1 without publishing to npm. Its two tools are left out when an MCP server already serves the same endpoint.
+  2.1 without publishing to npm. The digest still arrives on its own, once per session, and the package now builds
+  itself so a git install needs nothing prebuilt.
+
+### Fixed
+
+- The OpenCode plugin's two tools stay available when the MCP server for the same Mimir is not configured, disabled or
+  broken, and a folder without a git remote keeps writing to one project instead of a new one per memory.
+- A `~` in the plugin's token file path is expanded instead of silently disabling the plugin.
 
 ## [0.13.1] - 2026-10-26
 

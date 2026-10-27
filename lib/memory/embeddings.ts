@@ -14,9 +14,9 @@ export function toVectorLiteral(values: number[]): string {
 }
 
 /**
- * Returns a pgvector literal, or null. Never throws: a memory is worth more
- * than its vector, so a broken provider degrades search instead of losing the
- * write. The log line carries the reason and nothing else — no key, no text.
+ * Returns a pgvector literal and the model that produced it, or null. Never
+ * throws: a memory is worth more than its vector, so a broken provider degrades
+ * search instead of losing the write. The log line carries the reason and nothing else — no key, no text.
  */
 export async function embedText(
   text: string,
@@ -25,7 +25,7 @@ export async function embedText(
     inputType?: 'query' | 'document'
     purpose?: Purpose
   } = {},
-): Promise<string | null> {
+): Promise<{ literal: string; model: string } | null> {
   // Everything, including provider resolution, is inside the try: a rotated
   // MIMIR_SECRET makes decryption throw, and that must not fail the write.
   try {
@@ -53,7 +53,7 @@ export async function embedText(
       return null
     }
 
-    return toVectorLiteral(values)
+    return { literal: toVectorLiteral(values), model: provider.model }
   } catch (error) {
     console.error(`embedding unavailable (${(error as Error).message})`)
     return null

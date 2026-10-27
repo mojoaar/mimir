@@ -42,7 +42,10 @@ export async function searchMemories(input: SearchInput): Promise<SearchHit[]> {
   // slow embedding provider when the keyword arm already has an answer.
   // An empty query must not become "the 50 nearest memories to nothing".
   const queryVector =
-    query.trim() === '' ? null : await embedText(query, { timeoutMs: 3000, inputType: 'query', purpose: 'embed.search' })
+    query.trim() === ''
+      ? null
+      : ((await embedText(query, { timeoutMs: 3000, inputType: 'query', purpose: 'embed.search' }))
+          ?.literal ?? null)
 
   const { keywordRows, vectorRows } = await withUser(userId, async (client) => {
     const keyword = await client.query<Row>(

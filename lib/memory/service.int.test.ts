@@ -25,6 +25,23 @@ afterAll(async () => {
 })
 
 describe('memory service', () => {
+  it('leaves the embedding stamp empty when no provider is configured', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'a/plain', body: 'no vector here' })
+
+    const { rows } = await adminPool().query<{
+      embedded_at: Date | null
+      embedding_model: string | null
+      embedding: string | null
+    }>(
+      `select embedded_at, embedding_model, embedding::text as embedding
+         from memories where project_id = $1 and path = 'a/plain'`,
+      [projectId],
+    )
+    expect(rows[0]?.embedding).toBeNull()
+    expect(rows[0]?.embedded_at).toBeNull()
+    expect(rows[0]?.embedding_model).toBeNull()
+  })
+
   it('upserts one path instead of appending', async () => {
     await writeMemory({ userId: f.alice, projectId, path: 'conventions/commits', body: 'first' })
     const second = await writeMemory({

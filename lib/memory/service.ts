@@ -45,10 +45,11 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
 
   // Before the transaction: a provider round trip inside it would hold a
   // pooled connection for the duration of someone else's network call.
-  const embedding = await embedText([path, title, input.body].join('\n'), {
+  const embedded = await embedText([path, title, input.body].join('\n'), {
     inputType: 'document',
     purpose: 'embed.ingest',
   })
+  const embedding = embedded?.literal ?? null
 
   const result = await withUser(input.userId, async (tx) => {
     const { rows } = await tx.query<{
@@ -62,10 +63,11 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
       old_updated_at: Date | null
       old_deleted_at: Date | null
     }>(
-      `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id, embedding)
+      `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id, embedding, embedded_at, embedding_model)
        select $1, $2, $3, null, $4,
               to_tsvector(coalesce(p.fts_language, 'english')::regconfig, $2 || ' ' || $3 || ' ' || $4),
-              $5, $6, $7, $8::vector
+              $5, $6, $7, $8::vector,
+              case when $8::text is null then null else now() end, $9
          from projects p where p.id = $1
        on conflict (project_id, lower(path)) do update
           set title = excluded.title,
@@ -76,6 +78,8 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
               source = excluded.source,
               author_user_id = excluded.author_user_id,
               embedding = excluded.embedding,
+              embedded_at = excluded.embedded_at,
+              embedding_model = excluded.embedding_model,
               updated_at = now(),
               deleted_at = null
        returning (xmax = 0) as created,
@@ -87,7 +91,17 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
                  old.source as old_source,
                  old.updated_at as old_updated_at,
                  old.deleted_at as old_deleted_at`,
-      [input.projectId, path, title, input.body, kind, source, input.userId, embedding],
+      [
+        input.projectId,
+        path,
+        title,
+        input.body,
+        kind,
+        source,
+        input.userId,
+        embedding,
+        embedded?.model ?? null,
+      ],
     )
 
     const written = rows[0]

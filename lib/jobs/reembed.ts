@@ -25,7 +25,7 @@ export async function runReembed(data: ReembedData): Promise<ReembedResult> {
   if (!provider) throw invalidParams('no embedding provider is configured')
 
   const { rowCount } = await adminPool().query(
-    `update memories set embedding = null where deleted_at is null`,
+    `update memories set embedding = null, embedded_at = null, embedding_model = null where deleted_at is null`,
   )
   await runBackfill({})
 

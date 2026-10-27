@@ -10,13 +10,13 @@ const MAX_ROWS = 2000
 
 export type BackfillData = { projectId?: string }
 
-export type BackfillResult = { embedded: number }
+export type BackfillResult = { embedded: number; model: string | null }
 
 type Row = { id: string; path: string; title: string | null; body: string }
 
 export async function runBackfill(data: BackfillData): Promise<BackfillResult> {
   const provider = await resolveEmbeddingProvider()
-  if (!provider) return { embedded: 0 }
+  if (!provider) return { embedded: 0, model: null }
 
   let embedded = 0
   while (embedded < MAX_ROWS) {
@@ -36,18 +36,18 @@ export async function runBackfill(data: BackfillData): Promise<BackfillResult> {
         vector = first
       } catch (error) {
         console.log(`backfill stopped (${(error as Error).message})`)
-        return { embedded }
+        return { embedded, model: provider.model }
       }
       if (!vector || vector.length !== EMBEDDING_DIM) {
         console.log('backfill stopped (provider returned the wrong dimension)')
-        return { embedded }
+        return { embedded, model: provider.model }
       }
-      await store(row.id, vector)
+      await store(row.id, vector, provider.model)
       embedded += 1
     }
   }
 
-  return { embedded }
+  return { embedded, model: provider.model }
 }
 
 // A job is a system actor with no session, so RLS would hide every row: read and
@@ -68,12 +68,14 @@ async function nextBatch(projectId: string | undefined): Promise<Row[]> {
   })
 }
 
-async function store(id: string, values: number[]): Promise<void> {
+async function store(id: string, values: number[], model: string): Promise<void> {
   await withAdmin(async (client) => {
-    await client.query('update memories set embedding = $2::vector where id = $1', [
-      id,
-      toVectorLiteral(values),
-    ])
+    await client.query(
+      `update memories
+          set embedding = $2::vector, embedded_at = now(), embedding_model = $3
+        where id = $1`,
+      [id, toVectorLiteral(values), model],
+    )
   })
 }
 

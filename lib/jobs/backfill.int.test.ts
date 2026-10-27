@@ -65,13 +65,21 @@ describe('the backfill job', () => {
     const result = await runBackfill({})
 
     expect(result.embedded).toBe(2)
+    expect(result.model).toBe('nomic-embed-text')
     expect(await countNullEmbeddings()).toBe(0)
+
+    const { rows } = await adminPool().query<{ embedded_at: Date | null; embedding_model: string | null }>(
+      `select embedded_at, embedding_model from memories where project_id = $1 and path = 'a/one'`,
+      [projectId],
+    )
+    expect(rows[0]?.embedded_at).not.toBeNull()
+    expect(rows[0]?.embedding_model).toBe('nomic-embed-text')
   })
 
   it('does nothing when no embedding provider is configured', async () => {
     await writeMemory({ userId: f.alice, projectId, path: 'a/one', body: 'first' })
 
-    expect(await runBackfill({})).toEqual({ embedded: 0 })
+    expect(await runBackfill({})).toEqual({ embedded: 0, model: null })
     expect(await countNullEmbeddings()).toBe(1)
   })
 })

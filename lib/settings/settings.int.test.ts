@@ -14,6 +14,7 @@ import { getEmailSettings, setEmailSettings } from './email-settings'
 import { getIpAllowlist, getRequireMfa, setIpAllowlist, setRequireMfa } from './security'
 import { getPublicUrl, getSiteSettings, setSiteSettings } from './site'
 import { getTimeFormat, setClock, setTimezone } from './time'
+import { getLearningDefault, setLearningDefault } from './learning'
 
 let actor: string
 
@@ -142,5 +143,18 @@ describe('time settings', () => {
 
   test('refuses a zone that does not exist', async () => {
     await expect(setTimezone('Mars/Olympus_Mons', actor)).rejects.toThrow('not a timezone')
+  })
+})
+
+describe('learning default', () => {
+  test('is off until it is turned on', async () => {
+    expect(await getLearningDefault()).toBe(false)
+  })
+
+  test('saves both states', async () => {
+    await setLearningDefault(true, actor)
+    expect(await getLearningDefault()).toBe(true)
+    await setLearningDefault(false, actor)
+    expect(await getLearningDefault()).toBe(false)
   })
 })

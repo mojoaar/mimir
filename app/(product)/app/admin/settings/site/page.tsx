@@ -5,6 +5,7 @@ import { getSiteSettings } from '@/lib/settings/site'
 import { getIpAllowlist, getRequireMfa } from '@/lib/settings/security'
 import { getEmailSettings } from '@/lib/settings/email-settings'
 import { getTimeFormat, timezoneOptions } from '@/lib/settings/time'
+import { getLearningDefault } from '@/lib/settings/learning'
 import { saveSiteSettingsAction } from './actions'
 
 export const instant = false
@@ -24,13 +25,15 @@ export default async function SiteSettingsPage({
   await requireAdmin()
   const t = await translator()
   const params = await searchParams
-  const [site, requireMfa, allowlist, email, { timeZone, clock }] = await Promise.all([
-    getSiteSettings(),
-    getRequireMfa(),
-    getIpAllowlist(),
-    getEmailSettings(),
-    getTimeFormat(),
-  ])
+  const [site, requireMfa, allowlist, email, { timeZone, clock }, learningDefault] =
+    await Promise.all([
+      getSiteSettings(),
+      getRequireMfa(),
+      getIpAllowlist(),
+      getEmailSettings(),
+      getTimeFormat(),
+      getLearningDefault(),
+    ])
   const zones = timezoneOptions()
   if (!zones.includes(timeZone)) zones.unshift(timeZone)
   const proxyWarning = allowlist.length > 0 && getConfig().trustedProxies.length === 0
@@ -86,6 +89,16 @@ export default async function SiteSettingsPage({
             <option value="12h">{t('app.admin.site.clock12')}</option>
           </select>
           <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.clockHint')}</span>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="flex items-center gap-2">
+            <input type="checkbox" name="learningDefault" defaultChecked={learningDefault} />
+            {t('app.admin.site.learningDefault')}
+          </span>
+          <span className="text-xs text-[var(--text-muted)]">
+            {t('app.admin.site.learningDefaultHint')}
+          </span>
         </label>
 
         <label className="flex items-center gap-2 text-sm">

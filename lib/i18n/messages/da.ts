@@ -298,6 +298,9 @@ export const da: Messages = {
   'app.admin.site.clock24': '24-timer (16:05)',
   'app.admin.site.clock12': '12-timer (4:05 PM)',
   'app.admin.site.clockHint': 'Datoer vises altid som ÅÅÅÅ-MM-DD.',
+  'app.admin.site.learningDefault': 'Lær fra nye projekter',
+  'app.admin.site.learningDefaultHint':
+    'Projekter, der oprettes fremover, starter med læring slået til. Udtræk sender en erindrings tekst til din sprogudbyder.',
   'app.admin.site.requireMfa':
     'Kræv to-faktor for alle brugere (bootstrap-administratoren er undtaget)',
   'app.admin.site.allowlist': 'IP-allowlist (ét CIDR pr. linje, tom tillader alle)',

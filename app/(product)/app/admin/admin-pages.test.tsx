@@ -152,6 +152,11 @@ import SiteSettingsPage from './settings/site/page'
 
 const nothing = Promise.resolve({})
 
+vi.mock('@/lib/settings/learning', () => ({
+  getLearningDefault: async () => false,
+  setLearningDefault: async () => {},
+}))
+
 vi.mock('@/lib/settings/time', () => ({
   getTimezone: async () => 'UTC',
   getClock: async () => '24h',
@@ -240,6 +245,8 @@ describe('the admin screens', () => {
     expect(html).toContain('Site settings')
     expect(html).toContain('Public URL')
     expect(html).toContain('Require two-factor for every user')
+    expect(html).toContain('name="learningDefault"')
+    expect(html).toContain('Learn from new projects')
   })
 
   it('speaks Danish when the account does', async () => {

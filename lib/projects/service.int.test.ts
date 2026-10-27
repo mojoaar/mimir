@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
+import { setLearningDefault } from '@/lib/settings/learning'
 
 import { deleteMemory, readMemory, writeMemory } from '@/lib/memory/service'
 import { grantProject, projectRole, revokeGrant } from './access'
@@ -272,5 +273,18 @@ describe('the memory count in a project list', () => {
 
     const idle = await resolveProject(f.bob, { project: 'idle', create: true })
     expect((await listProjects(f.bob)).find((p) => p.id === idle.id)?.memoryCount).toBe(0)
+  })
+})
+
+describe('a new project', () => {
+  it('starts with learning off when that is the default', async () => {
+    const p = await resolveProject(alice, { repo: 'github.com/alice/fresh-repo', create: true })
+    expect((await getProject(alice, p.slug))?.learningEnabled).toBe(false)
+  })
+
+  it('starts with learning on when that is the default', async () => {
+    await setLearningDefault(true, alice)
+    const p = await resolveProject(alice, { repo: 'github.com/alice/learning-repo', create: true })
+    expect((await getProject(alice, p.slug))?.learningEnabled).toBe(true)
   })
 })

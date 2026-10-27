@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New projects can start with learning on. The default lives in **Admin → Settings → Site** and is off unless you
+  turn it on; it is copied into a project when that project is created, so projects that already exist keep their
+  own setting.
+
 ### Fixed
+
+- Opening another memory from the tree now shows *that* memory's text. The reader's body box kept the previous
+  memory's text while the heading changed, because a client-side navigation left the same editor mounted.
 
 - Testing a provider now says what happened. The button reads **Testing…** while it runs, then **Works.** — with
   the embedding dimension when the provider is an embedding one — or the provider's error, instead of leaving the

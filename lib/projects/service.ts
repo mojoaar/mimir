@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg'
 
 import { withUser } from '@/lib/db/tx'
+import { getLearningDefault } from '@/lib/settings/learning'
 import { audit } from '@/lib/audit'
 import { slugify } from '@/lib/slug'
 
@@ -112,6 +113,10 @@ async function createProject(
     requestedName ??
     (repoKey && !repoKey.startsWith('local:') ? repoKey : base)
 
+  // Read before the insert: creation happens rarely, and the default is copied
+  // into the row so later changes to it never touch a project that exists.
+  const learningEnabled = await getLearningDefault()
+
   for (let attempt = 1; attempt <= 5; attempt++) {
     const slug = attempt === 1 ? base : `${base}-${attempt}`
     // The repo_key unique index can fire on an archived project, and a failed
@@ -120,11 +125,11 @@ async function createProject(
     await client.query('SAVEPOINT create_project')
     try {
       const inserted = await client.query<{ id: string }>(
-        `INSERT INTO projects (owner_user_id, name, slug, repo_key)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO projects (owner_user_id, name, slug, repo_key, learning_enabled)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (owner_user_id, slug) DO NOTHING
          RETURNING id`,
-        [userId, name, slug, repoKey],
+        [userId, name, slug, repoKey, learningEnabled],
       )
       const row = inserted.rows[0]
       if (row) {

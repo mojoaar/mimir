@@ -301,6 +301,12 @@ export const de: Messages = {
     'Wird in Canonical-Links, im Sitemap und in jedem E-Mail-Link verwendet. Ein Wechsel meldet alle ab.',
   'app.admin.site.siteName': 'Name der Website',
   'app.admin.site.metaDescription': 'Meta-Beschreibung',
+  'app.admin.site.timezone': 'Zeitzone',
+  'app.admin.site.timezoneHint': 'Jeder Zeitstempel und jeder Nutzungsbalken folgt dieser Zone.',
+  'app.admin.site.clock': 'Uhrzeitformat',
+  'app.admin.site.clock24': '24 Stunden (16:05)',
+  'app.admin.site.clock12': '12 Stunden (4:05 PM)',
+  'app.admin.site.clockHint': 'Daten werden immer als JJJJ-MM-TT angezeigt.',
   'app.admin.site.requireMfa':
     'Zwei-Faktor für alle Benutzer verlangen (der Bootstrap-Administrator bleibt ausgenommen)',
   'app.admin.site.allowlist': 'IP-Allowlist (ein CIDR pro Zeile, leer erlaubt allen)',

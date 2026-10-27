@@ -290,6 +290,12 @@ export const en = {
     'Used in canonical links, the sitemap and every emailed link. Moving it signs everyone out.',
   'app.admin.site.siteName': 'Site name',
   'app.admin.site.metaDescription': 'Meta description',
+  'app.admin.site.timezone': 'Timezone',
+  'app.admin.site.timezoneHint': 'Every timestamp and every usage bar uses this zone.',
+  'app.admin.site.clock': 'Clock',
+  'app.admin.site.clock24': '24-hour (16:05)',
+  'app.admin.site.clock12': '12-hour (4:05 PM)',
+  'app.admin.site.clockHint': 'Dates always read as YYYY-MM-DD.',
   'app.admin.site.requireMfa':
     'Require two-factor for every user (the bootstrap admin stays exempt)',
   'app.admin.site.allowlist': 'IP allowlist (one CIDR per line, empty allows everyone)',

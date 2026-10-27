@@ -8,6 +8,7 @@ import { getIpAllowlist, getRequireMfa, setIpAllowlist, setRequireMfa } from '@/
 import { getEmailSettings, setEmailSettings } from '@/lib/settings/email-settings'
 import { invalidateAllowlistCache } from '@/lib/http/allowlist'
 import { InvalidSetting } from '@/lib/settings/store'
+import { getTimeFormat, setClock, setTimezone } from '@/lib/settings/time'
 import { translator } from '@/lib/i18n/request'
 import { actionMessage } from '@/lib/i18n/errors'
 
@@ -34,6 +35,8 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
       },
       user.id,
     )
+    await setTimezone(text(formData, 'timezone') || 'UTC', user.id)
+    await setClock(text(formData, 'clock') === '12h' ? '12h' : '24h', user.id)
     await setRequireMfa(text(formData, 'requireMfa') === 'on', user.id)
     await setIpAllowlist(allowlist, user.id)
     invalidateAllowlistCache()
@@ -65,6 +68,8 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
         publicUrl: before.publicUrl,
         requireMfa: mfa,
         allowlistEntries: list.length,
+        timezone: (await getTimeFormat()).timeZone,
+        clock: (await getTimeFormat()).clock,
       },
     })
   } catch (thrown) {

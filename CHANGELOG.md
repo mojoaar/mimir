@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Every clock in one place.
+
+### Added
+
+- One timezone for the whole install, set in **Admin → Settings → Site**. Every timestamp, the audit day filter
+  and the usage bars follow it instead of hard-coded UTC.
+- A 12-hour or 24-hour clock, set beside the timezone. Dates always read as `YYYY-MM-DD` either way.
+
+### Changed
+
+- The audit log's action filter is a dropdown of the actions that exist, grouped by prefix with their counts,
+  instead of a field that needed the exact action name.
+
 ## [0.14.0] - 2026-10-27
 
 Your agent starts informed.

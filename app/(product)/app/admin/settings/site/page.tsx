@@ -4,6 +4,7 @@ import { translator } from '@/lib/i18n/request'
 import { getSiteSettings } from '@/lib/settings/site'
 import { getIpAllowlist, getRequireMfa } from '@/lib/settings/security'
 import { getEmailSettings } from '@/lib/settings/email-settings'
+import { getTimeFormat, timezoneOptions } from '@/lib/settings/time'
 import { saveSiteSettingsAction } from './actions'
 
 export const instant = false
@@ -23,12 +24,15 @@ export default async function SiteSettingsPage({
   await requireAdmin()
   const t = await translator()
   const params = await searchParams
-  const [site, requireMfa, allowlist, email] = await Promise.all([
+  const [site, requireMfa, allowlist, email, { timeZone, clock }] = await Promise.all([
     getSiteSettings(),
     getRequireMfa(),
     getIpAllowlist(),
     getEmailSettings(),
+    getTimeFormat(),
   ])
+  const zones = timezoneOptions()
+  if (!zones.includes(timeZone)) zones.unshift(timeZone)
   const proxyWarning = allowlist.length > 0 && getConfig().trustedProxies.length === 0
 
   return (
@@ -61,6 +65,27 @@ export default async function SiteSettingsPage({
             className={FIELD}
             style={FIELD_STYLE}
           />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-[var(--text-muted)]">{t('app.admin.site.timezone')}</span>
+          <select name="timezone" defaultValue={timeZone} className={FIELD} style={FIELD_STYLE}>
+            {zones.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.timezoneHint')}</span>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-[var(--text-muted)]">{t('app.admin.site.clock')}</span>
+          <select name="clock" defaultValue={clock} className={FIELD} style={FIELD_STYLE}>
+            <option value="24h">{t('app.admin.site.clock24')}</option>
+            <option value="12h">{t('app.admin.site.clock12')}</option>
+          </select>
+          <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.clockHint')}</span>
         </label>
 
         <label className="flex items-center gap-2 text-sm">

@@ -292,6 +292,12 @@ export const da: Messages = {
     'Bruges i canonical-links, sitemap og alle links i e-mails. Flytter du den, bliver alle logget ud.',
   'app.admin.site.siteName': 'Webstedsnavn',
   'app.admin.site.metaDescription': 'Meta-beskrivelse',
+  'app.admin.site.timezone': 'Tidszone',
+  'app.admin.site.timezoneHint': 'Hvert tidsstempel og hver brugsbjælke følger denne zone.',
+  'app.admin.site.clock': 'Ur',
+  'app.admin.site.clock24': '24-timer (16:05)',
+  'app.admin.site.clock12': '12-timer (4:05 PM)',
+  'app.admin.site.clockHint': 'Datoer vises altid som ÅÅÅÅ-MM-DD.',
   'app.admin.site.requireMfa':
     'Kræv to-faktor for alle brugere (bootstrap-administratoren er undtaget)',
   'app.admin.site.allowlist': 'IP-allowlist (ét CIDR pr. linje, tom tillader alle)',

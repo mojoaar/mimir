@@ -37,6 +37,51 @@ vi.mock('@/lib/db/tx', () => ({
     }),
 }))
 
+vi.mock('@/lib/jobs/service', () => ({
+  queueHealth: async () => ({ started: true }),
+  jobCounts: async () => [
+    { name: 'extract', state: 'completed', count: 8 },
+    { name: 'extract', state: 'failed', count: 3 },
+  ],
+  recentJobs: async () => [
+    {
+      id: 'job-1',
+      name: 'backfill',
+      state: 'completed',
+      createdAt: new Date('2026-10-25T10:00:00Z'),
+      startedAt: new Date('2026-10-25T10:00:00Z'),
+      completedAt: new Date('2026-10-25T10:00:02Z'),
+      retryCount: 0,
+      retryLimit: 2,
+      detail: '12 embedded',
+    },
+    {
+      id: 'job-2',
+      name: 'extract',
+      state: 'failed',
+      createdAt: new Date('2026-10-25T09:00:00Z'),
+      startedAt: new Date('2026-10-25T09:00:00Z'),
+      completedAt: new Date('2026-10-25T09:00:01Z'),
+      retryCount: 2,
+      retryLimit: 2,
+      detail: 'bad port',
+    },
+  ],
+  embeddingCoverage: async () => ({
+    total: 7,
+    embedded: 7,
+    missing: 0,
+    lastEmbeddedAt: new Date('2026-10-25T10:00:00Z'),
+    models: [{ model: 'nomic-embed-text', count: 7 }],
+    projects: [],
+  }),
+  embeddingCalls: async () => [{ purpose: 'embed.ingest', count: 3, failures: 0 }],
+}))
+
+vi.mock('@/lib/settings/embedding', () => ({
+  getEmbeddingConfig: async () => ({ providerId: 'p1', model: 'nomic-embed-text', dim: 768 }),
+}))
+
 vi.mock('@/lib/usage/service', () => ({
   spike: async () => ({ calls: 40, median: 2, hourStart: '2026-10-26T09:00:00Z' }),
   dismissed: async () => false,
@@ -98,6 +143,7 @@ vi.mock('@/lib/jobs/boss', () => ({
 }))
 
 import AdminLayout from './layout'
+import JobsPage from './jobs/page'
 import AdminOverviewPage from './page'
 import UsagePage from './usage/page'
 import AuditPage from './audit/page'
@@ -122,6 +168,7 @@ describe('the admin nav', () => {
 
     expect(html).toContain('href="/app/admin/users"')
     expect(html).toContain('href="/app/admin/audit"')
+    expect(html).toContain('href="/app/admin/jobs"')
     expect(html).toContain('href="/app/admin/usage"')
     expect(html).toContain('rounded-md border border-[var(--border)]')
     expect(html).toContain('Usage spike · 40 calls this hour')
@@ -146,6 +193,19 @@ describe('the usage page', () => {
     expect(html).toContain('name="days"')
     expect(html).toContain('Delete older calls')
     expect(html).toContain('Pruned calls older than 90 days: 12.')
+  })
+})
+
+describe('the jobs page', () => {
+  it('shows the queue, the coverage and what each job did', async () => {
+    const html = renderToStaticMarkup(await JobsPage())
+
+    expect(html).toContain('The queue is running.')
+    expect(html).toContain('7 / 7 memories carry a vector')
+    expect(html).toContain('nomic-embed-text')
+    expect(html).toContain('12 embedded')
+    expect(html).toContain('bad port')
+    expect(html).toContain('2/2')
   })
 })
 

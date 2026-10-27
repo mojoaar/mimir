@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth/admin'
 import { withAdmin } from '@/lib/db/tx'
 import { stamp } from '@/lib/format/time'
+import { queueHealth } from '@/lib/jobs/service'
 import { translator } from '@/lib/i18n/request'
 import { getTimeFormat } from '@/lib/settings/time'
 
@@ -62,15 +63,37 @@ async function getStats(): Promise<Stats> {
   })
 }
 
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+function Stat({
+  label,
+  value,
+  hint,
+  href,
+}: {
+  label: string
+  value: string
+  hint?: string
+  href?: string
+}) {
+  const body = (
+    <>
+      <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
+      {hint ? <p className="text-xs text-[var(--text-muted)]">{hint}</p> : null}
+    </>
+  )
+
   return (
     <div
       className="rounded-lg border p-4"
       style={{ borderColor: 'var(--border)', background: 'var(--bg-raised)' }}
     >
-      <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
-      {hint ? <p className="text-xs text-[var(--text-muted)]">{hint}</p> : null}
+      {href ? (
+        <Link href={href} className="block">
+          {body}
+        </Link>
+      ) : (
+        body
+      )}
     </div>
   )
 }
@@ -79,7 +102,7 @@ export default async function AdminOverviewPage() {
   await requireAdmin()
   const t = await translator()
   const { timeZone, clock } = await getTimeFormat()
-  const stats = await getStats()
+  const [stats, health] = await Promise.all([getStats(), queueHealth()])
   const embeddedPercent =
     stats.memories === 0 ? 100 : Math.round((stats.embedded / stats.memories) * 100)
   const lastBackup = stats.lastBackupAt
@@ -113,7 +136,12 @@ export default async function AdminOverviewPage() {
         <Stat
           label={t('app.admin.overview.jobs')}
           value={String(stats.jobsActive)}
-          hint={t('app.admin.overview.jobsFailed', { count: stats.jobsFailed })}
+          hint={
+            health.started
+              ? t('app.admin.overview.jobsFailed', { count: stats.jobsFailed })
+              : t('app.jobs.queueNotRunning')
+          }
+          href="/app/admin/jobs"
         />
       </section>
 

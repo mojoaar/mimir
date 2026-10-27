@@ -23,6 +23,10 @@ vi.mock('@/lib/db/tx', () => ({
     }),
 }))
 
+vi.mock('@/lib/jobs/service', () => ({
+  queueHealth: async () => ({ started: true }),
+}))
+
 vi.mock('@/lib/settings/time', () => ({
   getTimezone: async () => 'UTC',
   getClock: async () => '24h',

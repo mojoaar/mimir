@@ -41,6 +41,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/app/admin/usage" className={button}>
           {t('app.admin.nav.usage')}
         </Link>
+        <Link href="/app/admin/jobs" className={button}>
+          {t('app.admin.nav.jobs')}
+        </Link>
       </nav>
       <div className="mx-auto flex max-w-5xl px-4 pb-3 sm:px-6">
         {await UsageAlert({ userId: admin.id })}

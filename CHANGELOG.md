@@ -14,11 +14,20 @@ Every clock in one place.
 - One timezone for the whole install, set in **Admin → Settings → Site**. Every timestamp, the audit day filter
   and the usage bars follow it instead of hard-coded UTC.
 - A 12-hour or 24-hour clock, set beside the timezone. Dates always read as `YYYY-MM-DD` either way.
+- **Admin → Jobs.** The queue's state, what each job did, embedding calls per purpose for the last day, and how
+  many memories actually carry a vector — with the model that built it.
 
 ### Changed
 
 - The audit log's action filter is a dropdown of the actions that exist, grouped by prefix with their counts,
   instead of a field that needed the exact action name.
+- A memory records when and with which model it was embedded, so a vector left behind by an old model is visible
+  instead of hiding behind "100%".
+
+### Fixed
+
+- A finished job now reports what it did ("12 embedded") instead of storing nothing, and Admin → Jobs shows every
+  job from the last seven days with its duration, retries and failure message.
 
 ## [0.14.0] - 2026-10-27
 

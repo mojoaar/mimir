@@ -431,7 +431,7 @@ export const en = {
   'app.profile.passwordBody': 'Changing it signs out every other device, and keeps this one.',
   'app.profile.sessions': 'Sessions',
   'app.profile.sessionsBody':
-    'Every browser and agent signed in as you. Revoke one you do not recognise.',
+    'Every browser signed in as you. Revoke one you do not recognise. Agents use the API keys below instead of a session.',
   'app.profile.revokedNotice': 'That session is signed out.',
   'app.profile.othersNotice': 'Every other device is signed out.',
   'app.profile.thisSession': 'This session',

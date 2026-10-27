@@ -444,7 +444,7 @@ export const de: Messages = {
     'Beim Ändern werden alle anderen Geräte abgemeldet, dieses bleibt angemeldet.',
   'app.profile.sessions': 'Sitzungen',
   'app.profile.sessionsBody':
-    'Jeder Browser und Agent, der als du angemeldet ist. Widerrufe, was du nicht kennst.',
+    'Jeder Browser, der als du angemeldet ist. Melde einen ab, den du nicht kennst. Agenten verwenden stattdessen die API-Schlüssel unten.',
   'app.profile.revokedNotice': 'Die Sitzung ist abgemeldet.',
   'app.profile.othersNotice': 'Alle anderen Geräte sind abgemeldet.',
   'app.profile.thisSession': 'Diese Sitzung',

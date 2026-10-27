@@ -434,7 +434,7 @@ export const da: Messages = {
     'Når du skifter den, logges alle andre enheder ud, og denne forbliver logget ind.',
   'app.profile.sessions': 'Sessioner',
   'app.profile.sessionsBody':
-    'Hver browser og agent der er logget ind som dig. Tilbagekald en, du ikke genkender.',
+    'Hver browser, der er logget ind som dig. Log en ud, du ikke genkender. Agenter bruger API-nøglerne nedenfor i stedet for en session.',
   'app.profile.revokedNotice': 'Sessionen er logget ud.',
   'app.profile.othersNotice': 'Alle andre enheder er logget ud.',
   'app.profile.thisSession': 'Denne session',

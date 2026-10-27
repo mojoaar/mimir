@@ -13,6 +13,7 @@ import {
 import { getEmailSettings, setEmailSettings } from './email-settings'
 import { getIpAllowlist, getRequireMfa, setIpAllowlist, setRequireMfa } from './security'
 import { getPublicUrl, getSiteSettings, setSiteSettings } from './site'
+import { getTimeFormat, setClock, setTimezone } from './time'
 
 let actor: string
 
@@ -129,5 +130,17 @@ describe('credentials', () => {
     expect(await getEmailSettings()).toMatchObject({ enabled: true, apiKey: 're_test_key' })
     await setEmailSettings(null, actor)
     expect(await getEmailSettings()).toBeNull()
+  })
+})
+
+describe('time settings', () => {
+  test('saves the zone and the clock', async () => {
+    await setTimezone('Europe/Copenhagen', actor)
+    await setClock('12h', actor)
+    expect(await getTimeFormat()).toEqual({ timeZone: 'Europe/Copenhagen', clock: '12h' })
+  })
+
+  test('refuses a zone that does not exist', async () => {
+    await expect(setTimezone('Mars/Olympus_Mons', actor)).rejects.toThrow('not a timezone')
   })
 })

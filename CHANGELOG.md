@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Project settings now says how much of the memory is learned: **N memories · N summarised · N embedded**, with
+  **Summarise now** and **Embed missing** for the owner. The embed button is replaced by a sentence when the install
+  has no embedding provider.
+- Turning learning on now summarises what was already there. Extraction used to be queued only by a write, so
+  memories written while learning was off stayed unsummarised forever.
+- A digest entry carries the date it was last written, so an agent can tell a convention from last week from one
+  from last year.
+
+### Changed
+
+- One user-settings page: **Settings → Profile** now holds two-factor authentication, appearance and API keys as well
+  as the name, password and sessions. `/app/settings` and `/app/settings/mfa` redirect there, Settings is gone from
+  the header nav, and Providers keeps its own link.
+
 ## [0.16.0] - 2026-10-27
 
 ### Added

@@ -3,11 +3,12 @@ import Link from 'next/link'
 import { requireUser } from '@/lib/auth/context'
 import { listGrants } from '@/lib/projects/access'
 import { listProviders } from '@/lib/providers/service'
-import { getProject } from '@/lib/projects/service'
+import { getProject, getProjectHealth } from '@/lib/projects/service'
+import { getEmbeddingConfig } from '@/lib/settings/embedding'
 import { listTeams } from '@/lib/teams/service'
 
 import { archiveProjectAction } from '../../actions'
-import { revokeProjectGrantAction } from './actions'
+import { embedProjectAction, revokeProjectGrantAction, summariseProjectAction } from './actions'
 import { GrantForm } from './grant-form'
 import { ProjectForm } from './project-form'
 import { Missing } from '../../missing'
@@ -20,12 +21,12 @@ export default async function ProjectSettingsPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; notice?: string }>
 }) {
   const user = await requireUser()
   const t = await translator()
   const { slug } = await params
-  const { error } = await searchParams
+  const { error, notice } = await searchParams
   const project = await getProject(user.id, slug)
   if (!project) return <Missing kind="project" t={t} />
 
@@ -38,6 +39,13 @@ export default async function ProjectSettingsPage({
           model: p.model,
         }))
       : []
+
+  // A role of null is RLS letting the row through with no grant behind it: fail
+  // closed rather than ask for counts the caller may not read.
+  const [health, embeddingConfigured] = await Promise.all([
+    project.role ? getProjectHealth(user.id, project.id) : null,
+    getEmbeddingConfig().then((config) => config !== null),
+  ])
 
   // Sharing is the owner's to change; a grantee only ever sees what it was given.
   const [grants, teams] =
@@ -68,6 +76,52 @@ export default async function ProjectSettingsPage({
         <p role="alert" className="text-sm text-[var(--danger)]">
           {error}
         </p>
+      ) : null}
+
+      {notice ? <p className="text-sm text-[var(--accent)]">{notice}</p> : null}
+
+      {health ? (
+        <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-4">
+          <p className="text-sm">
+            {t('app.projectSettings.health', {
+              memories: health.memories,
+              summarised: health.summarised,
+              embedded: health.embedded,
+            })}
+          </p>
+          {project.role === 'owner' ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {project.learningEnabled ? (
+                <form action={summariseProjectAction}>
+                  <input type="hidden" name="projectId" value={project.id} />
+                  <input type="hidden" name="slug" value={project.slug} />
+                  <button
+                    type="submit"
+                    className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-raised)]"
+                  >
+                    {t('app.projectSettings.summarise')}
+                  </button>
+                </form>
+              ) : null}
+              {embeddingConfigured ? (
+                <form action={embedProjectAction}>
+                  <input type="hidden" name="projectId" value={project.id} />
+                  <input type="hidden" name="slug" value={project.slug} />
+                  <button
+                    type="submit"
+                    className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-raised)]"
+                  >
+                    {t('app.projectSettings.embed')}
+                  </button>
+                </form>
+              ) : (
+                <p className="text-sm text-[var(--text-muted)]">
+                  {t('app.projectSettings.embedOff')}
+                </p>
+              )}
+            </div>
+          ) : null}
+        </section>
       ) : null}
 
       <ProjectForm

@@ -74,7 +74,6 @@ describe('the app shell', () => {
     for (const href of [
       'href="/app"',
       'href="/app/teams"',
-      'href="/app/settings"',
       'href="/app/settings/providers"',
     ]) {
       expect(html).toContain(href)

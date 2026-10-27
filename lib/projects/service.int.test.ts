@@ -1,4 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const enqueue = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/jobs/enqueue', () => ({ enqueueExtraction: enqueue }))
 
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'
@@ -10,6 +13,7 @@ import { grantProject, projectRole, revokeGrant } from './access'
 import {
   archiveProject,
   getProject,
+  getProjectHealth,
   listProjects,
   resolveProject,
   restoreProject,
@@ -67,6 +71,22 @@ describe('project settings', () => {
     expect((await getProject(alice, 'alice-project'))?.learningEnabled).toBe(true)
   })
 
+  it('queues the backlog when learning is turned on', async () => {
+    enqueue.mockClear()
+
+    await updateProjectSettings(alice, aliceProjectId, { learningEnabled: true })
+
+    expect(enqueue).toHaveBeenCalledWith(aliceProjectId)
+  })
+
+  it('leaves the queue alone when learning is not turned on', async () => {
+    enqueue.mockClear()
+
+    await updateProjectSettings(alice, aliceProjectId, { learningEnabled: false })
+
+    expect(enqueue).not.toHaveBeenCalled()
+  })
+
   it('a write grantee cannot toggle learning, and is told so', async () => {
     await seedGrant(aliceProjectId, bob, 'write')
 
@@ -75,6 +95,30 @@ describe('project settings', () => {
     ).rejects.toMatchObject({ code: 'forbidden' })
 
     expect((await getProject(alice, 'alice-project'))?.learningEnabled).toBe(false)
+  })
+})
+
+describe('project health', () => {
+  it('counts memories, summaries and vectors', async () => {
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'a/one', body: 'One' })
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'a/two', body: 'Two' })
+    await adminPool().query(`update memories set summary = 'S' where project_id = $1 and path = 'a/one'`, [
+      aliceProjectId,
+    ])
+    await adminPool().query(
+      `update memories set embedding = array_fill(0.1, array[768])::vector where project_id = $1 and path = 'a/two'`,
+      [aliceProjectId],
+    )
+
+    expect(await getProjectHealth(alice, aliceProjectId)).toEqual({
+      memories: 2,
+      summarised: 1,
+      embedded: 1,
+    })
+  })
+
+  it('refuses a project the user cannot read', async () => {
+    await expect(getProjectHealth(bob, aliceProjectId)).rejects.toMatchObject({ code: 'forbidden' })
   })
 })
 

@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   getProject: vi.fn(),
+  getProjectHealth: vi.fn(async () => ({ memories: 3, summarised: 1, embedded: 2 })),
+  getEmbeddingConfig: vi.fn(async () => ({ provider: 'test' }) as unknown),
   listProviders: vi.fn(async () => []),
   listGrants: vi.fn(async () => [] as unknown[]),
   listTeams: vi.fn(async () => [] as unknown[]),
@@ -16,7 +18,11 @@ vi.mock('@/lib/auth/context', () => ({
   requireUser: async () => ({ id: 'u1', email: 'alice@example.test', locale: mocks.locale }),
   getCurrentUser: async () => ({ id: 'u1', email: 'alice@example.test', locale: mocks.locale }),
 }))
-vi.mock('@/lib/projects/service', () => ({ getProject: mocks.getProject }))
+vi.mock('@/lib/projects/service', () => ({
+  getProject: mocks.getProject,
+  getProjectHealth: mocks.getProjectHealth,
+}))
+vi.mock('@/lib/settings/embedding', () => ({ getEmbeddingConfig: mocks.getEmbeddingConfig }))
 vi.mock('@/lib/providers/service', () => ({ listProviders: mocks.listProviders }))
 vi.mock('@/lib/projects/access', () => ({
   listGrants: mocks.listGrants,
@@ -66,6 +72,41 @@ describe('project settings page', () => {
     expect(html).toContain('Danger zone')
     expect(html).toContain('Archive project')
     expect(html).toContain('Memories and grants are kept')
+  })
+
+  it('says how much of the memory is learned, not just how much exists', async () => {
+    mocks.getProject.mockResolvedValueOnce(project)
+
+    const html = await render()
+
+    expect(html).toContain('3 memories · 1 summarised · 2 embedded')
+  })
+
+  it('offers the owner the two repairs that make the counts go up', async () => {
+    mocks.getProject.mockResolvedValueOnce({ ...project, learningEnabled: true })
+
+    const html = await render()
+
+    expect(html).toContain('Summarise now')
+    expect(html).toContain('Embed missing')
+  })
+
+  it('does not offer to summarise while learning is off', async () => {
+    mocks.getProject.mockResolvedValueOnce(project)
+
+    const html = await render()
+
+    expect(html).not.toContain('Summarise now')
+  })
+
+  it('explains the missing button when the install has no embeddings', async () => {
+    mocks.getProject.mockResolvedValueOnce(project)
+    mocks.getEmbeddingConfig.mockResolvedValueOnce(null)
+
+    const html = await render()
+
+    expect(html).toContain('Embeddings are not configured')
+    expect(html).not.toContain('Embed missing')
   })
 
   it('hides the danger zone from a user who does not own the project', async () => {

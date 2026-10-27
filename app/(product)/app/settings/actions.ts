@@ -26,7 +26,7 @@ export async function createKeyAction(
     // The token itself is never logged, and detail never carries it.
     detail: { name, prefix: key.prefix },
   })
-  revalidatePath('/app/settings')
+  revalidatePath('/app/settings/profile')
 
   // Returned to the caller instead of redirected: the token is shown exactly once
   // and never lands in a URL, a log line or browser history.
@@ -49,5 +49,5 @@ export async function revokeKeyAction(formData: FormData): Promise<void> {
     targetType: 'api_key',
     targetId: id,
   })
-  revalidatePath('/app/settings')
+  revalidatePath('/app/settings/profile')
 }

@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation'
 
 import { audit } from '@/lib/audit'
 import { requireUser } from '@/lib/auth/context'
-import { grantProject, revokeGrant, type PrincipalType } from '@/lib/projects/access'
+import { enqueueExtraction } from '@/lib/jobs/enqueue'
+import { grantProject, requireProjectRole, revokeGrant, type PrincipalType } from '@/lib/projects/access'
 import { updateProjectSettings } from '@/lib/projects/service'
 import { findActiveUserIdByEmail } from '@/lib/users/lookup'
 import { translator } from '@/lib/i18n/request'
@@ -128,4 +129,63 @@ export async function revokeProjectGrantAction(formData: FormData): Promise<void
     detail: { principalType, principalId },
   })
   revalidatePath(`/app/projects/${slug}/settings`)
+}
+
+/**
+ * Learning is queued by a write, so memories written before it was turned on
+ * stay unsummarised forever. These two give the owner a way to drain that
+ * backlog without pretending to edit every memory by hand.
+ */
+export async function summariseProjectAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const t = await translator()
+  const projectId = String(formData.get('projectId') ?? '')
+  const slug = String(formData.get('slug') ?? '')
+  const back = `/app/projects/${slug}/settings`
+
+  try {
+    await requireProjectRole(user.id, projectId, 'owner')
+  } catch (error) {
+    redirect(`${back}?error=${encodeURIComponent(actionMessage(error, t))}`)
+  }
+
+  await enqueueExtraction(projectId)
+  await audit({
+    actorType: 'user',
+    actorId: user.id,
+    action: 'project.summarise',
+    targetType: 'project',
+    targetId: projectId,
+  })
+  revalidatePath(back)
+
+  redirect(`${back}?notice=${encodeURIComponent(t('app.projectSettings.queued'))}`)
+}
+
+/** Backfill is gap-only, so a second press costs nothing for memories that already have a vector. */
+export async function embedProjectAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const t = await translator()
+  const projectId = String(formData.get('projectId') ?? '')
+  const slug = String(formData.get('slug') ?? '')
+  const back = `/app/projects/${slug}/settings`
+
+  try {
+    await requireProjectRole(user.id, projectId, 'owner')
+  } catch (error) {
+    redirect(`${back}?error=${encodeURIComponent(actionMessage(error, t))}`)
+  }
+
+  const { sendJob } = await import('@/lib/jobs/boss')
+  await sendJob('backfill', { projectId })
+  await audit({
+    actorType: 'user',
+    actorId: user.id,
+    action: 'project.embed',
+    targetType: 'project',
+    targetId: projectId,
+  })
+  revalidatePath(back)
+
+  redirect(`${back}?notice=${encodeURIComponent(t('app.projectSettings.queued'))}`)
 }

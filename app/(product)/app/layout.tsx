@@ -51,7 +51,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <nav className="flex flex-wrap gap-4">
             <Link href="/app">{t('app.nav.projects')}</Link>
             <Link href="/app/teams">{t('app.nav.teams')}</Link>
-            <Link href="/app/settings">{t('app.nav.settings')}</Link>
             <Link href="/app/settings/providers">{t('app.nav.providers')}</Link>
             {user.role === 'admin' ? (
               <Link href="/app/admin">{t('app.nav.admin')}</Link>

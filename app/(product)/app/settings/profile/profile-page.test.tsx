@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   profileCalls: [] as Record<string, unknown>[],
   passwordCalls: 0,
   locale: 'en',
+  mfaOn: false,
+  mfaRequired: false,
 }))
 
 vi.mock('next/headers', () => ({
@@ -27,6 +29,23 @@ vi.mock('@/lib/auth/session', () => ({ sessionIdFor: async () => 's1' }))
 vi.mock('@/lib/auth/cookie-name', () => ({ SESSION_COOKIE: 'mimir_session' }))
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
 vi.mock('@/lib/users/avatar', () => ({ avatarVersion: async () => '9' }))
+vi.mock('@/lib/auth/apikey', () => ({ listApiKeys: async () => [] }))
+vi.mock('@/lib/config', () => ({
+  getConfig: () => ({ publicUrlSeed: 'http://localhost:3000' }),
+}))
+vi.mock('@/lib/auth/mfa', () => ({
+  mfaEnabled: async () => mocks.mfaOn,
+  pendingEnrollment: async () => ({ secret: 'JBSWY3DPEHPK3PXP', uri: 'otpauth://totp/x' }),
+  beginEnrollment: async () => ({ secret: 'JBSWY3DPEHPK3PXP', uri: 'otpauth://totp/x' }),
+}))
+vi.mock('@/lib/settings/security', () => ({ getRequireMfa: async () => mocks.mfaRequired }))
+vi.mock('qrcode', () => ({ default: { toString: async () => '<svg></svg>' } }))
+// The real one is async and mints a secret; its own behaviour is not what this
+// page decides, only where it appears.
+vi.mock('../mfa/enrolment', () => ({
+  Enrolment: () => <div data-test="enrolment">Scan this with your authenticator app</div>,
+}))
+vi.mock('../../actions', () => ({ setLocaleAction: async () => {}, signOutAction: async () => {} }))
 vi.mock('@/lib/users/self', () => ({
   listMySessions: async () => mocks.sessions,
   updateProfile: async (_id: string, patch: Record<string, unknown>) => {
@@ -150,6 +169,68 @@ const other = (id: string, ip: string) => ({
   lastSeenAt: new Date('2026-10-24T10:00:00Z'),
   createdAt: new Date('2026-10-24T09:00:00Z'),
   current: false,
+})
+
+describe('the two-factor section', () => {
+  it('keeps the setup collapsed, because it draws a new QR every render', async () => {
+    mocks.sessions = []
+    mocks.mfaOn = false
+
+    const html = await render()
+
+    expect(html).toContain('<details')
+    expect(html).toContain('data-test="enrolment"')
+    expect(html).not.toContain('Turn off')
+  })
+
+  it('offers to turn it off once it is on', async () => {
+    mocks.sessions = []
+    mocks.mfaOn = true
+    mocks.mfaRequired = false
+
+    const html = await render()
+
+    expect(html).toContain('Turn off')
+    expect(html).not.toContain('Scan this')
+  })
+
+  it('explains why turning it off is refused when the install requires it', async () => {
+    mocks.sessions = []
+    mocks.mfaOn = true
+    mocks.mfaRequired = true
+
+    try {
+      expect(await render()).toContain('turning it off is disabled')
+    } finally {
+      mocks.mfaRequired = false
+      mocks.mfaOn = false
+    }
+  })
+})
+
+describe('appearance and keys', () => {
+  it('carries the language, theme and API key controls', async () => {
+    mocks.sessions = []
+
+    const html = await render()
+
+    expect(html).toContain('Appearance')
+    expect(html).toContain('name="locale"')
+    expect(html).toContain('English')
+    expect(html).toContain('API keys')
+    expect(html).toContain('http://localhost:3000/mcp')
+  })
+
+  it('speaks Danish when the account does', async () => {
+    mocks.sessions = []
+    mocks.locale = 'da'
+
+    try {
+      expect(await render()).toContain('Udseende')
+    } finally {
+      mocks.locale = 'en'
+    }
+  })
 })
 
 describe('the picture', () => {

@@ -1,6 +1,6 @@
 import { withAdmin, withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
-import { EXTRACT_DEBOUNCE_SECONDS } from '@/lib/jobs/constants'
+import { enqueueExtraction } from '@/lib/jobs/enqueue'
 import { embedText } from './embeddings'
 import { archiveVersion } from './versions'
 import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
@@ -132,24 +132,6 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
 
   await enqueueExtraction(input.projectId)
   return result
-}
-
-/**
- * Every write queues an extraction; the queue's `short` policy collapses them
- * per project, and the handler checks `learning_enabled` at run time because
- * the flag can change between the write and the job.
- */
-async function enqueueExtraction(projectId: string): Promise<void> {
-  try {
-    const { sendJob } = await import('@/lib/jobs/boss')
-    await sendJob(
-      'extract',
-      { projectId },
-      { singletonKey: projectId, startAfter: EXTRACT_DEBOUNCE_SECONDS },
-    )
-  } catch (error) {
-    console.error(`could not queue extraction (${(error as Error).message})`)
-  }
 }
 
 export async function readMemory(

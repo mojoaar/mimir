@@ -47,6 +47,22 @@ describe('buildDigest', () => {
     expect(digest.text).not.toContain('### .')
   })
 
+  it('dates every entry, because age is the point of a digest', async () => {
+    for (let i = 0; i < 6; i++) {
+      await writeMemory({ userId: f.alice, projectId, path: `d${i}/m`, body: `title ${i}` })
+    }
+    // Written last, so it is one of the five rendered in full.
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy', body: 'Deploy notes' })
+
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+    const day = new Date().toISOString().slice(0, 10)
+
+    // One full entry and one list line, so both shapes are covered.
+    expect(digest.text).toMatch(new RegExp(`^## deploy \\(${day}\\)$`, 'm'))
+    expect(digest.text).toMatch(new RegExp(` — title 0 · ${day}$`, 'm'))
+  })
+
   it('respects the token budget and says it truncated', async () => {
     for (let i = 0; i < 12; i++) {
       await writeMemory({ userId: f.alice, projectId, path: `d${i}/m`, body: 'word '.repeat(40) })

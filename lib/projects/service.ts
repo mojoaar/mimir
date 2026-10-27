@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg'
 
 import { withUser } from '@/lib/db/tx'
+import { enqueueExtraction } from '@/lib/jobs/enqueue'
 import { getLearningDefault } from '@/lib/settings/learning'
 import { audit } from '@/lib/audit'
 import { slugify } from '@/lib/slug'
@@ -251,6 +252,29 @@ export async function getProject(userId: string, slug: string): Promise<ProjectS
   })
 }
 
+export type ProjectHealth = { memories: number; summarised: number; embedded: number }
+
+/**
+ * What the memory actually looks like to a reader: how many paths there are,
+ * how many carry a summary, and how many can be found by vector search. The
+ * three counts are what makes a half-learned project visible instead of silent.
+ */
+export async function getProjectHealth(userId: string, projectId: string): Promise<ProjectHealth> {
+  await requireProjectRole(userId, projectId, 'read')
+
+  return withUser(userId, async (client) => {
+    const { rows } = await client.query<ProjectHealth>(
+      `SELECT count(*)::int AS memories,
+              count(*) FILTER (WHERE summary IS NOT NULL)::int AS summarised,
+              count(*) FILTER (WHERE embedding IS NOT NULL)::int AS embedded
+         FROM memories
+        WHERE project_id = $1 AND deleted_at IS NULL`,
+      [projectId],
+    )
+    return rows[0] ?? { memories: 0, summarised: 0, embedded: 0 }
+  })
+}
+
 /**
  * Project settings belong to the owner: the provider change spends the owner's
  * key, and the RLS update policy is owner-only, so a write grantee would get a
@@ -276,6 +300,11 @@ export async function updateProjectSettings(
       throw forbidden('Only the project owner can change that.')
     }
   })
+
+  // Turning learning on must reach memories written while it was off. A write
+  // only queues extraction for itself, so the backlog would otherwise sit
+  // unsummarised until someone happened to edit that project again.
+  if (patch.learningEnabled === true) await enqueueExtraction(projectId)
 }
 
 /**

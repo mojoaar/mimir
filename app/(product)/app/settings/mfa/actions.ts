@@ -23,7 +23,7 @@ export async function confirmMfaAction(prev: MfaState, formData: FormData): Prom
   }
 
   revalidatePath('/app')
-  revalidatePath('/app/settings/mfa')
+  revalidatePath('/app/settings/profile')
   return { ok: t('app.mfa.on') }
 }
 
@@ -33,11 +33,11 @@ export async function disableMfaAction(): Promise<void> {
     await disableMfaForUser(user.id)
   } catch (error) {
     const code = (error as { code?: string }).code
-    if (code === 'forbidden') redirect('/app/settings/mfa?error=required')
+    if (code === 'forbidden') redirect('/app/settings/profile?error=required')
     throw error
   }
 
   revalidatePath('/app')
-  revalidatePath('/app/settings/mfa')
-  redirect('/app/settings/mfa?notice=off')
+  revalidatePath('/app/settings/profile')
+  redirect('/app/settings/profile?notice=off')
 }

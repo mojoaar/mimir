@@ -27,8 +27,13 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
   await requireProjectRole(input.userId, input.projectId, 'read')
 
   const rows = await withUser(input.userId, async (client) => {
-    const { rows } = await client.query<{ path: string; title: string; summary: string | null }>(
-      `select path, title, summary
+    const { rows } = await client.query<{
+      path: string
+      title: string
+      summary: string | null
+      updated_at: Date
+    }>(
+      `select path, title, summary, updated_at
        from memories
        where project_id = $1 and deleted_at is null
        order by updated_at desc, path
@@ -59,9 +64,12 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
     let emittedHeader = false
 
     for (const row of entries) {
+      // The date is the whole point of a session-start digest: a fact from six
+      // months ago and one from yesterday read the same without it.
+      const day = row.updated_at.toISOString().slice(0, 10)
       const chunk = recent.has(row.path)
-        ? `## ${row.path}\n${row.summary ?? row.title}\n\n`
-        : `- ${row.path.includes('/') ? row.path.slice(dir.length + 1) : row.path} — ${row.title}\n`
+        ? `## ${row.path} (${day})\n${row.summary ?? row.title}\n\n`
+        : `- ${row.path.includes('/') ? row.path.slice(dir.length + 1) : row.path} — ${row.title} · ${day}\n`
       const candidate = emittedHeader ? text + chunk : text + header + chunk
 
       if (Math.ceil(candidate.length / 4) > budget) {

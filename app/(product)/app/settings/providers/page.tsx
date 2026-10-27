@@ -7,7 +7,8 @@ import { PRESETS, type PresetId, type PresetModel, type ProviderKind } from '@/l
 import { listProviders, type ProviderSummary } from '@/lib/providers/service'
 import { PriceForm } from './price-form'
 import { ProviderForm } from './provider-form'
-import { deleteProviderAction, setDefaultAction, verifyProviderAction } from './actions'
+import { VerifyForm } from './verify-form'
+import { deleteProviderAction, setDefaultAction } from './actions'
 
 export const instant = false
 
@@ -76,12 +77,17 @@ function Card({
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <form action={verifyProviderAction}>
-          <input type="hidden" name="id" value={provider.id} />
-          <button type="submit" className={secondary}>
-            {t('app.providers.test')}
-          </button>
-        </form>
+        <VerifyForm
+          id={provider.id}
+          label={t('app.providers.test')}
+          className={secondary}
+          labels={{
+            testing: t('app.providers.testing'),
+            ok: t('app.providers.verifyOk'),
+            okDim: t('app.providers.verifyOkDim'),
+            failed: t('app.providers.verifyFailed'),
+          }}
+        />
         {!provider.isDefault && (
           <form action={setDefaultAction}>
             <input type="hidden" name="id" value={provider.id} />

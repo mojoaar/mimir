@@ -16,6 +16,7 @@ import {
 import { verifyProvider } from '@/lib/providers/verify'
 
 export type ProviderFormState = { ok?: boolean; error?: string }
+export type VerifyState = { ok?: boolean; error?: string; dim?: number }
 
 const PATH = '/app/settings/providers'
 
@@ -130,10 +131,18 @@ export async function setDefaultAction(formData: FormData): Promise<void> {
   revalidatePath(PATH)
 }
 
-export async function verifyProviderAction(formData: FormData): Promise<void> {
+/**
+ * Returns the outcome so the button can say what happened. A provider probe can
+ * take fifteen seconds; with nothing on screen the row looked untouched and the
+ * press read as a no-op.
+ */
+export async function verifyProviderAction(
+  _prev: VerifyState | null,
+  formData: FormData,
+): Promise<VerifyState> {
   const user = await requireUser()
   const id = String(formData.get('id') ?? '')
-  if (!id) return
+  if (!id) return {}
 
   const result = await verifyProvider(user.id, id)
   const row = (await listProviders(user.id)).find((p) => p.id === id)
@@ -150,4 +159,5 @@ export async function verifyProviderAction(formData: FormData): Promise<void> {
   })
 
   revalidatePath(PATH)
+  return result.ok ? { ok: true, dim: result.dim } : { ok: false, error: result.error }
 }

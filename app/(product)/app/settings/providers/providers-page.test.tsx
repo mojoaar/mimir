@@ -66,6 +66,9 @@ describe('providers page', () => {
     expect(html).toContain('name="inputPrice"')
     expect(html).toContain('name="outputPrice"')
     expect(html).toContain('value="0.15"')
+    // The test button reports its own outcome instead of waiting for a reload.
+    expect(html).toContain('name="id" value="p1"')
+    expect(html).toContain('>Test<')
   })
 
   it('offers the preset models in a dropdown', async () => {

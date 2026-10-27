@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Testing a provider now says what happened. The button reads **Testing…** while it runs, then **Works.** — with
+  the embedding dimension when the provider is an embedding one — or the provider's error, instead of leaving the
+  row looking untouched until the page is reloaded.
+
 ## [0.15.0] - 2026-10-27
 
 Every clock in one place.

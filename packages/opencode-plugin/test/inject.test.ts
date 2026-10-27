@@ -11,38 +11,59 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../src/client.js', () => ({
   detectRepo: () => mocks.repo,
-  callTool: async (
-    name: string,
-    args: Record<string, unknown>,
-    options?: { timeoutMs?: number },
-  ) => {
+  callTool: async (name: string, args: Record<string, unknown>, options?: { timeoutMs?: number }) => {
     mocks.calls.push({ name, args, options })
     if (mocks.reject) throw new Error('network is down')
     return mocks.result
   },
 }))
 
-import { MimirPlugin } from '../src/index.js'
+import plugin from '../src/index.js'
 
-const original = { url: process.env.MIMIR_URL, token: process.env.MIMIR_TOKEN }
-async function fresh() {
-  process.env.MIMIR_URL = 'http://127.0.0.1:3000'
-  process.env.MIMIR_TOKEN = 'mimir_test'
-  // The plugin remembers what it injected per session module-wide, so each
-  // test starts from a clean module rather than from another test's memory.
-  vi.resetModules()
-  const { MimirPlugin: Fresh } = await import('../src/index.js')
-  const hooks = await Fresh({ directory: '/tmp/project' } as never)
-  const hook = hooks['experimental.chat.system.transform']
-  if (!hook) throw new Error('the plugin registers no system transform hook')
-  return hook
+type ContextEvent = { sessionID: string; system: { type: string; text: string }[] }
+
+function context(overrides: Record<string, unknown> = {}) {
+  const hooks: Record<string, (event: ContextEvent) => Promise<void>> = {}
+  const added: string[] = []
+  const disposed: string[] = []
+  const registration = (name: string) => ({ dispose: async () => void disposed.push(name) })
+
+  const fake = {
+    location: { directory: '/tmp/project' },
+    options: { url: 'http://127.0.0.1:3000', token: 'mimir_test', ...overrides },
+    session: {
+      hook: async (name: string, callback: (event: ContextEvent) => Promise<void>) => {
+        hooks[name] = callback
+        return registration(`session:${name}`)
+      },
+    },
+    tool: {
+      transform: async (callback: (editor: { add: (tool: { name: string }) => void }) => void) => {
+        callback({ add: (tool) => added.push(tool.name) })
+        return registration('tools')
+      },
+    },
+    mcp: {
+      transform: async (callback: (editor: { list: () => [] }) => void) => {
+        callback({ list: () => [] })
+        return registration('mcp')
+      },
+    },
+  }
+  return { fake, hooks, added, disposed }
 }
 
-async function transform(sessionId = 'session-1') {
-  const hook = await fresh()
-  const output = { system: [] as string[] }
-  await hook({ sessionID: sessionId } as never, output)
-  return output
+async function setup(overrides: Record<string, unknown> = {}) {
+  const built = context(overrides)
+  const cleanup = await plugin.setup(built.fake as never)
+  const hook = built.hooks.context
+  if (!hook) throw new Error('the plugin registers no context hook')
+  return { ...built, hook, cleanup }
+}
+
+function transform(sessionId = 'session-1') {
+  const event: ContextEvent = { sessionID: sessionId, system: [] }
+  return event
 }
 
 describe('the session-start digest', () => {
@@ -50,12 +71,15 @@ describe('the session-start digest', () => {
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { text: '### auth\n- rotation — tokens last 30 days' } }
     mocks.reject = false
+    const { hook } = await setup()
 
-    const output = await transform()
+    const event = transform()
+    await hook(event)
 
-    expect(output.system).toHaveLength(1)
-    expect(output.system[0]).toContain('What this project already knows')
-    expect(output.system[0]).toContain('tokens last 30 days')
+    expect(event.system).toHaveLength(1)
+    expect(event.system[0]?.type).toBe('text')
+    expect(event.system[0]?.text).toContain('What this project already knows')
+    expect(event.system[0]?.text).toContain('tokens last 30 days')
     expect(mocks.calls[0]?.name).toBe('memory_digest')
     expect(mocks.calls[0]?.args.repo).toBe('git@github.com:alice/notes.git')
   })
@@ -64,90 +88,86 @@ describe('the session-start digest', () => {
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { text: 'anything' } }
     mocks.reject = false
+    const { hook } = await setup()
 
-    await transform()
+    await hook(transform())
 
     expect(mocks.calls[0]?.options?.timeoutMs).toBe(1500)
     expect(mocks.calls[0]?.args.budget_tokens).toBe(800)
+  })
+
+  it('injects once per session and again for a new one', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { text: 'anything' } }
+    mocks.reject = false
+    const { hook } = await setup()
+
+    const first = transform('session-a')
+    const second = transform('session-a')
+    const other = transform('session-b')
+    await hook(first)
+    await hook(second)
+    await hook(other)
+
+    expect(mocks.calls).toHaveLength(2)
+    expect(first.system).toHaveLength(1)
+    expect(second.system).toHaveLength(0)
+    expect(other.system).toHaveLength(1)
   })
 
   it('says nothing when Mimir cannot answer', async () => {
     mocks.calls.length = 0
     mocks.result = { ok: false, error: 'mimir responded 500' }
     mocks.reject = false
+    const { hook } = await setup()
 
-    const output = await transform()
+    const event = transform()
+    await hook(event)
 
-    expect(output.system).toHaveLength(0)
+    expect(event.system).toHaveLength(0)
   })
 
   it('stays quiet when the call throws', async () => {
     mocks.calls.length = 0
     mocks.reject = true
+    const { hook } = await setup()
 
-    const output = await transform()
+    const event = transform()
+    await hook(event)
 
-    expect(output.system).toHaveLength(0)
-  })
-
-  it('does not call Mimir when the environment is not configured', async () => {
-    mocks.calls.length = 0
-    mocks.reject = false
-    delete process.env.MIMIR_URL
-    process.env.MIMIR_TOKEN = 'mimir_test'
-
-    const hooks = await MimirPlugin({ directory: '/tmp/project' } as never)
-    const output = { system: [] as string[] }
-    await hooks['experimental.chat.system.transform']?.({} as never, output)
-
-    expect(mocks.calls).toHaveLength(0)
-    expect(output.system).toHaveLength(0)
+    expect(event.system).toHaveLength(0)
   })
 
   it('does nothing when the digest is empty', async () => {
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { text: '   ' } }
     mocks.reject = false
+    const { hook } = await setup()
 
-    const output = await transform()
+    const event = transform()
+    await hook(event)
 
-    expect(output.system).toHaveLength(0)
+    expect(event.system).toHaveLength(0)
   })
 
-  it('injects once per session, however many steps the agent takes', async () => {
+  it('registers no hook at all when it is not configured', async () => {
     mocks.calls.length = 0
-    mocks.result = { ok: true, result: { text: 'anything' } }
-    mocks.reject = false
-    const hook = await fresh()
+    const built = context({ url: '', token: '', tokenFile: '/nonexistent/mimir-token' })
 
-    const first = { system: [] as string[] }
-    const second = { system: [] as string[] }
-    await hook({ sessionID: 'session-a' } as never, first)
-    await hook({ sessionID: 'session-a' } as never, second)
+    const cleanup = await plugin.setup(built.fake as never)
 
-    expect(mocks.calls).toHaveLength(1)
-    expect(first.system).toHaveLength(1)
-    expect(second.system).toHaveLength(0)
+    expect(Object.keys(built.hooks)).toHaveLength(0)
+    expect(built.added).toHaveLength(0)
+    expect(cleanup).toBeUndefined()
   })
 
-  it('injects again for a different session', async () => {
-    mocks.calls.length = 0
-    mocks.result = { ok: true, result: { text: 'anything' } }
-    mocks.reject = false
-    const hook = await fresh()
+  it('disposes what it registered', async () => {
+    const { cleanup, disposed } = await setup()
 
-    await hook({ sessionID: 'session-a' } as never, { system: [] })
-    await hook({ sessionID: 'session-b' } as never, { system: [] })
+    await cleanup?.()
 
-    expect(mocks.calls).toHaveLength(2)
-  })
-
-  it('restores the environment', () => {
-    if (original.url === undefined) delete process.env.MIMIR_URL
-    else process.env.MIMIR_URL = original.url
-    if (original.token === undefined) delete process.env.MIMIR_TOKEN
-    else process.env.MIMIR_TOKEN = original.token
-
-    expect(true).toBe(true)
+    // The MCP probe is disposed during setup; the two live registrations last
+    // until the plugin is cleaned up.
+    expect(disposed).toEqual(['mcp', 'tools', 'session:context'])
   })
 })

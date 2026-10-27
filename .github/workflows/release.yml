@@ -67,7 +67,10 @@ jobs:
       - run: npx tsc -p packages/opencode-plugin/tsconfig.json
       - name: Publish @mojoaar/opencode-mimir
         # Skipped silently until the repository has an NPM_TOKEN secret.
+        # Run inside the package: from the repo root npm reads the path as a
+        # GitHub spec and tries to clone it over ssh.
         if: ${{ env.NODE_AUTH_TOKEN != '' }}
+        working-directory: packages/opencode-plugin
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish packages/opencode-plugin --access public
+        run: npm publish --access public

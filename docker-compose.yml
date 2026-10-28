@@ -17,7 +17,7 @@ services:
       retries: 30
 
   mimir:
-    image: ghcr.io/mojoaar/mimir:0.22.1
+    image: ghcr.io/mojoaar/mimir:0.23.0
     build: .
     restart: unless-stopped
     ports:

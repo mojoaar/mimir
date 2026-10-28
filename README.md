@@ -10,11 +10,12 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.22.1` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, and searches by keyword and by meaning.
+`0.23.0` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, and searches by keyword and by meaning.
 It backs itself up on a schedule, meters every remote model call on an admin usage page, and ships a localised landing page and a docs site with a config per agent.
 An agent can hand over a transcript and the project's own model distils it into memories, and a `procedure` is a kind
 that leads the session digest however old it is. The digest names a `gotcha` and a `decision` so a trap does not read
 like a note, and the OpenCode plugin can search, learn and write every kind the server accepts.
+Oh My Pi has a plugin too: `@mojoaar/omp-mimir` puts the digest in front of the first turn, which MCP cannot do.
 One search box on the dashboard asks every project you can read at once and groups the answers by where they came from.
 Projects can be shared with a person or a team at read or write, each user owns their name, email and password and can sign out their other devices, and the whole app is available in English, Danish and German.
 Analytics is optional: point it at your own Umami instance in the admin settings and every page sends a pageview, with no cookies and Do Not Track respected.
@@ -27,10 +28,11 @@ The running install serves its own docs at `/docs`. Start with **How Mimir works
 for the model (projects, paths, versions, digest, search, teams, audit) and
 **Providers and embeddings** for which model does what and what a call costs.
 There is also a page per agent
-(OpenCode, Claude Code, Codex, Cursor, Gemini CLI, Pi, Antigravity, Hermes,
+(OpenCode, Claude Code, Codex, Cursor, Gemini CLI, Pi, Oh My Pi, Antigravity, Hermes,
 Muse) with the exact config file each one reads. The OpenCode plugin is
 `@mojoaar/opencode-mimir`, which runs on the OpenCode v2 plugin API and installs straight from this
-repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); the Claude Code session-start hook is
+repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); Oh My Pi installs
+`@mojoaar/omp-mimir` with `omp plugin install @mojoaar/omp-mimir`; the Claude Code session-start hook is
 `hooks/mimir-session-start.sh`.
 
 The server also sends its protocol to every MCP client on `initialize` - digest first,

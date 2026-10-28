@@ -7,3 +7,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Memory
+
+This project keeps long-term memory in Mimir, under `repo: github.com/mojoaar/mimir`.
+
+- Start a session with `memory_digest`. It returns what is already settled, dated.
+- Search with `memory_search` and a `path_prefix` before re-deriving a convention.
+- Call `memory_write` once at a clear path (for example `deploy/rollback`) when a decision, a
+  convention or a gotcha lands. One memory is one outcome, not a log. The same path again
+  replaces it and the old body stays in history.
+- Never store secrets, tokens or customer data.

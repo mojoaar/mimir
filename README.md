@@ -2,15 +2,15 @@
 
 Long-term memory for coding agents. Self-hosted, path-based, and readable by a human.
 
-> **Mímir** was the Norse god whose well held wisdom and memory; Odin (Óðinn) traded an eye for a single draught from it. The name is the same word as *memory* and *remember* — and a memory worth an eye is the right standard for one your agents drink from.
+> **Mímir** was the Norse god whose well held wisdom and memory; Odin (Óðinn) traded an eye for a single draught from it. The name is the same word as *memory* and *remember* - and a memory worth an eye is the right standard for one your agents drink from.
 
-An agent asks "what do we already know about this project?" and gets back the decisions, conventions and gotchas that were learned the hard way — scoped to the repository it is standing in. Memory is a tree of paths with three levels of detail, so an agent pays for one line until it needs the whole thing.
+An agent asks "what do we already know about this project?" and gets back the decisions, conventions and gotchas that were learned the hard way - scoped to the repository it is standing in. Memory is a tree of paths with three levels of detail, so an agent pays for one line until it needs the whole thing.
 
 Nothing is stored as an opaque embedding you cannot inspect. Every memory is a path with a title, a summary and a body, served over MCP and REST.
 
 ## Status
 
-`0.18.0` — one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, an import command that walks a repository or a plain folder, and lets you read, edit, delete and restore every memory in the browser, with the last twenty versions of each kept and diffable. Projects can be shared with a person or with a team, at read or write, without ever making anyone else the owner, each user can edit their own name, email and password and sign out their other devices, and the whole app is
+`0.18.0` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, an import command that walks a repository or a plain folder, and lets you read, edit, delete and restore every memory in the browser, with the last twenty versions of each kept and diffable. Projects can be shared with a person or with a team, at read or write, without ever making anyone else the owner, each user can edit their own name, email and password and sign out their other devices, and the whole app is
 available in English, Danish and German with the choice saved on the account, and every remote model call is metered on an admin usage page with spend, failures and a spike alert.
 
 Everything in the [design](docs/superpowers/specs/2026-10-25-mimir-design.md) has now shipped.
@@ -27,7 +27,7 @@ Muse) with the exact config file each one reads. The OpenCode plugin is
 repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); the Claude Code session-start hook is
 `hooks/mimir-session-start.sh`.
 
-The server also sends its protocol to every MCP client on `initialize` — digest first,
+The server also sends its protocol to every MCP client on `initialize` - digest first,
 search before re-deriving, one memory per outcome. A client that does not show that to
 the model gets the same text as a copyable block on its page under `/docs/agents`.
 
@@ -59,7 +59,7 @@ MIMIR_APP_PASSWORD=...
 docker compose up -d
 ```
 
-An install created before 0.3.0 runs PostgreSQL 17. Moving it needs a dump from a 17 client (`pg_dump -Fc`) and a `pg_restore` into the 18 volume — the new image will not start on the old data directory. There is no automatic migration; a fresh volume with re-entered settings is the alternative.
+An install created before 0.3.0 runs PostgreSQL 17. Moving it needs a dump from a 17 client (`pg_dump -Fc`) and a `pg_restore` into the 18 volume - the new image will not start on the old data directory. There is no automatic migration; a fresh volume with re-entered settings is the alternative.
 
 Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASSWORD`, then create an API key under **Settings**. Point an agent at `http://localhost:3000/mcp`:
 
@@ -101,10 +101,10 @@ Two independent settings, because they answer different questions.
 endpoint with your key, press **Test connection**. Extraction reads the project
 owner's provider, so whoever owns the memory pays for it.
 
-**Search** is install-wide and set by an admin: **Admin → Settings**, point it at an embedding model. Until one is configured, search works on keywords alone — you lose nothing, you just get no semantic matches.
+**Search** is install-wide and set by an admin: **Admin → Settings**, point it at an embedding model. Until one is configured, search works on keywords alone - you lose nothing, you just get no semantic matches.
 
 Ollama is the homelab default (`nomic-embed-text`, 768 dimensions). Octen is a
-hosted alternative — add it in **Settings → Providers**, pick one of its three
+hosted alternative - add it in **Settings → Providers**, pick one of its three
 models, and give it a key. Mistral's `codestral-embed` works the same way. All of
 them answer at the 768 dimensions the schema stores.
 
@@ -136,12 +136,12 @@ For extraction, pick an instruct model. A reasoning model can spend its whole to
 Admin → Backups sets a target and a schedule. A run produces two encrypted
 artifacts: `mimir-YYYYMMDD-HHMMSS.dump.enc` (the whole database, `pg_dump -Fc`)
 and `settings-YYYYMMDD-HHMMSS.json.enc` (settings, project metadata and provider
-labels — never keys). Both are AES-256-GCM under a key derived from
+labels - never keys). Both are AES-256-GCM under a key derived from
 `MIMIR_SECRET`, uploaded, then read back: a run is only recorded as successful
 once every object reports the size that was uploaded. The newest N runs are kept
 (14 by default) and older artifacts under the prefix are pruned.
 
-Targets: any S3-compatible bucket (path-style supported for MinIO), or WebDAV —
+Targets: any S3-compatible bucket (path-style supported for MinIO), or WebDAV -
 `https://webdav.pcloud.com` with a pCloud app password.
 
 Without `MIMIR_SECRET` a backup cannot be decrypted. Store it outside the
@@ -182,7 +182,7 @@ re-roles, resets and deletes users.
 - The IP allowlist (Admin → Site) takes CIDR blocks and applies to `/api/v1`,
   `/mcp`, the login page and the app. `/health` stays open for monitors. With an
   empty `MIMIR_TRUSTED_PROXIES` no client address can be read and a non-empty
-  allowlist denies everything — set the proxy's address range first.
+  allowlist denies everything - set the proxy's address range first.
 
 ## Email
 

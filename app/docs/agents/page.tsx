@@ -10,7 +10,7 @@ export const instant = false;
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
   return publicMetadata({
-    title: 'Agents — Mimir',
+    title: 'Agents - Mimir',
     description: 'Connect OpenCode, Claude Code, Codex, Cursor, Gemini CLI and others to Mimir over MCP.',
     path: '/docs/agents',
   });
@@ -30,7 +30,7 @@ export default function AgentsIndex() {
             <Link href={`/docs/agents/${agent.id}`} className="underline">
               {agent.name}
             </Link>{' '}
-            — {agent.file}
+            - {agent.file}
           </li>
         ))}
       </Ul>
@@ -38,7 +38,7 @@ export default function AgentsIndex() {
       <Ul>
         <li>
           Any MCP client: the eight tools, and the digest when the agent asks for it. The server sends a short
-          protocol on <code>initialize</code> — digest first, search before re-deriving, one memory per outcome.
+          protocol on <code>initialize</code> - digest first, search before re-deriving, one memory per outcome.
           Clients differ in whether they show that to the model; if yours does not, paste the block from its page into
           the file it reads.
         </li>

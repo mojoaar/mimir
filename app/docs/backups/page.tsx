@@ -43,7 +43,7 @@ export default async function BackupsPage() {
       <H2>Targets</H2>
       <P>
         Choose S3 or WebDAV in <strong>Admin → Backups</strong>. S3 takes a bucket, an endpoint, a region, an optional
-        prefix and path-style addressing for MinIO. WebDAV takes a base URL, a username and a password — pCloud works
+        prefix and path-style addressing for MinIO. WebDAV takes a base URL, a username and a password - pCloud works
         through <code>https://webdav.pcloud.com</code> with an app-specific password.
       </P>
 
@@ -61,7 +61,7 @@ export default async function BackupsPage() {
 DATABASE_ADMIN_URL=postgres://mimir_owner:...@db:5432/mimir ./scripts/restore.sh mimir.dump --yes`}</Code>
       <Callout kind="warning">
         The restore replaces the database and needs <code>MIMIR_SECRET</code> to decrypt. A backup restored without the
-        original secret is a pile of bytes — keep the secret with the backups, in a password manager or a sealed
+        original secret is a pile of bytes - keep the secret with the backups, in a password manager or a sealed
         envelope, not in the same bucket.
       </Callout>
     </Prose>

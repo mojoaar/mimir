@@ -1,7 +1,7 @@
 export type EmailTemplate = { subject: string; text: string };
 
 function sign(text: string, siteName: string): string {
-  return `${text}\n\n— ${siteName}`;
+  return `${text}\n\n- ${siteName}`;
 }
 
 export function inviteEmail(input: { siteName: string; link: string; invitedBy: string }): EmailTemplate {

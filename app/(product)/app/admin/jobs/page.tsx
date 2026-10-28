@@ -14,7 +14,7 @@ import { getTimeFormat } from '@/lib/settings/time'
 export const instant = false
 
 function seconds(start: Date | null, end: Date | null): string {
-  if (!start || !end) return '—'
+  if (!start || !end) return '-'
   return `${((end.getTime() - start.getTime()) / 1000).toFixed(1)}s`
 }
 
@@ -180,7 +180,7 @@ export default async function JobsPage() {
                       {job.retryCount}/{job.retryLimit}
                     </td>
                     <td className="max-w-[22rem] break-words py-1 text-[var(--text-muted)]">
-                      {job.detail ?? '—'}
+                      {job.detail ?? '-'}
                     </td>
                   </tr>
                 ))}

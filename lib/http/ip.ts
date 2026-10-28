@@ -44,7 +44,7 @@ function isTrusted(peer: string, trustedProxies: string[]): boolean {
  * sends ends up on the left and can never be reached by this walk.
  *
  * Next's server runtime does not expose the socket peer (`peer` is null
- * there), and this container publishes its port on loopback only — the
+ * there), and this container publishes its port on loopback only - the
  * reverse proxy is the sole way in. With an unknown peer we therefore take
  * the last hop, the one the proxy appended.
  */

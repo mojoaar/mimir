@@ -17,7 +17,7 @@ export type DiffLine = { kind: 'same' | 'add' | 'remove'; text: string }
 /**
  * A unified line diff: `remove` lines are what the version had, `add` lines are
  * what the current memory says instead. Long unchanged stretches are kept whole
- * rather than collapsed — a memory is short enough that context helps.
+ * rather than collapsed - a memory is short enough that context helps.
  */
 export function diffLines(before: string, after: string): DiffLine[] {
   return computeDiff(before, after).flatMap((part) => {

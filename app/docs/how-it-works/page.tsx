@@ -13,7 +13,7 @@ export async function generateMetadata() {
   return publicMetadata({
     title: 'How Mimir works',
     description:
-      'Projects, paths, versions, the session digest, hybrid search, teams, and the audit log — how a memory moves through Mimir.',
+      'Projects, paths, versions, the session digest, hybrid search, teams, and the audit log - how a memory moves through Mimir.',
     path: '/docs/how-it-works',
   })
 }
@@ -42,7 +42,7 @@ export default function HowItWorksPage() {
         <code>deploys/rollback</code>. One path is one memory: writing it again replaces the body and keeps the old one
         as a version. Paths are compared case-insensitively and are literal, so <code>auth</code> scopes to{' '}
         <code>auth</code> and <code>auth/…</code> but never to <code>authentication</code>. Describe meaning in the
-        path, not a file name — the path is what a search can scope to and what a person scans in the tree.
+        path, not a file name - the path is what a search can scope to and what a person scans in the tree.
       </P>
 
       <H2>Every write keeps its predecessor</H2>
@@ -98,7 +98,7 @@ export default function HowItWorksPage() {
       <H2>The audit log</H2>
       <P>
         Auth, account, project, memory, provider, backup and admin actions write an audit row with the actor, the
-        target and a small detail object — never a key, a token or a body. Rows for memory reads are kept 30 days;
+        target and a small detail object - never a key, a token or a body. Rows for memory reads are kept 30 days;
         everything else 365. Admins can read the log under{' '}
         <strong>Admin → Audit</strong>, and prune the provider usage log separately under{' '}
         <strong>Admin → Usage</strong>.
@@ -141,19 +141,19 @@ export default function HowItWorksPage() {
           <Link className="text-[var(--accent)] underline" href="/docs/providers">
             Providers and embeddings
           </Link>{' '}
-          — which model does what, and what it costs.
+          - which model does what, and what it costs.
         </li>
         <li>
           <Link className="text-[var(--accent)] underline" href="/docs/self-hosting">
             Self-hosting
           </Link>{' '}
-          — the compose file, environment and first admin.
+          - the compose file, environment and first admin.
         </li>
         <li>
           <Link className="text-[var(--accent)] underline" href="/docs/api">
             HTTP API
           </Link>{' '}
-          — the same operations without MCP.
+          - the same operations without MCP.
         </li>
       </Ul>
 

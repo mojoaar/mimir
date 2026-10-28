@@ -163,7 +163,7 @@ export type ProjectSummary = {
   role: ProjectRole | null
   memoryCount: number
   archived: boolean
-}/** Projects the caller owns or holds a grant on — RLS already hides the rest. */
+}/** Projects the caller owns or holds a grant on - RLS already hides the rest. */
 export async function listProjects(
   userId: string,
   includeArchived = false,
@@ -308,8 +308,8 @@ export async function updateProjectSettings(
 }
 
 /**
- * Archiving hides a project everywhere `archived_at IS NULL` is checked — lists,
- * `getProject`, and therefore every page and API call — while keeping its rows.
+ * Archiving hides a project everywhere `archived_at IS NULL` is checked - lists,
+ * `getProject`, and therefore every page and API call - while keeping its rows.
  * Only the owner may do it, and it is reversible, because an archive nobody can
  * undo is a deletion with extra steps.
  */

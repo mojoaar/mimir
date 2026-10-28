@@ -79,7 +79,7 @@ docker compose up -d`}</Code>
       <H2>Import an existing project</H2>
       <P>
         <code>npx @mojoaar/opencode-mimir ingest .</code> reads a folder and loads its documentation and
-        configuration — READMEs, <code>docs/</code>, markdown, compose files, <code>package.json</code> — into the
+        configuration - READMEs, <code>docs/</code>, markdown, compose files, <code>package.json</code> - into the
         project under <code>import/</code>, where <code>memory_search</code> finds them. Source code is skipped by
         default, because the agent already has it on disk.
       </P>
@@ -100,8 +100,8 @@ docker compose up -d`}</Code>
         request, because access is read from the database every time rather than cached in a session.
       </P>
       <P>
-        A share is never the owner. Whoever owns the project keeps every right — renaming, archiving, deleting,
-        sharing again and changing settings — and a person or team with write access can read, write, delete and
+        A share is never the owner. Whoever owns the project keeps every right - renaming, archiving, deleting,
+        sharing again and changing settings - and a person or team with write access can read, write, delete and
         restore memories but cannot do any of those. Deleting a team takes its shares with it; the projects it could
         see are untouched.
       </P>

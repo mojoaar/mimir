@@ -36,6 +36,15 @@ describe('the message catalogs', () => {
     }
   })
 
+  // House style: a plain hyphen, never an em dash, in anything a person reads.
+  it('never uses an em dash', () => {
+    for (const locale of locales) {
+      for (const [key, value] of Object.entries(MESSAGES[locale])) {
+        expect(value.includes('\u2014'), `${locale} ${key}`).toBe(false)
+      }
+    }
+  })
+
   it('keeps every placeholder in the translation', () => {
     for (const [key, value] of Object.entries(en)) {
       for (const locale of ['da', 'de'] as const) {

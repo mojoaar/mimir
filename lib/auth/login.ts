@@ -68,7 +68,7 @@ async function startSession(userId: string, meta: RequestMeta, detail?: Record<s
 }
 
 /**
- * Step one: prove the password. No session is created here — an enrolled user
+ * Step one: prove the password. No session is created here - an enrolled user
  * still owes a code, and handing out a session first would make the second
  * step decorative.
  */
@@ -93,7 +93,7 @@ export async function authenticatePassword(
 
   // Same answer for an unknown account and a wrong password: the login form
   // must not become an account enumerator. The dummy verify keeps the response
-  // time identical too — returning here would answer in milliseconds.
+  // time identical too - returning here would answer in milliseconds.
   if (!user) {
     await verifyPasswordForTiming()
     return fail('invalid', { email: normalised }, meta)

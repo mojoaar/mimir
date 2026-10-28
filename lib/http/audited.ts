@@ -9,7 +9,7 @@ import { rejectOversized } from './limit'
 
 /**
  * The one place a REST call authenticates, is size-checked, has its errors
- * mapped, and leaves exactly one audit row — the same contract the MCP
+ * mapped, and leaves exactly one audit row - the same contract the MCP
  * endpoint keeps. Without this a shell script could read and delete memory
  * with no trace.
  *

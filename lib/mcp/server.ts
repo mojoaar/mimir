@@ -25,7 +25,7 @@ export const INSTRUCTIONS = [
   'At the start of a session, call memory_digest with `repo` to load what is already known about this project.',
   'Before answering a question about the codebase, call memory_search with a path_prefix when you know roughly where the answer lives.',
   'When you settle a decision, hit a gotcha, or establish a convention, call memory_write once at a clear path. Writes upsert, so update the existing path rather than adding variants.',
-  'One memory is one outcome: what changed, why, and the trap you hit — not a log of what you did.',
+  'One memory is one outcome: what changed, why, and the trap you hit - not a log of what you did.',
 ].join(' ')
 
 type JsonRpcId = string | number | null

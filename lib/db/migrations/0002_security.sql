@@ -1,5 +1,5 @@
 -- ENABLE turns RLS on for everyone but the table owner. FORCE would extend it to
--- the owner as well — and the helpers below depend on the owner bypassing
+-- the owner as well - and the helpers below depend on the owner bypassing
 -- policies, or they recurse (projects -> project_grants -> projects) and every
 -- query dies with "infinite recursion detected in policy". The app therefore
 -- connects as mimir_app, which is not the owner, and RLS applies to every

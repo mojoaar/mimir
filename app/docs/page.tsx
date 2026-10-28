@@ -31,14 +31,14 @@ export default function DocsIndex() {
         </P>
         <P>
           It is one container and one database. Agents reach it over MCP, or over a small REST API; both use the same
-          bearer token and both write the same audit row. There is no hosted service behind it — the model calls go
+          bearer token and both write the same audit row. There is no hosted service behind it - the model calls go
           straight from your install to the provider you chose, with your key.
         </P>
 
         <H2>Why “Mimir”</H2>
         <P>
           Mímir was the Norse god whose well held wisdom and memory; Odin traded an eye for a single draught from it.
-          The name is the same word as <em>memory</em> and <em>remember</em> — and a memory worth an eye is the right
+          The name is the same word as <em>memory</em> and <em>remember</em> - and a memory worth an eye is the right
           standard for one your agents drink from. The mark is that eye in the well, with an M in the pupil.
         </P>
 
@@ -56,14 +56,14 @@ memory_write   remember that deploys run from main`}</Code>
         <H2>What is in the box</H2>
         <Ul>
           <li>
-            <strong>A store, not a chat log</strong> — projects, paths, 20 versions per path, soft delete, restore.
+            <strong>A store, not a chat log</strong> - projects, paths, 20 versions per path, soft delete, restore.
           </li>
           <li>
-            <strong>Hybrid search</strong> — PostgreSQL full-text plus pgvector, fused by reciprocal rank fusion, with a
+            <strong>Hybrid search</strong> - PostgreSQL full-text plus pgvector, fused by reciprocal rank fusion, with a
             path prefix to scope it. Keyword search works with no model configured at all.
           </li>
           <li>
-            <strong>Your models</strong> — DeepSeek, OpenCode, Ollama, Octen, Mistral or any OpenAI-compatible endpoint,
+            <strong>Your models</strong> - DeepSeek, OpenCode, Ollama, Octen, Mistral or any OpenAI-compatible endpoint,
             per person for chat and install-wide for embeddings. See{' '}
             <Link className="text-[var(--accent)] underline" href="/docs/providers">
               Providers and embeddings
@@ -71,15 +71,15 @@ memory_write   remember that deploys run from main`}</Code>
             .
           </li>
           <li>
-            <strong>A web app</strong> — browse the tree, read a memory, diff its versions, manage members, and see what
+            <strong>A web app</strong> - browse the tree, read a memory, diff its versions, manage members, and see what
             the agents have been writing.
           </li>
           <li>
-            <strong>Operations</strong> — users, teams, grants, MFA, an IP allowlist, an audit log, encrypted scheduled
+            <strong>Operations</strong> - users, teams, grants, MFA, an IP allowlist, an audit log, encrypted scheduled
             backups, and a usage page that shows what the model calls cost.
           </li>
           <li>
-            <strong>A localised interface</strong> — English, Danish and German, per account for the app and by URL for
+            <strong>A localised interface</strong> - English, Danish and German, per account for the app and by URL for
             the public pages.
           </li>
         </Ul>
@@ -90,31 +90,31 @@ memory_write   remember that deploys run from main`}</Code>
             <Link className="text-[var(--accent)] underline" href="/docs/self-hosting">
               Self-hosting
             </Link>{' '}
-            — one container, one database, five minutes.
+            - one container, one database, five minutes.
           </li>
           <li>
             <Link className="text-[var(--accent)] underline" href="/docs/how-it-works">
               How Mimir works
             </Link>{' '}
-            — projects, paths, versions, digest, search, teams and audit.
+            - projects, paths, versions, digest, search, teams and audit.
           </li>
           <li>
             <Link className="text-[var(--accent)] underline" href="/docs/mcp">
               Connect over MCP
             </Link>{' '}
-            — the endpoint and the token an agent needs.
+            - the endpoint and the token an agent needs.
           </li>
           <li>
             <Link className="text-[var(--accent)] underline" href="/docs/agents/opencode">
               Per-agent setup
             </Link>{' '}
-            — copy-paste configs for OpenCode, Claude Code, Codex and the rest.
+            - copy-paste configs for OpenCode, Claude Code, Codex and the rest.
           </li>
           <li>
             <Link className="text-[var(--accent)] underline" href="/docs/api">
               HTTP API
             </Link>{' '}
-            — the same operations without MCP, with request and response examples.
+            - the same operations without MCP, with request and response examples.
           </li>
         </Ul>
 

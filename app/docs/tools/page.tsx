@@ -29,7 +29,7 @@ export default async function ToolsPage() {
       <P>
         Arguments: <code>budget_tokens</code> (default 800). Returns <code>{'{ text, memoryCount, truncated }'}</code>:
         the one-line title of every memory, plus the full summary of the five most recently updated, grouped by
-        top-level directory. Deterministic and cheap — call it once at session start.
+        top-level directory. Deterministic and cheap - call it once at session start.
       </P>
 
       <H2>memory_search</H2>

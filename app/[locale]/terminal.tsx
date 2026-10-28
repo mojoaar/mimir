@@ -1,7 +1,7 @@
 /**
  * A mock of an OpenCode session, not a screenshot: the landing has to show what
  * Mimir does for an agent, and the agent lives in a TUI. English is intentional
- * — it is a code sample, like the docker command, not interface copy.
+ * - it is a code sample, like the docker command, not interface copy.
  */
 export function MimirTerminal() {
   const dot = (color: string) => (

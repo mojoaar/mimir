@@ -11,7 +11,7 @@ export async function generateMetadata() {
   return publicMetadata({
     title: 'REST API',
     description:
-      'Every MCP tool has an HTTP route under /api/v1, authenticated with the same bearer token — with request and response examples.',
+      'Every MCP tool has an HTTP route under /api/v1, authenticated with the same bearer token - with request and response examples.',
     path: '/docs/api',
   })
 }
@@ -63,7 +63,7 @@ export MIMIR_TOKEN=mimir_...        # Settings → API keys, shown once`}</Code>
 }`}</Code>
 
       <P>
-        <strong>2. What does this project know?</strong> The tree is titles only — the cheap orientation read before a
+        <strong>2. What does this project know?</strong> The tree is titles only - the cheap orientation read before a
         search.
       </P>
       <Code language="bash">{`curl -s "$MIMIR_URL/api/v1/projects/mimir/tree?path=deploys&depth=2" \\
@@ -96,7 +96,7 @@ export MIMIR_TOKEN=mimir_...        # Settings → API keys, shown once`}</Code>
 
       <P>
         <strong>4. Write one.</strong> Writing an existing path replaces the body and keeps the old one as a version. A
-        provider that is down does not fail this call — the memory is stored and the summary and vector arrive later.
+        provider that is down does not fail this call - the memory is stored and the summary and vector arrive later.
       </P>
       <Code language="bash">{`curl -s -X PUT "$MIMIR_URL/api/v1/projects/mimir/memory/deploys/rollback" \\
   -H "Authorization: Bearer $MIMIR_TOKEN" \\
@@ -138,11 +138,11 @@ export MIMIR_TOKEN=mimir_...        # Settings → API keys, shown once`}</Code>
       <Code language="bash">{`curl -s "$MIMIR_URL/api/v1/projects/mimir/digest?budget_tokens=400&format=text" \\
   -H "Authorization: Bearer $MIMIR_TOKEN"`}</Code>
       <Code language="text">{`deploys
-- deploys/rollback — How to roll back a release
+- deploys/rollback - How to roll back a release
   Compose: down, check out the previous tag, up.
 
 conventions
-- conventions/state-management — Zustand, one store per feature
+- conventions/state-management - Zustand, one store per feature
 … 38 more memories, truncated to fit 400 tokens`}</Code>
 
       <P>
@@ -194,16 +194,16 @@ curl -s -X POST "$MIMIR_URL/api/v1/projects/mimir/versions/9ac2…/restore" \\
       <Table
         head={['Method and path', 'Body', 'Returns']}
         rows={[
-          ['GET /api/v1/me', '—', '{ id, email, name, role, mfaEnabled }'],
-          ['GET /api/v1/projects', '—', '{ projects: [{ id, slug, name, role, memoryCount, archived }] }'],
-          ['GET /api/v1/projects/:slug/tree?path=&depth=', '—', '{ memories: [{ path, title, hasSummary, updatedAt }] }'],
-          ['GET /api/v1/projects/:slug/memory/:path', '—', 'one memory'],
+          ['GET /api/v1/me', '-', '{ id, email, name, role, mfaEnabled }'],
+          ['GET /api/v1/projects', '-', '{ projects: [{ id, slug, name, role, memoryCount, archived }] }'],
+          ['GET /api/v1/projects/:slug/tree?path=&depth=', '-', '{ memories: [{ path, title, hasSummary, updatedAt }] }'],
+          ['GET /api/v1/projects/:slug/memory/:path', '-', 'one memory'],
           ['PUT /api/v1/projects/:slug/memory/:path', '{ body, title?, kind? }', '{ path, created }'],
-          ['DELETE /api/v1/projects/:slug/memory/:path', '—', '{ deleted: true }'],
+          ['DELETE /api/v1/projects/:slug/memory/:path', '-', '{ deleted: true }'],
           ['POST /api/v1/projects/:slug/search', '{ query, path_prefix?, limit? }', '{ results: [{ path, title, summary, score }] }'],
-          ['GET /api/v1/projects/:slug/digest?budget_tokens=&format=text', '—', '{ text, memoryCount, truncated }'],
-          ['GET /api/v1/projects/:slug/versions?path=', '—', '{ versions: [{ id, path, title, kind, source, updatedAt, createdAt, bytes }] }'],
-          ['POST /api/v1/projects/:slug/versions/:id/restore', '—', '{ restored: true, path }'],
+          ['GET /api/v1/projects/:slug/digest?budget_tokens=&format=text', '-', '{ text, memoryCount, truncated }'],
+          ['GET /api/v1/projects/:slug/versions?path=', '-', '{ versions: [{ id, path, title, kind, source, updatedAt, createdAt, bytes }] }'],
+          ['POST /api/v1/projects/:slug/versions/:id/restore', '-', '{ restored: true, path }'],
           ['POST /api/v1/projects/:slug/ingest', '{ files: [{ path, body }], prefix? }', '{ written, skipped: [{ path, reason }] }'],
         ]}
       />
@@ -219,14 +219,14 @@ curl -s -X POST "$MIMIR_URL/api/v1/projects/mimir/versions/9ac2…/restore" \\
           ['invalid_path', '400', 'A memory path is malformed after normalisation'],
           ['body_too_large', '413', 'The memory body is over 256 KB'],
           ['rate_limited', '429', 'The per-user rate limit; read Retry-After'],
-          ['internal', '500', '{ "error": "internal error" } — the database message never leaves the server'],
+          ['internal', '500', '{ "error": "internal error" } - the database message never leaves the server'],
         ]}
       />
 
       <H2>Limits</H2>
       <P>
         256 KB per memory body, 1 MiB per request, 100 files and 2 MB per ingest, 60 calls per minute per user. A
-        project over its limits is not throttled per project — the ceiling is the caller.
+        project over its limits is not throttled per project - the ceiling is the caller.
       </P>
     </Prose>
   )

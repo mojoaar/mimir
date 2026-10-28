@@ -46,7 +46,7 @@ export function registerWorker(name: JobName, handler: Handler): void {
  * Starts the queue and every worker registered so far. Idempotent: a second
  * call while running, or while the first is still in flight, does nothing.
  *
- * The owner connection string is deliberate — pg-boss creates and migrates its
+ * The owner connection string is deliberate - pg-boss creates and migrates its
  * own schema, and the runtime role has no DDL.
  */
 export async function startJobs(): Promise<void> {

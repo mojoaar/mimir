@@ -131,7 +131,7 @@ export function ProviderForm({
             >
               {catalogue.map((option) => (
                 <option key={option.id} value={option.id}>
-                  {option.label ? `${option.id} — ${option.label}` : option.id}
+                  {option.label ? `${option.id} - ${option.label}` : option.id}
                 </option>
               ))}
             </select>

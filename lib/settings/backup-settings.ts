@@ -48,7 +48,7 @@ export async function setBackupSettings(
     throw new InvalidSetting('retention must be a whole number of backups, at least 1')
   }
   // pg-boss validates again when the schedule is registered, and a rejection
-  // there happens inside startJobs — where it would take the whole queue down.
+  // there happens inside startJobs - where it would take the whole queue down.
   const fields = next.schedule.trim().split(/\s+/)
   const validField = /^[0-9A-Za-z*/,\-]+$/
   if (fields.length !== 5 || !fields.every((field) => validField.test(field))) {

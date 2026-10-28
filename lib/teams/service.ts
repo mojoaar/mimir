@@ -261,7 +261,7 @@ export async function renameTeam(
     // The name only: the slug and the URL carry the team's identity.
     const updated = await client.query('update teams set name = $2 where id = $1', [teamId, trimmed])
   // The guard reads team_members; the update policy reads owner_user_id. Two owner
-  // rows can disagree, and then nothing is written — say so instead of "renamed".
+  // rows can disagree, and then nothing is written - say so instead of "renamed".
   if (updated.rowCount === 0) throw fail('forbidden', 'only a team owner can do that')
     await audit(
       {

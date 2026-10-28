@@ -7,7 +7,7 @@ import type { AuthUser } from './types'
 
 /**
  * Resolving a session is the one choke point every authenticated surface passes
- * through — pages, server actions, route handlers. The allowlist is checked
+ * through - pages, server actions, route handlers. The allowlist is checked
  * here because a server action can run without any layout being rendered, so a
  * layout-level check would leave mutations open to a blocked network.
  */

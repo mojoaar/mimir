@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ agent: st
   if (!doc) return {};
   await connection();
   return publicMetadata({
-    title: `${doc.name} — Mimir`,
+    title: `${doc.name} - Mimir`,
     description: `Connect ${doc.name} to Mimir over MCP.`,
     path: `/docs/agents/${doc.id}`,
   });
@@ -69,7 +69,7 @@ export default async function AgentPage({ params }: { params: Promise<{ agent: s
       <H2>2. Verify</H2>
       <P>
         Ask the agent to run <code>memory_tree</code>. It should list the projects your token can see, or nothing at
-        all on a fresh install — either answer proves the connection works.
+        all on a fresh install - either answer proves the connection works.
       </P>
 
       <H2>3. Tell it how to behave</H2>

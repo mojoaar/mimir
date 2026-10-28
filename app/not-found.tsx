@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-// Shown when a page calls notFound() — a missing project, a purged memory, an
+// Shown when a page calls notFound() - a missing project, a purged memory, an
 // agent that does not exist. Unknown URLs never reach this file; proxy.ts sends
 // them to app/api/not-found/route.ts, which can set a real 404 status.
 export default function NotFound() {
@@ -14,7 +14,7 @@ export default function NotFound() {
         Retrieved 0 documents. Reranked them anyway.
       </p>
       <p className="text-sm text-[var(--text-muted)]">
-        Whatever this was, it is not here now — deleted, archived, or never written down. Mimir
+        Whatever this was, it is not here now - deleted, archived, or never written down. Mimir
         keeps memories, and memories can be forgotten.
       </p>
       <div className="flex flex-wrap gap-4 text-sm">

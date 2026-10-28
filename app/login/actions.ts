@@ -68,7 +68,7 @@ export async function loginMfaAction(formData: FormData): Promise<void> {
   if (!userId) redirect('/login?error=expired')
 
   // A six-digit code is guessable at ~1 in a million per try, which is far too
-  // cheap without a limit — the password step's throttle does not cover it.
+  // cheap without a limit - the password step's throttle does not cover it.
   const request = await meta()
   const limitKey = `mfa:${userId}`
   const limit = checkLoginRateLimit(limitKey)

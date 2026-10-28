@@ -50,7 +50,7 @@ function render(overrides: Partial<PanelProps> = {}) {
         title: `History (${props.versions.length})`,
         back: 'Back to memory',
         empty: 'Nothing yet. The next edit keeps this body.',
-        replaced: `Replaced ${props.selected?.updatedAt.toISOString() ?? ''} — changes from that body to what is live now.`,
+        replaced: `Replaced ${props.selected?.updatedAt.toISOString() ?? ''} - changes from that body to what is live now.`,
         restore: 'Restore this version',
         kept: 'The current body is kept in history.',
       }}

@@ -5,7 +5,7 @@ import { getProviderSecret, listProviders, type ProviderSecret } from './service
 
 /**
  * Extraction runs as background work with no user, so the owner has to be read
- * with the admin pool — but the key is still the owner's own row, never anyone
+ * with the admin pool - but the key is still the owner's own row, never anyone
  * else's. A project override pointing at a provider the owner does not own is
  * ignored rather than trusted.
  */

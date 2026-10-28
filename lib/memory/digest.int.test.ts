@@ -60,7 +60,7 @@ describe('buildDigest', () => {
 
     // One full entry and one list line, so both shapes are covered.
     expect(digest.text).toMatch(new RegExp(`^## deploy \\(${day}\\)$`, 'm'))
-    expect(digest.text).toMatch(new RegExp(` — title 0 · ${day}$`, 'm'))
+    expect(digest.text).toMatch(new RegExp(` - title 0 · ${day}$`, 'm'))
   })
 
   it('respects the token budget and says it truncated', async () => {

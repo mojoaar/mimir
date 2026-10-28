@@ -36,7 +36,7 @@ export async function resetFixtures(): Promise<void> {
 
 /**
  * Four users: two with their own project, one with none (the "stranger"), and
- * one admin. The admin owns no project on purpose — being an admin must not
+ * one admin. The admin owns no project on purpose - being an admin must not
  * grant read access to anyone's memory.
  */
 export async function seedTwoUsersWithProjects(): Promise<Fixtures> {

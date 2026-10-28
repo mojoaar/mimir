@@ -29,7 +29,7 @@ export function missingPage(pathname: string, theme: ThemeValue): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>404 — nothing at ${pathname.replace(/[<>&"]/g, '')}</title>
+<title>404 - nothing at ${pathname.replace(/[<>&"]/g, '')}</title>
 <style>
   html { color-scheme: ${dark ? 'dark' : 'light'}; }
   body { margin: 0; background: ${bg}; color: ${fg};

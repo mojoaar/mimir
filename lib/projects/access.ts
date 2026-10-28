@@ -28,7 +28,7 @@ const RANK: Record<Exclude<ProjectRole, null>, number> = { read: 1, write: 2, ow
  * A grant can name the user or a team they belong to; the best of those decides,
  * and a team never makes anyone the owner. RLS already hides projects the user
  * has no business seeing, so a null here means either "no access" or "no such
- * project" — deliberately the same answer, so a caller cannot probe for
+ * project" - deliberately the same answer, so a caller cannot probe for
  * someone else's slugs.
  */
 /**

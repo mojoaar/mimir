@@ -12,7 +12,7 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 
 /**
  * Sends one plain-text email through Resend. Email is optional in Mimir, so
- * every failure — including "not configured" — is a value, never an exception:
+ * every failure - including "not configured" - is a value, never an exception:
  * the caller decides whether to show the user a copyable link instead.
  */
 export async function sendEmail(input: EmailInput, deps: SendDeps = {}): Promise<SendResult> {

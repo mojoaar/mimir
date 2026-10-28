@@ -16,7 +16,7 @@ export function toVectorLiteral(values: number[]): string {
 /**
  * Returns a pgvector literal and the model that produced it, or null. Never
  * throws: a memory is worth more than its vector, so a broken provider degrades
- * search instead of losing the write. The log line carries the reason and nothing else — no key, no text.
+ * search instead of losing the write. The log line carries the reason and nothing else - no key, no text.
  */
 export async function embedText(
   text: string,

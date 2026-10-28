@@ -38,7 +38,7 @@ export async function generateMetadata({
     openGraph: {
       type: 'website',
       siteName: site.siteName,
-      title: `${site.siteName} — ${title}`,
+      title: `${site.siteName} - ${title}`,
       description,
       url: `${base}${path === '/' ? '' : path}`,
       images: [{ url: `${base}/opengraph-image`, width: 1200, height: 630 }],

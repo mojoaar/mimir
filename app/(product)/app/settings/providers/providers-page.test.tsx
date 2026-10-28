@@ -77,7 +77,7 @@ describe('providers page', () => {
     const html = renderToStaticMarkup(await ProvidersPage())
 
     expect(html).toContain('<select name="model"')
-    expect(html).toContain('deepseek-v4-pro — $0.28 per 1M')
+    expect(html).toContain('deepseek-v4-pro - $0.28 per 1M')
     // DeepSeek has one kind, so the kind is submitted without a picker.
     expect(html).toContain('<input type="hidden" name="kind" value="llm"/>')
   })

@@ -9,7 +9,7 @@ import { ResetForm } from './form'
 
 export const instant = false
 
-export const metadata: Metadata = { title: 'Forgot password — Mimir', robots: PRIVATE_ROBOTS }
+export const metadata: Metadata = { title: 'Forgot password - Mimir', robots: PRIVATE_ROBOTS }
 
 export default async function ForgotPasswordPage() {
   const t = await translator()

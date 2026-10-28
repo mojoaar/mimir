@@ -25,7 +25,7 @@ export default function ProvidersPage() {
       <P>
         Mimir talks to two kinds of model, and they do different jobs. A <strong>language model</strong> reads a memory
         after it is written and answers with a title and a one-line summary. An <strong>embedding model</strong> turns a
-        memory into a vector so search can find it by meaning. Without either one Mimir still works — you lose summaries
+        memory into a vector so search can find it by meaning. Without either one Mimir still works - you lose summaries
         and the vector half of search, not the store.
       </P>
 
@@ -65,7 +65,7 @@ export default function ProvidersPage() {
           ['Ollama', 'Chat and embeddings', 'nomic-embed-text', 'Local, no key; host.docker.internal on compose'],
           ['Octen', 'Embeddings', 'octen-embedding-4b', '0.6b and 8b also listed, all truncate to 768'],
           ['Mistral', 'Chat and embeddings', 'mistral-small-latest', 'Embeddings use codestral-embed'],
-          ['OpenAI-compatible', 'Chat and embeddings', '—', 'Your own base URL and model name'],
+          ['OpenAI-compatible', 'Chat and embeddings', '-', 'Your own base URL and model name'],
         ]}
       />
 
@@ -74,11 +74,11 @@ export default function ProvidersPage() {
         The vector column is <code>vector(768)</code>. An embedding provider must be able to answer at exactly 768
         dimensions, or its vectors are discarded and search quietly falls back to keywords. Octen takes a{' '}
         <code>dimension</code> field, Mistral’s <code>codestral-embed</code> takes{' '}
-        <code>output_dimension</code>, and both truncate to the first N values — so both fit. Mistral’s other embedding
+        <code>output_dimension</code>, and both truncate to the first N values - so both fit. Mistral’s other embedding
         model, <code>mistral-embed</code>, is fixed at 1024 and is deliberately not offered.
       </P>
       <Callout kind="warning">
-        A model that answers with the wrong number of dimensions is not an error at write time — the memory is stored
+        A model that answers with the wrong number of dimensions is not an error at write time - the memory is stored
         without a vector. If semantic search seems to find nothing, check Admin → Embeddings before you check the
         memories.
       </Callout>
@@ -91,7 +91,7 @@ Used for   [ Embeddings ▾ ]        one kind per saved row
 Label      [ homelab ]
 Model      [ nomic-embed-text ▾ ]
 Base URL   [ http://host.docker.internal:11434 ]
-API key    [ optional — a local model has none ]
+API key    [ optional - a local model has none ]
 [x] Use as the default for this type`}</Code>
       <Ul>
         <li>
@@ -140,7 +140,7 @@ API key    [ optional — a local model has none ]
         <li>Writes always succeed. The memory is stored with no summary and no vector.</li>
         <li>Search is keyword-only: still fused, still path-scoped, just one arm.</li>
         <li>
-          The tree and the digest are unaffected — they read titles and paths, which do not need a model.
+          The tree and the digest are unaffected - they read titles and paths, which do not need a model.
         </li>
         <li>
           A backfill can fill missing vectors later, and <strong>Admin → Embeddings</strong> can re-embed everything
@@ -159,13 +159,13 @@ API key    [ optional — a local model has none ]
           <Link className="text-[var(--accent)] underline" href="/docs/how-it-works">
             How Mimir works
           </Link>{' '}
-          — paths, versions, digest and search.
+          - paths, versions, digest and search.
         </li>
         <li>
           <Link className="text-[var(--accent)] underline" href="/docs/search">
             How search works
           </Link>{' '}
-          — what the vector arm adds and when to trust it.
+          - what the vector arm adds and when to trust it.
         </li>
       </Ul>
     </Prose>

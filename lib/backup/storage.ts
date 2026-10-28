@@ -36,7 +36,7 @@ const STAMP = /(\d{8}-\d{6})/
  * Retention counts RESTORE POINTS, not files: one run writes a dump and a
  * settings export under the same stamp, and both survive or go together.
  * Sorting the files would work only if their names interleaved, and they do
- * not — every `mimir-` name sorts before every `settings-` name.
+ * not - every `mimir-` name sorts before every `settings-` name.
  * Anything that is not one of our two artefacts is left alone, including a
  * dump an operator put there by hand.
  */

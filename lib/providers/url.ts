@@ -76,7 +76,7 @@ function isPrivateHost(host: string): boolean {
 /**
  * A save-time string check cannot see where a DNS name points: `169.254.169.254.nip.io`
  * is public text and a private address. Resolve it once when the provider is saved.
- * A name that does not resolve here is allowed — internal DNS is the operator's
+ * A name that does not resolve here is allowed - internal DNS is the operator's
  * business, and this is a guard against the obvious, not a firewall.
  */
 export async function assertPublicProviderHost(

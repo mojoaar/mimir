@@ -112,7 +112,7 @@ MIMIR_TOKEN=mimir_...        # mint one under Settings → API keys`}</Code>
       </Ul>
       <P>
         Not every client passes those instructions to the model. If yours does not, paste the block from your agent’s
-        page under Agents in the sidebar into <code>AGENTS.md</code>, <code>CLAUDE.md</code> or the equivalent — it
+        page under Agents in the sidebar into <code>AGENTS.md</code>, <code>CLAUDE.md</code> or the equivalent - it
         says the same thing.
       </P>
 

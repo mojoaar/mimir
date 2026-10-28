@@ -37,7 +37,7 @@ export default async function SearchPage() {
       <Ul>
         <li>
           Check that an embedding model is configured in <strong>Admin → Settings</strong>. Without one, search is
-          keyword only — still useful, much narrower.
+          keyword only - still useful, much narrower.
         </li>
         <li>
           Check that memories have embeddings. A write never fails because a provider is down; it stores the row with

@@ -6,7 +6,7 @@ import type { Translate } from '@/lib/i18n/request'
  * Next streams the shell of a dynamic route before `notFound()` resolves, so a
  * status of 404 is not reachable from inside a page here. Rendering the same
  * message without the throw is honest about that: the page says there is
- * nothing, the response says 200, and no crawler is told a lie it can index —
+ * nothing, the response says 200, and no crawler is told a lie it can index -
  * product routes also carry `noindex`.
  */
 export function Missing({ kind, t }: { kind: 'project' | 'memory'; t: Translate }) {

@@ -28,7 +28,7 @@ export type ToolDef = {
 
 const PROJECT_ARG = {
   type: 'string',
-  description: 'Project slug. Optional — omit when sending `repo`.',
+  description: 'Project slug. Optional - omit when sending `repo`.',
 }
 const REPO_ARG = {
   type: 'string',
@@ -98,7 +98,7 @@ const TOOLS: ToolDef[] = [
     name: 'memory_search',
     action: 'memory.read',
     description:
-      'Hybrid search over memory. Returns titles and summaries only — read the path if you need the body. Scope it with path_prefix so auth knowledge does not pollute a deploy question.',
+      'Hybrid search over memory. Returns titles and summaries only - read the path if you need the body. Scope it with path_prefix so auth knowledge does not pollute a deploy question.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -127,7 +127,7 @@ const TOOLS: ToolDef[] = [
     name: 'memory_digest',
     action: 'memory.read',
     description:
-      'Call this once at the start of a session. Returns the project digest — titles of recent memories plus summaries of the newest few — packed into a token budget. No search terms needed.',
+      'Call this once at the start of a session. Returns the project digest - titles of recent memories plus summaries of the newest few - packed into a token budget. No search terms needed.',
     inputSchema: {
       type: 'object',
       properties: {

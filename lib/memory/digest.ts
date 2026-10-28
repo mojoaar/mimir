@@ -19,7 +19,7 @@ const MAX_ROWS = 200
 
 /**
  * Session-start injection. No query, no embedding, one indexed read: an agent
- * opening a session has no search terms yet, so selection is deterministic —
+ * opening a session has no search terms yet, so selection is deterministic -
  * most recently updated first, L0 for everything, L1 for the newest five.
  */
 export async function buildDigest(input: DigestInput): Promise<Digest> {
@@ -69,7 +69,7 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
       const day = row.updated_at.toISOString().slice(0, 10)
       const chunk = recent.has(row.path)
         ? `## ${row.path} (${day})\n${row.summary ?? row.title}\n\n`
-        : `- ${row.path.includes('/') ? row.path.slice(dir.length + 1) : row.path} — ${row.title} · ${day}\n`
+        : `- ${row.path.includes('/') ? row.path.slice(dir.length + 1) : row.path} - ${row.title} · ${day}\n`
       const candidate = emittedHeader ? text + chunk : text + header + chunk
 
       if (Math.ceil(candidate.length / 4) > budget) {

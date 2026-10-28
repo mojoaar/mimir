@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { NextRequest } from 'next/server'
 
 // The integration setup does not set this, and without a trusted proxy there is
-// no client address at all — a non-empty allowlist then denies everything.
+// no client address at all - a non-empty allowlist then denies everything.
 process.env.MIMIR_TRUSTED_PROXIES = '127.0.0.1'
 
 const { setIpAllowlist } = await import('@/lib/settings/security')

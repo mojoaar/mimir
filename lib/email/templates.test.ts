@@ -12,7 +12,7 @@ describe('email templates', () => {
     expect(email.subject).toContain(siteName);
     expect(email.text).toContain(link);
     expect(email.text).toContain('admin@example.test');
-    expect(email.text.endsWith(`— ${siteName}`)).toBe(true);
+    expect(email.text.endsWith(`- ${siteName}`)).toBe(true);
   });
 
   it('sends a reset link', () => {
@@ -20,7 +20,7 @@ describe('email templates', () => {
 
     expect(email.text).toContain(link);
     expect(email.text).toContain(siteName);
-    expect(email.text.endsWith(`— ${siteName}`)).toBe(true);
+    expect(email.text.endsWith(`- ${siteName}`)).toBe(true);
   });
 
   it('tells a user their second factor was reset', () => {

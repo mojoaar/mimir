@@ -11,8 +11,11 @@ const SUMMARY_MAX = 400
 // A whole body can be 256 KB; the extraction prompt only needs the gist.
 const BODY_LIMIT = 8000
 const BATCH = 20
+// One unusable reply is worth another try later; the same row costing model
+// calls forever is not.
+const MAX_ATTEMPTS = 3
 
-export type ExtractData = { projectId: string }
+export type ExtractData = { projectId: string; attempts?: Record<string, number> }
 export type ExtractResult = { extracted: number }
 
 function text(value: unknown): string | null {
@@ -71,6 +74,7 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
   )
 
   let extracted = 0
+  const skipped: string[] = []
   for (const row of rows) {
     let reply: string
     try {
@@ -88,6 +92,7 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
       // carries on instead of stalling behind it forever.
       if ((error as ProviderError).detail === 'empty_completion') {
         console.error('extract skipped: the model returned no answer')
+        skipped.push(row.id)
         continue
       }
       // The provider is down or refusing: fail the job so pg-boss retries it
@@ -98,6 +103,7 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
     const parsed = parseExtraction(reply)
     if (!parsed) {
       console.error('extract skipped: the reply was not usable metadata')
+      skipped.push(row.id)
       continue
     }
     await withAdmin((client) =>
@@ -117,6 +123,20 @@ export async function runExtract(data: ExtractData): Promise<ExtractResult> {
   if (extracted > 0 && rows.length === BATCH) {
     const { sendJob } = await import('./boss')
     await sendJob('extract', { projectId }, { singletonKey: projectId })
+  }
+
+  // A skipped row keeps `summary is null`, so the next write to this project
+  // picks it up again - but if nothing is ever written again it would wait
+  // forever. Ask for it on its own, backing off, and stop after three tries.
+  const attempts = { ...(data.attempts ?? {}) }
+  const retry = skipped.filter((id) => (attempts[id] ?? 0) + 1 < MAX_ATTEMPTS)
+  if (retry.length > 0) {
+    for (const id of retry) attempts[id] = (attempts[id] ?? 0) + 1
+    const { sendJob } = await import('./boss')
+    await sendJob('extract', { projectId, attempts }, {
+      singletonKey: projectId,
+      startAfter: 60 * Math.min(...retry.map((id) => attempts[id] ?? 1)),
+    })
   }
 
   return { extracted }

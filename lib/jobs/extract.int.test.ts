@@ -27,6 +27,13 @@ vi.mock('@/lib/providers/client', async (importOriginal) => {
   }
 })
 
+const jobs = vi.hoisted(() => ({ send: vi.fn(async () => 'job-1') }))
+
+vi.mock('@/lib/jobs/boss', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/jobs/boss')>()
+  return { ...actual, sendJob: jobs.send }
+})
+
 const { runExtract } = await import('./extract')
 
 const target: ProviderTarget = {
@@ -134,6 +141,34 @@ describe('runExtract', () => {
     withFakeCompletion('I am not JSON, sorry.')
     expect(await runExtract({ projectId })).toEqual({ extracted: 0 })
     expect((await readMemory(f.alice, projectId, 'deploy/rollback'))?.summary).toBeNull()
+  })
+
+  // A skipped row keeps `summary is null`, so only the next write to the
+  // project would pick it up again - and nothing else might ever write. Ask
+  // for it once more on its own, with a backoff.
+  it('asks again for a row the model could not summarise', async () => {
+    await setLearning(projectId, true)
+    withFakeCompletion('I am not JSON, sorry.')
+    jobs.send.mockClear()
+    const row = await readMemory(f.alice, projectId, 'deploy/rollback')
+
+    await runExtract({ projectId })
+
+    expect(jobs.send).toHaveBeenCalledWith(
+      'extract',
+      { projectId, attempts: { [row!.id]: 1 } },
+      { singletonKey: projectId, startAfter: 60 },
+    )
+  })
+
+  it('stops asking after three tries, so one bad row cannot cost calls forever', async () => {
+    await setLearning(projectId, true)
+    withFakeCompletion('I am not JSON, sorry.')
+    jobs.send.mockClear()
+    const row = await readMemory(f.alice, projectId, 'deploy/rollback')
+
+    expect(await runExtract({ projectId, attempts: { [row!.id]: 2 } })).toEqual({ extracted: 0 })
+    expect(jobs.send).not.toHaveBeenCalled()
   })
 
   // A 9B model on a laptop takes far longer than the client's 10 s default to

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Search across every project** from the dashboard. The box at the top of `/app` asks one question of every
+  memory you can read, then groups the answers under the project each one came from. When the match is in the
+  body rather than the summary, the hit quotes the line that matched.
+
 ### Fixed
 
 - The **Raw file** block on the changelog page showed only the first 400 characters of the file, ending mid-word,

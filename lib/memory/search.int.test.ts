@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { closePools } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
 import { searchMemories } from './search'
+import { resolveProject } from '@/lib/projects/service'
 import { writeMemory } from './service'
 
 const mocks = vi.hoisted(() => ({
@@ -155,5 +156,47 @@ describe('literal path prefixes', () => {
       pathPrefix: 'deploy',
     })
     expect(hits.map((hit) => hit.path).sort()).toEqual(['deploy', 'deploy/runbook'])
+  })
+})
+
+describe('across projects', () => {
+  it('finds a memory in another project and says which project it came from', async () => {
+    const second = await resolveProject(f.alice, { repo: 'github.com/alice/second', create: true })
+    await writeMemory({ userId: f.alice, projectId, path: 'auth/jwt', body: 'refresh tokens rotate on use' })
+    await writeMemory({
+      userId: f.alice,
+      projectId: second.id,
+      path: 'deploy/rollback',
+      body: 'roll back by redeploying the previous image',
+    })
+
+    const hits = await searchMemories({ userId: f.alice, query: 'redeploying image' })
+
+    expect(hits.map((hit) => `${hit.projectSlug}/${hit.path}`)).toEqual([
+      `${second.slug}/deploy/rollback`,
+    ])
+    expect(hits[0]!.projectName).not.toBe('')
+  })
+
+  it('does not reach a project the caller cannot read', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'auth/jwt', body: 'refresh tokens rotate on use' })
+
+    expect(await searchMemories({ userId: f.bob, query: 'refresh tokens' })).toEqual([])
+  })
+
+  it('quotes the body across projects, and leaves the project search as it was', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'deploy/rollback',
+      body: 'roll back by redeploying the previous image',
+    })
+
+    const [everywhere] = await searchMemories({ userId: f.alice, query: 'redeploying image' })
+    expect(everywhere!.summary).toBeNull()
+    expect(everywhere!.excerpt).toContain('redeploying')
+
+    const [scoped] = await searchMemories({ userId: f.alice, projectId, query: 'redeploying image' })
+    expect(scoped!.excerpt).toBeNull()
   })
 })

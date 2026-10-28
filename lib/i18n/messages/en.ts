@@ -103,6 +103,8 @@ export const en = {
   'app.setPassword.pending': 'Saving…',
   'app.setPassword.weak': 'Use at least 12 characters.',
   'app.setPassword.invalid': 'This link is no longer valid. Ask an administrator for a new one.',
+  'app.dashboard.searchPlaceholder': 'Search every memory, in every project',
+  'app.dashboard.search': 'Search',
   'app.dashboard.noProjects': 'No projects yet. Agents create one the first time they write a memory.',
   'app.dashboard.oneMemory': '{count} memory',
   'app.dashboard.manyMemories': '{count} memories',

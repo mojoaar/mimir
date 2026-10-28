@@ -108,6 +108,8 @@ export const de: Messages = {
   'app.setPassword.weak': 'Verwende mindestens 12 Zeichen.',
   'app.setPassword.invalid':
     'Der Link ist nicht mehr gültig. Bitte eine Administration um einen neuen.',
+  'app.dashboard.searchPlaceholder': 'Alle Erinnerungen durchsuchen, in allen Projekten',
+  'app.dashboard.search': 'Suchen',
   'app.dashboard.noProjects':
     'Noch keine Projekte. Ein Agent legt eines an, sobald er eine Erinnerung schreibt.',
   'app.dashboard.oneMemory': '{count} Erinnerung',

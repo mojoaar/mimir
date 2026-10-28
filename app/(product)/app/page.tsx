@@ -1,19 +1,52 @@
 import Link from 'next/link'
 
 import { requireUser } from '@/lib/auth/context'
+import { translator, type Translate } from '@/lib/i18n/request'
+import { searchMemories, type SearchHit } from '@/lib/memory/search'
 import { listProjects } from '@/lib/projects/service'
 import { restoreProjectAction } from './projects/actions'
-import { translator } from '@/lib/i18n/request'
+
+type Group = { slug: string; name: string; hits: SearchHit[] }
+
+function groupByProject(hits: SearchHit[]): Group[] {
+  const groups = new Map<string, Group>()
+  for (const hit of hits) {
+    const group = groups.get(hit.projectSlug) ?? { slug: hit.projectSlug, name: hit.projectName, hits: [] }
+    group.hits.push(hit)
+    groups.set(hit.projectSlug, group)
+  }
+  return [...groups.values()]
+}
+
+/**
+ * Across projects the keyword arm can match the body, where neither the title
+ * nor the summary holds the words. Show the quoted line then, and stay quiet
+ * when the summary already answers it.
+ */
+function showExcerpt(hit: SearchHit, query: string): boolean {
+  if (!hit.excerpt) return false
+  if (!hit.summary) return true
+  const summary = hit.summary.toLowerCase()
+  return !query
+    .toLowerCase()
+    .split(/\s+/)
+    .some((word) => word.length > 2 && summary.includes(word))
+}
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string; error?: string }>
+  searchParams: Promise<{ notice?: string; error?: string; query?: string }>
 }) {
   const user = await requireUser()
   const t = await translator()
-  const { notice, error } = await searchParams
-  const all = await listProjects(user.id, true)
+  const { notice, error, query: typed } = await searchParams
+  const query = (typed ?? '').trim()
+
+  const [all, hits] = await Promise.all([
+    listProjects(user.id, true),
+    query ? searchMemories({ userId: user.id, query, limit: 50 }) : Promise.resolve([]),
+  ])
   const projects = all.filter((project) => !project.archived)
   const archived = all.filter((project) => project.archived)
 
@@ -26,6 +59,24 @@ export default async function DashboardPage({
         </div>
       </header>
 
+      <form action="/app" className="flex flex-wrap gap-2">
+        <input
+          name="query"
+          defaultValue={query}
+          placeholder={t('app.dashboard.searchPlaceholder')}
+          aria-label={t('app.dashboard.searchPlaceholder')}
+          className="min-w-0 flex-1 rounded border px-3 py-2 text-sm"
+          style={{ borderColor: 'var(--border)', background: 'var(--bg)', color: 'var(--fg)' }}
+        />
+        <button
+          type="submit"
+          className="rounded px-4 py-2 text-sm font-medium"
+          style={{ background: 'var(--accent)', color: 'var(--accent-fg)' }}
+        >
+          {t('app.dashboard.search')}
+        </button>
+      </form>
+
       {notice ? (
         <p role="status" className="text-sm text-[var(--accent)]">
           {notice}
@@ -37,11 +88,15 @@ export default async function DashboardPage({
         </p>
       ) : null}
 
-      {projects.length === 0 ? (
+      {query ? <Results groups={groupByProject(hits)} query={query} t={t} /> : null}
+
+      {!query && projects.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">
           {t('app.dashboard.noProjects')}
         </p>
-      ) : (
+      ) : null}
+
+      {!query && projects.length > 0 ? (
         <ul className="flex flex-col gap-3">
           {projects.map((project) => (
             <li
@@ -66,9 +121,9 @@ export default async function DashboardPage({
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
 
-      {archived.length > 0 ? (
+      {!query && archived.length > 0 ? (
         <section className="flex flex-col gap-3">
           <h2 className="text-sm font-semibold text-[var(--text-muted)]">
             {t('app.dashboard.archived')}
@@ -102,5 +157,44 @@ export default async function DashboardPage({
         </section>
       ) : null}
     </main>
+  )
+}
+
+function Results({ groups, query, t }: { groups: Group[]; query: string; t: Translate }) {
+  if (groups.length === 0) {
+    return <p className="text-sm text-[var(--text-muted)]">{t('app.browse.noMatches')}</p>
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {groups.map((group) => (
+        <section key={group.slug} className="flex flex-col gap-2">
+          <h2 className="text-sm font-medium">
+            <Link href={`/app/projects/${group.slug}`} className="hover:underline">
+              {group.name}
+            </Link>
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {group.hits.map((hit) => (
+              <li key={`${group.slug}/${hit.path}`}>
+                <Link
+                  href={`/app/projects/${group.slug}?path=${encodeURIComponent(hit.path)}`}
+                  className="block rounded border border-[var(--border)] p-3 hover:bg-[var(--bg-raised)]"
+                >
+                  <span className="block text-sm font-medium">{hit.title}</span>
+                  <span className="block text-xs text-[var(--text-muted)]">{hit.path}</span>
+                  {hit.summary ? (
+                    <span className="mt-1 block text-sm text-[var(--text-muted)]">{hit.summary}</span>
+                  ) : null}
+                  {showExcerpt(hit, query) ? (
+                    <span className="mt-1 block text-xs text-[var(--text-muted)]">{hit.excerpt}</span>
+                  ) : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   )
 }

@@ -105,6 +105,8 @@ export const da: Messages = {
   'app.setPassword.pending': 'Gemmer…',
   'app.setPassword.weak': 'Brug mindst 12 tegn.',
   'app.setPassword.invalid': 'Linket er ikke længere gyldigt. Bed en administrator om et nyt.',
+  'app.dashboard.searchPlaceholder': 'Søg i alle minder, i alle projekter',
+  'app.dashboard.search': 'Søg',
   'app.dashboard.noProjects': 'Ingen projekter endnu. En agent opretter et, første gang den skriver et minde.',
   'app.dashboard.oneMemory': '{count} minde',
   'app.dashboard.manyMemories': '{count} minder',

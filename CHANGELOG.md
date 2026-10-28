@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The favicon and the install icons carry the mark in the product mint instead of cream, so the browser tab
+  matches the header. They keep the tile, because a transparent mark disappears against a dark tab bar.
+
 ### Fixed
 
 - Changing the language in **Settings → Profile** keeps you on the page and shows the language you picked.

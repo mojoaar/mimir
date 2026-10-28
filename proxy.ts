@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE } from './lib/auth/cookie-name'
 import { agentById } from './lib/docs/agents'
-import { LOCALE_COOKIE, LOCALES, localeFromPath } from './lib/i18n/locales'
+import { LOCALE_COOKIE, LOCALES, localeFromPath, type Locale } from './lib/i18n/locales'
 
 // Next 16 streams a dynamic route's shell before notFound() resolves, so an
 // unknown [locale] or [agent] answers 200 with a not-found body. A route
@@ -42,6 +42,13 @@ function isKnownPath(pathname: string): boolean {
   return true
 }
 
+// Every locale branch writes the cookie, English included. Without that, picking
+// German latches it and going back to English never clears it.
+function remember(response: NextResponse, locale: Locale): NextResponse {
+  response.cookies.set(LOCALE_COOKIE, locale, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
+  return response
+}
+
 // The edge runtime cannot reach Postgres, so the session branch only proves a
 // cookie exists. A cookie that is present but expired or revoked is caught by
 // app/(product)/app/layout.tsx, which calls requireUser(). Keep the split: do
@@ -53,23 +60,17 @@ export function proxy(request: NextRequest) {
   // rewritten to `/en` and `/en/...` is redirected away to avoid a duplicate.
   const parsed = localeFromPath(pathname)
   if (parsed?.locale === 'da' || parsed?.locale === 'de') {
-    const response = NextResponse.next()
-    response.cookies.set(LOCALE_COOKIE, parsed.locale, {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: 'lax',
-    })
-    return response
+    return remember(NextResponse.next(), parsed.locale)
   }
   if (pathname === '/en' || pathname.startsWith('/en/')) {
     const url = request.nextUrl.clone()
     url.pathname = pathname.slice(3) || '/'
-    return NextResponse.redirect(url, 308)
+    return remember(NextResponse.redirect(url, 308), 'en')
   }
   if (pathname === '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/en'
-    return NextResponse.rewrite(url)
+    return remember(NextResponse.rewrite(url), 'en')
   }
 
   if (!isKnownPath(pathname)) {

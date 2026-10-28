@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { describe, expect, it } from 'vitest'
 
 import { proxy } from './proxy'
+import { LOCALE_COOKIE } from './lib/i18n/locales'
 
 const SENTINEL = '/api/not-found'
 const SESSION = '__Host-mimir_session'
@@ -36,6 +37,12 @@ describe('proxy', () => {
     expect(rewrittenTo(proxy(get('/')))).toBe('/en')
     expect(proxy(get('/en/docs')).headers.get('location')).toMatch(/\/docs$/)
     expect(proxy(get('/da')).status).toBe(200)
+  })
+
+  it('remembers English too, so the choice is not one-way', () => {
+    expect(proxy(get('/')).cookies.get(LOCALE_COOKIE)?.value).toBe('en')
+    expect(proxy(get('/en/docs')).cookies.get(LOCALE_COOKIE)?.value).toBe('en')
+    expect(proxy(get('/da')).cookies.get(LOCALE_COOKIE)?.value).toBe('da')
   })
 
   it('still sends an unauthenticated product request to the login page', () => {

@@ -93,18 +93,28 @@ MIMIR_TOKEN=mimir_...        # mint one under Settings → API keys`}</Code>
       <H2>Tools</H2>
       <Table head={['Tool', 'Purpose']} rows={TOOL_NAMES.map((name) => [name, purpose(name)])} />
 
-      <H2>What to tell the agent</H2>
+      <H2>What the agent is told</H2>
+      <P>
+        The server sends a short protocol in its <code>initialize</code> response, so a client that shows it to the
+        model needs no extra file:
+      </P>
       <Ul>
         <li>
           Call <code>memory_digest</code> once at the start of a session, then <code>memory_search</code> before
           re-deriving something the project already knows.
         </li>
         <li>
-          Call <code>memory_write</code> when you learn something durable: a convention, a gotcha, a decision and its
-          reason. Not a log of what you just did.
+          One memory is one outcome: what changed, why, and the trap you hit. Not a log of what you just did.
         </li>
-        <li>Keep paths stable. One path is one memory; writing it again replaces the body.</li>
+        <li>
+          Write it once at a stable path. One path is one memory; writing it again replaces the body.
+        </li>
       </Ul>
+      <P>
+        Not every client passes those instructions to the model. If yours does not, paste the block from your agent’s
+        page under Agents in the sidebar into <code>AGENTS.md</code>, <code>CLAUDE.md</code> or the equivalent — it
+        says the same thing.
+      </P>
 
       <P>Per-agent configuration lives under Agents in the sidebar.</P>
     </Prose>

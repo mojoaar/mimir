@@ -33,6 +33,7 @@ describe('agent docs', () => {
   it('tells the agent to digest first and never store secrets', () => {
     expect(INSTRUCTION_BLOCK).toContain('memory_digest');
     expect(INSTRUCTION_BLOCK).toContain('memory_write');
-    expect(INSTRUCTION_BLOCK).toContain('Do not store secrets');
+    expect(INSTRUCTION_BLOCK).toContain('one outcome')
+  expect(INSTRUCTION_BLOCK).toContain('Do not store secrets');
   });
 });

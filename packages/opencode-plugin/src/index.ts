@@ -4,6 +4,18 @@ import { resolveConfig } from './config.js'
 import { registerTools } from './tools.js'
 
 export const DIGEST_HEADER = '## What this project already knows (Mimir)\n\n'
+export const NUDGE_HEADER = '## Memory check (Mimir)\n\n'
+
+/**
+ * A fact written before a compaction is cheap; one that has already been
+ * summarised away is gone. So the reminder comes every twenty turns, and again
+ * the moment the transcript shrinks, which is what a compaction looks like from
+ * the message list this hook is handed.
+ */
+const NUDGE_EVERY = 20
+const NUDGE =
+  'If this session settled a decision, a convention or a gotcha that is not in Mimir yet, ' +
+  'call memory_write now at one clear path, before the detail is compacted away.'
 
 /**
  * One injection point and two tools. The hook is what puts the project's
@@ -43,11 +55,21 @@ export default Plugin.define({
       event.system.push({ type: 'text', text: `${DIGEST_HEADER}${text}` })
     })
 
+    const counts = new Map<string, { turns: number; nudgedAt: number }>()
+    const nudge = await ctx.session.hook('context', async (event) => {
+      const state = counts.get(event.sessionID) ?? { turns: 0, nudgedAt: 0 }
+      const turns = event.messages?.length ?? 0
+      const due = turns < state.turns || turns - state.nudgedAt >= NUDGE_EVERY
+      counts.set(event.sessionID, { turns, nudgedAt: due ? turns : state.nudgedAt })
+      if (due) event.system.push({ type: 'text', text: `${NUDGE_HEADER}${NUDGE}` })
+    })
+
     const tools = await registerTools(ctx, config, repo)
 
     return async () => {
       await tools.dispose()
       await session.dispose()
+      await nudge.dispose()
     }
   },
 })

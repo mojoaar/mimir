@@ -20,10 +20,14 @@ vi.mock('../src/client.js', () => ({
 
 import plugin from '../src/index.js'
 
-type ContextEvent = { sessionID: string; system: { type: string; text: string }[] }
+type ContextEvent = {
+  sessionID: string
+  system: { type: string; text: string }[]
+  messages?: unknown[]
+}
 
 function context(overrides: Record<string, unknown> = {}) {
-  const hooks: Record<string, (event: ContextEvent) => Promise<void>> = {}
+  const hooks: Record<string, ((event: ContextEvent) => Promise<void>)[]> = {}
   const added: string[] = []
   const disposed: string[] = []
   const registration = (name: string) => ({ dispose: async () => void disposed.push(name) })
@@ -33,7 +37,7 @@ function context(overrides: Record<string, unknown> = {}) {
     options: { url: 'http://127.0.0.1:3000', token: 'mimir_test', ...overrides },
     session: {
       hook: async (name: string, callback: (event: ContextEvent) => Promise<void>) => {
-        hooks[name] = callback
+        hooks[name] = [...(hooks[name] ?? []), callback]
         return registration(`session:${name}`)
       },
     },
@@ -56,13 +60,18 @@ function context(overrides: Record<string, unknown> = {}) {
 async function setup(overrides: Record<string, unknown> = {}) {
   const built = context(overrides)
   const cleanup = await plugin.setup(built.fake as never)
-  const hook = built.hooks.context
+  const [hook, nudge] = built.hooks.context ?? []
   if (!hook) throw new Error('the plugin registers no context hook')
-  return { ...built, hook, cleanup }
+  if (!nudge) throw new Error('the plugin registers no nudge hook')
+  return { ...built, hook, nudge, cleanup }
 }
 
-function transform(sessionId = 'session-1') {
-  const event: ContextEvent = { sessionID: sessionId, system: [] }
+function transform(sessionId = 'session-1', turns = 0) {
+  const event: ContextEvent = {
+    sessionID: sessionId,
+    system: [],
+    messages: Array.from({ length: turns }, () => ({})),
+  }
   return event
 }
 
@@ -191,6 +200,57 @@ describe('the session-start digest', () => {
 
     // The MCP probe is disposed during setup; the two live registrations last
     // until the plugin is cleaned up.
-    expect(disposed).toEqual(['mcp', 'tools', 'session:context'])
+    expect(disposed).toEqual(['mcp', 'tools', 'session:context', 'session:context'])
+  })
+})
+
+describe('the nudge to write', () => {
+  it('stays quiet while the session is short', async () => {
+    const { nudge } = await setup()
+
+    const event = transform('s', 10)
+    await nudge(event)
+
+    expect(event.system).toHaveLength(0)
+  })
+
+  it('reminds once the session passes twenty turns', async () => {
+    const { nudge } = await setup()
+
+    const event = transform('s', 20)
+    await nudge(event)
+
+    expect(event.system[0]?.text).toContain('Memory check')
+    expect(event.system[0]?.text).toContain('memory_write')
+  })
+
+  it('does not repeat inside the next window', async () => {
+    const { nudge } = await setup()
+
+    await nudge(transform('s', 20))
+    const quiet = transform('s', 35)
+    await nudge(quiet)
+
+    expect(quiet.system).toHaveLength(0)
+  })
+
+  it('reminds again when a compaction shrinks the transcript', async () => {
+    const { nudge } = await setup()
+
+    await nudge(transform('s', 20))
+    const compacted = transform('s', 4)
+    await nudge(compacted)
+
+    expect(compacted.system[0]?.text).toContain('Memory check')
+  })
+
+  it('counts each session on its own', async () => {
+    const { nudge } = await setup()
+
+    await nudge(transform('a', 20))
+    const other = transform('b', 5)
+    await nudge(other)
+
+    expect(other.system).toHaveLength(0)
   })
 })

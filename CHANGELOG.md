@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Every MCP client is told one thing more: one memory is one outcome — what changed, why, and the trap you hit, not
+  a log of what you did. It rides the `initialize` handshake, so it reaches clients that never read a file in the
+  repository.
+- The OpenCode plugin reminds the agent to write once a session passes twenty turns, and again as soon as the
+  transcript has been compacted, because that is the moment the detail worth writing is about to be gone.
+
+### Changed
+
+- The MCP page says where that protocol comes from and what to do when a client ignores it, and the agents page now
+  separates what every client gets from what the OpenCode plugin and the Claude Code hook add.
+
 ### Fixed
 
 - The sessions list no longer claims to show agents. It lists browser sessions only; agents authenticate with an API

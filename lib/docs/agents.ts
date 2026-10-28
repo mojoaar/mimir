@@ -212,6 +212,7 @@ export const INSTRUCTION_BLOCK = `You have a long-term memory store called Mimir
 At the start of a session, call memory_digest with the current repository to load what is already known.
 Before answering a question about this project's conventions, call memory_search with a path_prefix (for example "conventions").
 When you learn something durable — a decision, a convention, a gotcha — call memory_write with a path that says where it belongs.
+One memory is one outcome: what changed, why, and the trap you hit. Not a log of what you did.
 Do not store secrets, tokens or customer data.`;
 
 export function agentById(id: string): AgentDoc | undefined {

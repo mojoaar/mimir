@@ -27,6 +27,10 @@ Muse) with the exact config file each one reads. The OpenCode plugin is
 repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); the Claude Code session-start hook is
 `hooks/mimir-session-start.sh`.
 
+The server also sends its protocol to every MCP client on `initialize` — digest first,
+search before re-deriving, one memory per outcome. A client that does not show that to
+the model gets the same text as a copyable block on its page under `/docs/agents`.
+
 An existing project can be loaded in one command:
 
 ```bash

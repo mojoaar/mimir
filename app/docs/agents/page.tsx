@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { AGENTS } from '@/lib/docs/agents';
 import { publicMetadata } from '@/lib/seo';
-import { H1, P, Prose, Ul } from '@/components/docs/prose';
+import { H1, H2, P, Prose, Ul } from '@/components/docs/prose';
 
 export const instant = false;
 
@@ -33,6 +33,22 @@ export default function AgentsIndex() {
             — {agent.file}
           </li>
         ))}
+      </Ul>
+      <H2>What you get</H2>
+      <Ul>
+        <li>
+          Any MCP client: the eight tools, and the digest when the agent asks for it. The server sends a short
+          protocol on <code>initialize</code> — digest first, search before re-deriving, one memory per outcome.
+          Clients differ in whether they show that to the model; if yours does not, paste the block from its page into
+          the file it reads.
+        </li>
+        <li>
+          The OpenCode plugin also injects the digest before the first turn, adds a reminder to write once a session
+          gets long, and registers <code>mimir_digest</code> and <code>mimir_remember</code>.
+        </li>
+        <li>
+          The Claude Code hook in this repository does the first of those: it puts the digest into the session start.
+        </li>
       </Ul>
     </Prose>
   );

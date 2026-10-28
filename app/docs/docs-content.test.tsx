@@ -6,6 +6,7 @@ import { TOOL_NAMES } from '@/lib/mcp/tools'
 
 const pkg = JSON.parse(readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')) as { version: string }
 
+import AgentsIndex from './agents/page'
 import ApiPage from './api/page'
 import BackupsPage from './backups/page'
 import ChangelogPage from './changelog/page'
@@ -27,6 +28,7 @@ const pages = [
   ['tools', ToolsPage],
   ['search', SearchPage],
   ['changelog', ChangelogPage],
+  ['agents', AgentsIndex],
 ] as const
 
 describe('docs content', () => {
@@ -43,6 +45,22 @@ describe('docs content', () => {
     expect(html).toContain('tools/call')
     expect(html).toContain('jsonrpc')
     expect(html).toContain('2025-06-18')
+  })
+
+  it('says the protocol arrives on connect', async () => {
+    const html = renderToStaticMarkup(await McpPage())
+
+    expect(html).toContain('What the agent is told')
+    expect(html).toContain('initialize')
+    expect(html).toContain('One memory is one outcome')
+  })
+
+  it('separates the plain endpoint from the plugin', async () => {
+    const html = renderToStaticMarkup(AgentsIndex())
+
+    expect(html).toContain('What you get')
+    expect(html).toContain('OpenCode plugin')
+    expect(html).toContain('initialize')
   })
 
   it('names every mcp tool', async () => {

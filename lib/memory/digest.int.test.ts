@@ -63,6 +63,26 @@ describe('buildDigest', () => {
     expect(digest.text).toMatch(new RegExp(` - title 0 · ${day}$`, 'm'))
   })
 
+  it('lists a procedure first, even when it is the oldest', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'runbooks/rotate-keys',
+      title: 'Rotate the signing keys',
+      body: 'step one',
+      kind: 'procedure',
+    })
+    for (let i = 0; i < 7; i++) {
+      await writeMemory({ userId: f.alice, projectId, path: `d${i}/m`, body: `title ${i}` })
+    }
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+
+    // A runbook is valid until it is replaced, not until it is old.
+    expect(digest.text.startsWith('### Procedures')).toBe(true)
+    expect(digest.text.match(/runbooks\/rotate-keys/g)).toHaveLength(1)
+  })
+
   it('respects the token budget and says it truncated', async () => {
     for (let i = 0; i < 12; i++) {
       await writeMemory({ userId: f.alice, projectId, path: `d${i}/m`, body: 'word '.repeat(40) })

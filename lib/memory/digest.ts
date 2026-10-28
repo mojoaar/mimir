@@ -15,6 +15,7 @@ export type DigestInput = {
 
 const DEFAULT_BUDGET = 800
 const RECENT_SUMMARIES = 5
+const PROCEDURE_LIMIT = 5
 const MAX_ROWS = 200
 
 /**
@@ -31,9 +32,10 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
       path: string
       title: string
       summary: string | null
+      kind: string
       updated_at: Date
     }>(
-      `select path, title, summary, updated_at
+      `select path, title, summary, kind, updated_at
        from memories
        where project_id = $1 and deleted_at is null
        order by updated_at desc, path
@@ -47,6 +49,11 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
 
   const recent = new Set(rows.slice(0, RECENT_SUMMARIES).map((row) => row.path))
 
+  // A runbook stays valid until it is replaced, while a gotcha is only as good
+  // as its last verification. So procedures lead, whatever their age.
+  const procedures = rows.filter((row) => row.kind === 'procedure').slice(0, PROCEDURE_LIMIT)
+  const promoted = new Set(procedures.map((row) => row.path))
+
   const groups = new Map<string, typeof rows>()
   for (const row of rows) {
     const top = row.path.includes('/') ? row.path.slice(0, row.path.indexOf('/')) : row.path
@@ -59,11 +66,33 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
   let included = 0
   let truncated = false
 
+  if (procedures.length > 0) {
+    const head = '### Procedures\n'
+    let block = ''
+
+    for (const row of procedures) {
+      const day = row.updated_at.toISOString().slice(0, 10)
+      const chunk = `## ${row.path} (${day})\n${row.summary ?? row.title}\n\n`
+      if (Math.ceil((head.length + block.length + chunk.length) / 4) > budget) {
+        truncated = true
+        break
+      }
+      block += chunk
+      included++
+    }
+
+    if (block) text = head + block
+    if (truncated) return { text: text.trimEnd(), memoryCount: included, truncated }
+  }
+
   outer: for (const [dir, entries] of groups) {
     const header = `### ${dir}\n`
     let emittedHeader = false
 
     for (const row of entries) {
+      // Already listed at the top, where being a procedure counts more than age.
+      if (promoted.has(row.path)) continue
+
       // The date is the whole point of a session-start digest: a fact from six
       // months ago and one from yesterday read the same without it.
       const day = row.updated_at.toISOString().slice(0, 10)

@@ -1,4 +1,12 @@
-export const MEMORY_KINDS = ['note', 'fact', 'decision', 'gotcha', 'snippet', 'import'] as const
+export const MEMORY_KINDS = [
+  'note',
+  'fact',
+  'decision',
+  'gotcha',
+  'procedure',
+  'snippet',
+  'import',
+] as const
 export type MemoryKind = (typeof MEMORY_KINDS)[number]
 
 export type MemoryRow = {

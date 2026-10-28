@@ -5,6 +5,7 @@ import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i1
 import { connection } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
+import { QuickStart } from './quick-start';
 import { Logo } from '@/app/logo'
 
 export const instant = false;
@@ -215,14 +216,18 @@ export default async function MarketingPage({
               {t(locale, 'hero.docs')}
             </a>
           </div>
-          <div className="pt-1">
-            <p className="mb-1 text-xs uppercase tracking-wide text-[var(--text-muted)]">
+          <div className="flex flex-col gap-2 pt-1">
+            <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
               {t(locale, 'hero.dockerLabel')}
             </p>
-            <pre className="w-fit max-w-full overflow-x-auto rounded border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm">
-              <code>{t(locale, 'hero.docker')}</code>
-            </pre>
+            <QuickStart />
           </div>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'start.agent')}
+          </p>
+          <a className="w-fit text-sm text-[var(--accent)] underline" href="/docs/agents">
+            {t(locale, 'start.agentLink')} {'\u2192'}
+          </a>
         </section>
       </main>
 

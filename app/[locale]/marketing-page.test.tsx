@@ -60,6 +60,23 @@ describe('the marketing page', () => {
     expect(html).toContain(t('en', 'cta.title'));
   });
 
+  test('shows the commands that actually start it, not just the last one', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('git clone https://github.com/mojoaar/mimir');
+    expect(html).toContain('cp .env.example .env');
+    expect(html).toContain('docker compose up -d');
+    expect(html).toContain('one secret, two passwords');
+  });
+
+  test('says how to connect an agent once it is running', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain(t('en', 'start.agent'));
+    expect(html).toContain('href="/docs/agents"');
+    expect(t('en', 'start.agent')).toContain('OpenCode plugin');
+  });
+
   test('names the entry point for someone already signed in', async () => {
     session.user = { id: 'u1' };
     const html = renderToStaticMarkup(await page('en'));
@@ -81,7 +98,11 @@ describe('the marketing page', () => {
     const html = renderToStaticMarkup(await page('en'));
     expect(html).toContain('application/ld+json');
     expect(html).toContain('"@type":"SoftwareApplication"');
-    expect(html).not.toContain('localhost');
+    // The quick start card does say localhost, because that is where compose
+    // leaves you; the claim that matters is the public URL in the metadata.
+    const start = html.indexOf('application/ld+json');
+    const jsonLd = html.slice(start, html.indexOf('</script>', start));
+    expect(jsonLd).not.toContain('localhost');
   });
 
   test('explains the name, the session, the providers and the data', async () => {

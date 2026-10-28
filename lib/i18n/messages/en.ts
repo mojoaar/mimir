@@ -4,7 +4,6 @@ export const en = {
     'Mimir remembers what your coding agents learn - across sessions, across agents, across machines. Self-hosted, yours to keep.',
   'hero.docs': 'Read the docs',
   'hero.github': 'GitHub',
-  'hero.docker': 'docker compose up -d',
   'hero.openApp': 'Open app',
   'hero.signIn': 'Sign in',
   'hero.eyebrow': 'Long-term memory for coding agents',
@@ -18,6 +17,9 @@ export const en = {
   'cta.title': 'Give your agents a memory.',
   'cta.body':
     'Run it on your own machine, point one agent at it, and the next session starts where the last one ended.',
+  'start.agent':
+    'Then give it to an agent. Add the MCP server and nine clients can use it, or install the OpenCode plugin, which also puts the digest at the start of every session and reminds the agent to write before the context is compacted.',
+  'start.agentLink': 'Set up an agent',
 
   'features.title': 'What it holds',
   'features.path.title': 'Memory is a path',

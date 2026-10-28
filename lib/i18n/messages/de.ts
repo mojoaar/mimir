@@ -6,7 +6,6 @@ export const de: Messages = {
     'Mimir merkt sich, was deine Coding-Agenten lernen - über Sitzungen, Agenten und Rechner hinweg. Selbst gehostet, und es gehört dir.',
   'hero.docs': 'Dokumentation lesen',
   'hero.github': 'GitHub',
-  'hero.docker': 'docker compose up -d',
   'hero.openApp': 'App öffnen',
   'hero.signIn': 'Anmelden',
   'hero.eyebrow': 'Langzeitgedächtnis für Coding-Agenten',
@@ -20,6 +19,9 @@ export const de: Messages = {
   'cta.title': 'Gib deinen Agenten ein Gedächtnis.',
   'cta.body':
     'Lauf es auf deiner eigenen Maschine, richte einen Agenten darauf aus, und die nächste Sitzung beginnt, wo die letzte aufgehört hat.',
+  'start.agent':
+    'Dann gib sie einem Agenten. Füge den MCP-Server hinzu, und neun Clients können sie nutzen, oder installiere das OpenCode-Plugin, das außerdem den Digest zu Beginn jeder Sitzung einfügt und den Agenten ans Schreiben erinnert, bevor der Kontext verdichtet wird.',
+  'start.agentLink': 'Einen Agenten einrichten',
 
   'features.title': 'Was es enthält',
   'features.path.title': 'Erinnerung ist ein Pfad',

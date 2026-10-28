@@ -29,6 +29,34 @@ export const en = {
   'features.private.title': 'Yours alone',
   'features.private.body':
     'Runs in your homelab on one container and one database. User accounts, per-project grants, two-factor sign-in, encrypted backups.',
+  'why.title': 'Why Mimir',
+  'why.p1':
+    'Mimir was the Norse god whose well held wisdom and memory. Odin traded an eye for a single draught from it.',
+  'why.p2':
+    'The name is the same word as memory and remember. A memory worth an eye is the right standard for one your agents drink from.',
+
+  'session.title': 'How a session goes',
+  'session.s1':
+    'Start. The agent asks for the digest and gets the project\'s paths and titles back, with summaries for the newest memories.',
+  'session.s2':
+    'Ask. A question about the codebase becomes a search: keyword matches and meaning matches, fused into one list.',
+  'session.s3':
+    'Write. When something is settled, the agent writes one memory at a path. The same path again replaces it, and the old body stays in history.',
+  'session.s4':
+    'Learn. A language model writes the one-line title and summary, so the next digest stays short.',
+
+  'providers.title': 'Two providers, two jobs',
+  'providers.llm':
+    'A language model reads a memory and writes its title and summary. It spends tokens, and it uses the key of whoever owns the project.',
+  'providers.embed':
+    'An embedding model turns text into vectors, so a search for "secret rollover" finds the memory called how we rotate keys. One model serves the whole install, at 768 dimensions, chosen by an admin.',
+  'providers.optional':
+    'Neither is required. Without them, memories are still stored, versioned, backed up and searchable by keyword.',
+
+  'data.title': 'Your box, your data',
+  'data.body':
+    'One container and a Postgres you already run. Nothing leaves the box unless you configure a provider, and then only the text you wrote. Backups are encrypted with a key only you hold, and the restore script ships in the repo.',
+
   'app.layout.mfaRequired': 'Two-factor is required',
   'app.layout.mfaRequiredBody':
     'This install requires an authenticator app before the app can be used.',

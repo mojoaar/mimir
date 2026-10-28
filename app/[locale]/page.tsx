@@ -135,6 +135,16 @@ export default async function MarketingPage({
           <MimirTerminal />
         </section>
 
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'why.title')}</h2>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'why.p1')}
+          </p>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'why.p2')}
+          </p>
+        </section>
+
         <section className="flex flex-col gap-6">
           <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'features.title')}</h2>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -154,6 +164,42 @@ export default async function MarketingPage({
               </article>
             ))}
           </div>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'session.title')}</h2>
+          <ol className="flex max-w-2xl list-decimal flex-col gap-3 pl-5 text-sm leading-relaxed text-[var(--text-muted)]">
+            {(['session.s1', 'session.s2', 'session.s3', 'session.s4'] as const).map((key) => {
+              // Each line leads with its verb, so the reader can scan the four
+              // steps without reading the sentences.
+              const [lead, ...rest] = t(locale, key).split('. ')
+              return (
+                <li key={key}>
+                  <strong className="text-[var(--fg)]">{lead}.</strong> {rest.join('. ')}
+                </li>
+              )
+            })}
+          </ol>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'providers.title')}</h2>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'providers.llm')}
+          </p>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'providers.embed')}
+          </p>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--accent)]">
+            {t(locale, 'providers.optional')}
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'data.title')}</h2>
+          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'data.body')}
+          </p>
         </section>
 
         <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] p-6">

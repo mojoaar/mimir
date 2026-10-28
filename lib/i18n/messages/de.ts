@@ -31,6 +31,34 @@ export const de: Messages = {
   'features.private.title': 'Nur deins',
   'features.private.body':
     'Läuft im eigenen Heimnetz auf einem Container und einer Datenbank. Benutzerkonten, Projektfreigaben, Zwei-Faktor-Anmeldung, verschlüsselte Backups.',
+  'why.title': 'Warum Mimir',
+  'why.p1':
+    'Mimir war der nordische Gott, dessen Brunnen Weisheit und Erinnerung barg. Odin gab ein Auge für einen einzigen Schluck daraus.',
+  'why.p2':
+    'Der Name ist dasselbe Wort wie memory und remember. Eine Erinnerung, die ein Auge wert ist, ist der richtige Maßstab für eine, aus der deine Agenten trinken.',
+
+  'session.title': 'So läuft eine Sitzung ab',
+  'session.s1':
+    'Start. Der Agent fragt nach dem Überblick und bekommt Pfade und Titel des Projekts zurück, mit Zusammenfassungen der neuesten Erinnerungen.',
+  'session.s2':
+    'Fragen. Eine Frage zur Codebasis wird zu einer Suche: Treffer nach Schlüsselwort und Treffer nach Bedeutung, zu einer Liste verschmolzen.',
+  'session.s3':
+    'Schreiben. Wenn etwas geklärt ist, schreibt der Agent eine Erinnerung an einen Pfad. Derselbe Pfad ersetzt sie, und der alte Text bleibt in der Historie.',
+  'session.s4':
+    'Lernen. Ein Sprachmodell schreibt den einzeiligen Titel und die Zusammenfassung, damit der nächste Überblick kurz bleibt.',
+
+  'providers.title': 'Zwei Anbieter, zwei Aufgaben',
+  'providers.llm':
+    'Ein Sprachmodell liest eine Erinnerung und schreibt Titel und Zusammenfassung. Das kostet Tokens, und es nutzt den Schlüssel des Projekteigentümers.',
+  'providers.embed':
+    'Ein Embedding-Modell macht aus Text Vektoren, damit eine Suche nach "secret rollover" die Erinnerung findet, die heißt, wie wir Schlüssel rotieren. Ein Modell dient der ganzen Installation, mit 768 Dimensionen, von einem Admin gewählt.',
+  'providers.optional':
+    'Keiner von beiden ist nötig. Ohne sie werden Erinnerungen trotzdem gespeichert, versioniert, gesichert und nach Schlüsselwort durchsuchbar.',
+
+  'data.title': 'Deine Box, deine Daten',
+  'data.body':
+    'Ein Container und ein Postgres, das du schon betreibst. Nichts verlässt die Box, außer du richtest einen Anbieter ein, und dann nur der Text, den du geschrieben hast. Backups werden mit einem Schlüssel verschlüsselt, den nur du hast, und das Wiederherstellungsskript liegt im Repo.',
+
   'app.layout.mfaRequired': 'Zwei-Faktor ist erforderlich',
   'app.layout.mfaRequiredBody':
     'Diese Installation verlangt eine Authenticator-App, bevor die App genutzt werden kann.',

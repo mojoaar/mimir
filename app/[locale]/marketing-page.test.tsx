@@ -83,4 +83,23 @@ describe('the marketing page', () => {
     expect(html).toContain('"@type":"SoftwareApplication"');
     expect(html).not.toContain('localhost');
   });
+
+  test('explains the name, the session, the providers and the data', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    for (const heading of [
+      'Why Mimir',
+      'How a session goes',
+      'Two providers, two jobs',
+      'Your box, your data',
+    ]) {
+      expect(html).toContain(heading);
+    }
+    expect(html).toContain('Odin traded an eye');
+    expect(html).toContain('768');
+  });
+
+  test('says why in danish too', async () => {
+    expect(renderToStaticMarkup(await page('da'))).toContain('Hvorfor Mimir');
+  });
 });

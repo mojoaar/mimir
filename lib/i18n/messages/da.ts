@@ -31,6 +31,34 @@ export const da: Messages = {
   'features.private.title': 'Kun dit',
   'features.private.body':
     'Kører i dit eget hjemmenetværk på én container og én database. Brugere, projektadgang, tofaktor og krypterede backupper.',
+  'why.title': 'Hvorfor Mimir',
+  'why.p1':
+    'Mimir var den nordiske gud, hvis brønd rummede visdom og erindring. Odin gav et øje for en enkelt tår af den.',
+  'why.p2':
+    'Navnet er det samme ord som memory og remember. Et minde, der er et øje værd, er den rette målestok for et, dine agenter drikker af.',
+
+  'session.title': 'Sådan forløber en session',
+  'session.s1':
+    'Start. Agenten beder om overblikket og får projektets stier og titler tilbage, med resuméer af de nyeste minder.',
+  'session.s2':
+    'Spørg. Et spørgsmål om kodebasen bliver en søgning: nøgleordsmatch og betydningsmatch, smeltet sammen til én liste.',
+  'session.s3':
+    'Skriv. Når noget er afgjort, skriver agenten ét minde på en sti. Samme sti igen erstatter det, og den gamle tekst bliver i historikken.',
+  'session.s4':
+    'Lær. En sprogmodel skriver titlen på én linje og resuméet, så næste overblik forbliver kort.',
+
+  'providers.title': 'To udbydere, to opgaver',
+  'providers.llm':
+    'En sprogmodel læser et minde og skriver titel og resumé. Det koster tokens, og den bruger nøglen til den, der ejer projektet.',
+  'providers.embed':
+    'En embedding-model laver tekst om til vektorer, så en søgning efter "secret rollover" finder mindet, der hedder hvordan vi roterer nøgler. Én model dækker hele installationen, med 768 dimensioner, valgt af en admin.',
+  'providers.optional':
+    'Ingen af dem er påkrævet. Uden dem bliver minder stadig gemt, versioneret, sikkerhedskopieret og søgbare på nøgleord.',
+
+  'data.title': 'Din boks, dine data',
+  'data.body':
+    'Én container og en Postgres, du allerede kører. Intet forlader boksen, medmindre du opsætter en udbyder, og så kun den tekst, du skrev. Backupper krypteres med en nøgle, kun du har, og gendannelsesscriptet ligger i repoet.',
+
   'app.layout.mfaRequired': 'Tofaktor er påkrævet',
   'app.layout.mfaRequiredBody':
     'Denne installation kræver en godkendelsesapp, før appen kan bruges.',

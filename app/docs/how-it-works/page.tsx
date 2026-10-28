@@ -62,7 +62,9 @@ export default function HowItWorksPage() {
 
       <P>
         Procedures are always listed first, with their summary, because a procedure is valid until it is replaced,
-        not until it is old.
+        not until it is old. A <code>gotcha</code> and a <code>decision</code> are named in the list, because those
+        two change how the line is read. Everything else is left bare: a note is the default, and a label on every
+        line would cost a third of the budget to say nothing.
       </P>
 
       <H2>Search is two arms and a fuse</H2>

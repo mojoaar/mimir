@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- The OpenCode plugin can search and learn, not only write blind. `mimir_search` and `mimir_learn` join
+  `mimir_digest` and `mimir_remember`, so a session that runs the plugin without the MCP server can ask what the
+  project already knows and can hand the conversation over. The reminder at twenty turns names both paths.
+
+### Changed
+
+- The digest names a `gotcha` and a `decision` in the list, so a trap does not read like a plain note. Nothing else
+  is labelled: a note is the default, and a label on every line would cost a third of the token budget.
+
+### Fixed
+
+- The plugin's `mimir_remember` now accepts every kind the server does. `procedure` and `import` were missing, so a
+  runbook written from the plugin was refused.
+
+- A memory whose summary the model failed to produce is asked for again with a backoff, rather than waiting for the
+  next write to that project. Three tries, then it waits for a real change.
+
 ## [0.20.0] - 2026-10-28
 
 Memories from a session, and procedures first.

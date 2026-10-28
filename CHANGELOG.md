@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page repainted and that part of it stayed on the old theme.
 - The **Agents** heading in the docs sidebar is now a link to the page it names, and the overview's
   per-agent link lands on that list instead of jumping straight into OpenCode.
+- The tab icon is the mint mark everywhere. The browser icon file was still the cream original from before the
+  colour change, and the hand-written 404 page named no icon at all, so it fell back to that old one.
 
 ## [0.22.0] - 2026-10-28
 

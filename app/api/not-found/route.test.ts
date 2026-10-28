@@ -19,6 +19,12 @@ describe('the 404 page', () => {
     expect(body).toContain('/nope')
   })
 
+  it('names the icon, because this page is not under the app layout', async () => {
+    const body = await (await GET(request('/x'))).text()
+
+    expect(body).toContain('<link rel="icon" href="/icon.svg" type="image/svg+xml">')
+  })
+
   it('paints the theme the visitor chose, and the default for junk', async () => {
     expect(await (await GET(request('/x', 'mimir_theme=fjord-light'))).text()).toContain('#dbe3ea')
     expect(await (await GET(request('/x', 'mimir_theme=<script>'))).text()).toContain('#0b1020')

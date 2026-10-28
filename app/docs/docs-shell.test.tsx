@@ -46,6 +46,13 @@ describe('the docs shell', () => {
     expect(html).toContain('aria-label="Switch to the light theme"');
   });
 
+  it('leaves the theme attribute to the html element', async () => {
+    // A second data-theme here shadowed the one the switch repaints, so the
+    // button worked on every page except these.
+    const html = renderToStaticMarkup(await DocsLayout({ children: <p>content</p> }));
+    expect(html).not.toContain('data-theme');
+  });
+
   it('renders a disclosure for small screens', async () => {
     const html = renderToStaticMarkup(await DocsLayout({ children: <p>content</p> }));
     expect(html).toContain('<details');

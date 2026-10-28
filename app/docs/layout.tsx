@@ -43,8 +43,10 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
     getCurrentUser(),
   ]);
 
+  // The theme attribute belongs on <html> alone. Carrying a second one here
+  // meant the switch repainted the document and this subtree ignored it.
   return (
-    <div data-theme={theme} className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)]">
       <header className="border-b border-[var(--border)]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 sm:px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">

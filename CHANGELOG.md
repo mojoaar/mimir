@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The **light or dark switch** is on the app and docs headers too, not only the landing page. It was already one
   cookie for the whole install, so the choice now follows you across all three without going through the profile page.
 
+### Fixed
+
+- The switch did nothing on the docs pages. The docs shell carried a second theme attribute of its own, so the
+  page repainted and that part of it stayed on the old theme.
+
 ## [0.22.0] - 2026-10-28
 
 One search over every project, and a landing page that says how to start.

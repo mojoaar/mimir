@@ -105,7 +105,7 @@ memory_write   remember that deploys run from main`}</Code>
             - the endpoint and the token an agent needs.
           </li>
           <li>
-            <Link className="text-[var(--accent)] underline" href="/docs/agents/opencode">
+            <Link className="text-[var(--accent)] underline" href="/docs/agents">
               Per-agent setup
             </Link>{' '}
             - copy-paste configs for OpenCode, Claude Code, Codex and the rest.

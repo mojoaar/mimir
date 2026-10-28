@@ -1,5 +1,5 @@
 export type DocLink = { href: string; title: string }
-export type DocGroup = { title: string; links: DocLink[] }
+export type DocGroup = { title: string; href?: string; links: DocLink[] }
 
 export const DOCS_NAV: DocGroup[] = [
   {
@@ -21,6 +21,7 @@ export const DOCS_NAV: DocGroup[] = [
   },
   {
     title: 'Agents',
+    href: '/docs/agents',
     links: [
       { href: '/docs/agents/opencode', title: 'OpenCode' },
       { href: '/docs/agents/claude-code', title: 'Claude Code' },

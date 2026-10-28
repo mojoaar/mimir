@@ -13,9 +13,18 @@ function Sidebar() {
     <nav aria-label="Documentation" className="space-y-6">
       {DOCS_NAV.map((group) => (
         <div key={group.title}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            {group.title}
-          </p>
+          {group.href ? (
+            <Link
+              href={group.href}
+              className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)] hover:text-[var(--fg)]"
+            >
+              {group.title}
+            </Link>
+          ) : (
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              {group.title}
+            </p>
+          )}
           <ul className="space-y-1">
             {group.links.map((link) => (
               <li key={link.href}>

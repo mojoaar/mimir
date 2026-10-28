@@ -41,6 +41,13 @@ describe('the docs shell', () => {
     expect(html).toContain('href="/docs/agents/opencode"');
   });
 
+  it('makes a group heading a way into its index page', async () => {
+    const html = renderToStaticMarkup(await DocsLayout({ children: <p>content</p> }));
+    // The Agents heading was a label, so its page was reachable only from a
+    // leaf. A group with an index page now links to it.
+    expect(html).toContain('href="/docs/agents"');
+  });
+
   it('offers the other theme in the header', async () => {
     const html = renderToStaticMarkup(await DocsLayout({ children: <p>content</p> }));
     expect(html).toContain('aria-label="Switch to the light theme"');

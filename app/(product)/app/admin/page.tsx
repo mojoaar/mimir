@@ -121,8 +121,13 @@ export default async function AdminOverviewPage() {
             pending: stats.pendingUsers,
             disabled: stats.disabledUsers,
           })}
+          href="/app/admin/users"
         />
-        <Stat label={t('app.admin.overview.projects')} value={String(stats.projects)} />
+        <Stat
+          label={t('app.admin.overview.projects')}
+          value={String(stats.projects)}
+          href="/app"
+        />
         <Stat
           label={t('app.admin.overview.memories')}
           value={String(stats.memories)}

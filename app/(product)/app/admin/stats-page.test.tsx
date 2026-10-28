@@ -50,4 +50,15 @@ describe('admin overview', () => {
     expect(html).toContain('Never')
     expect(html).toContain('2 failed')
   })
+
+  it('links the counts to the pages that explain them', async () => {
+    mocks.requireAdmin.mockResolvedValue({ id: 'a', email: 'admin@example.test', role: 'admin' })
+    const { default: Page } = await import('./page')
+
+    const html = renderToStaticMarkup(await Page())
+
+    expect(html).toContain('href="/app/admin/users"')
+    expect(html).toContain('href="/app"')
+    expect(html).toContain('href="/app/admin/jobs"')
+  })
 })

@@ -117,10 +117,16 @@ memory_write   remember that deploys run from main`}</Code>
             - the same operations without MCP, with request and response examples.
           </li>
           <li>
+            <Link className="text-[var(--accent)] underline" href="/docs/plugins">
+              Plugins
+            </Link>{' '}
+            - the OpenCode and Oh My Pi packages, and what they add that MCP cannot.
+          </li>
+          <li>
             <Link className="text-[var(--accent)] underline" href="/docs/tools">
               Tool reference
             </Link>{' '}
-            - all eight tools, their arguments and what each one returns.
+            - all nine tools, their arguments and what each one returns.
           </li>
           <li>
             <Link className="text-[var(--accent)] underline" href="/docs/changelog">

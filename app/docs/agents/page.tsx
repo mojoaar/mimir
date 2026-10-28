@@ -37,14 +37,19 @@ export default function AgentsIndex() {
       <H2>What you get</H2>
       <Ul>
         <li>
-          Any MCP client: the eight tools, and the digest when the agent asks for it. The server sends a short
+          Any MCP client: the nine tools, and the digest when the agent asks for it. The server sends a short
           protocol on <code>initialize</code> - digest first, search before re-deriving, one memory per outcome.
           Clients differ in whether they show that to the model; if yours does not, paste the block from its page into
           the file it reads.
         </li>
         <li>
-          The OpenCode plugin also injects the digest before the first turn, adds a reminder to write once a session
-          gets long, and registers <code>mimir_digest</code> and <code>mimir_remember</code>.
+          The OpenCode and Oh My Pi plugins also inject the digest before the first turn, add a reminder to write once
+          a session gets long, and register <code>mimir_digest</code>, <code>mimir_remember</code>,{' '}
+          <code>mimir_search</code> and <code>mimir_learn</code>. The{' '}
+          <Link href="/docs/plugins" className="text-[var(--accent)] underline">
+            plugins page
+          </Link>{' '}
+          compares them with the server and shows both installs.
         </li>
         <li>
           The Claude Code hook in this repository does the first of those: it puts the digest into the session start.

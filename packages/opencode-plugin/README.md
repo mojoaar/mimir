@@ -62,10 +62,10 @@ unreachable, slow, or unconfigured - a session never waits on memory.
 
 ## Import an existing project
 
-Until the package is published, run the CLI from a checkout:
+The package ships the importer as its `mimir` binary:
 
 ```sh
-node packages/opencode-plugin/dist/bin.js ingest .
+npx @mojoaar/opencode-mimir ingest .
 ```
 
 Walks the folder and loads its **documentation and configuration** - READMEs,

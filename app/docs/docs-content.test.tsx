@@ -3,6 +3,7 @@ import path from 'node:path'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { TOOL_NAMES } from '@/lib/mcp/tools'
+import { DOCS_NAV } from '@/lib/docs/nav'
 
 const pkg = JSON.parse(readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')) as { version: string }
 
@@ -14,6 +15,7 @@ import HowItWorksPage from './how-it-works/page'
 import ProvidersPage from './providers/page'
 import DocsIndex from './page'
 import McpPage from './mcp/page'
+import PluginsPage from './plugins/page'
 import SearchPage from './search/page'
 import SelfHostingPage from './self-hosting/page'
 import ToolsPage from './tools/page'
@@ -24,6 +26,7 @@ const pages = [
   ['self-hosting', SelfHostingPage],
   ['backups', BackupsPage],
   ['mcp', McpPage],
+  ['plugins', PluginsPage],
   ['api', ApiPage],
   ['tools', ToolsPage],
   ['search', SearchPage],
@@ -59,7 +62,8 @@ describe('docs content', () => {
     const html = renderToStaticMarkup(AgentsIndex())
 
     expect(html).toContain('What you get')
-    expect(html).toContain('OpenCode plugin')
+    expect(html).toContain('OpenCode and Oh My Pi plugins')
+    expect(html).toContain('href="/docs/plugins"')
     expect(html).toContain('initialize')
   })
 
@@ -228,3 +232,23 @@ describe('session learning', () => {
   })
 })
 
+describe('plugins', () => {
+  it('compares MCP with the plugin, and shows both installs', async () => {
+    // The code block is highlighted into spans, so compare the text, not the markup.
+    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('MCP or plugin')
+    expect(text).toContain('injected once per session')
+    expect(text).toContain('opencode plugin add @mojoaar/opencode-mimir')
+    expect(text).toContain('omp plugin install @mojoaar/omp-mimir')
+    expect(text).toContain('All nine')
+  })
+
+  it('sits in the sidebar and on the index', async () => {
+    const slugs = DOCS_NAV.flatMap((group) => group.links.map((link) => link.href))
+    expect(slugs).toContain('/docs/plugins')
+
+    const html = renderToStaticMarkup(await DocsIndex())
+    expect(html).toContain('href="/docs/plugins"')
+  })
+})

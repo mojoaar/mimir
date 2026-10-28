@@ -17,6 +17,7 @@ export const DOCS_NAV: DocGroup[] = [
     links: [
       { href: '/docs/mcp', title: 'MCP' },
       { href: '/docs/api', title: 'HTTP API' },
+      { href: '/docs/plugins', title: 'Plugins' },
     ],
   },
   {

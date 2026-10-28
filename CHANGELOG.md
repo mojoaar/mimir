@@ -7,11 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A **Plugins** page at `/docs/plugins`. It puts the MCP server and the plugin packages side by side: what each one
+  can and cannot do, how to install the OpenCode and Oh My Pi plugins with the options each takes, and how to tell
+  afterwards whether the digest arrived. The importer that ships with the OpenCode package is documented there too.
+
 ### Fixed
 
 - **Oh My Pi** was missing from the docs sidebar, and every agent page counted nine clients while the index listed
   ten. The sidebar keeps its agent list by hand, so a new client had to be added in two places. It is in the menu
   now, its URL is in the sitemap, and a test fails if the two lists drift apart again.
+
+- The docs index and the agents page said **eight MCP tools** while the server has nine, and the plugin README sent
+  readers to a checkout for an importer that has been published as `npx @mojoaar/opencode-mimir` since 0.14.0.
 
 ## [0.23.0] - 2026-10-28
 

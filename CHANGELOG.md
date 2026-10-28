@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Analytics, if you want it. **Admin → Settings → Site** takes your Umami script URL and website ID, and every
+  page - landing, docs, app, admin - starts sending pageviews there. Off by default, and nothing is sent until both
+  values are filled in. Umami sets no cookies and respects Do Not Track.
+
 - Every MCP client is told one thing more: one memory is one outcome — what changed, why, and the trap you hit, not
   a log of what you did. It rides the `initialize` handshake, so it reaches clients that never read a file in the
   repository.
@@ -16,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transcript has been compacted, because that is the moment the detail worth writing is about to be gone.
 
 ### Changed
+
+- The header mark lost its tile. It is drawn as a transparent cut-out in the theme's own ink - mint on the dark
+  themes, the dark ground on the light ones - while the favicon and the install icons keep the tile.
 
 - The MCP page says where that protocol comes from and what to do when a client ignores it, and the agents page now
   separates what every client gets from what the OpenCode plugin and the Claude Code hook add.

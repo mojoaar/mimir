@@ -50,7 +50,10 @@ export default async function ToolsPage() {
       <Code language="json">{`{"path":"deploy/rollback","body":"Roll back with the previous image tag.","title":"Roll back by tag"}`}</Code>
       <P>
         One path is one memory: writing it again replaces the body and clears the generated summary, so extraction
-        runs on the new text. Returns <code>{'{ path, created }'}</code>.
+        runs on the new text. Returns <code>{'{ path, created }'}</code>. An optional <code>kind</code> is one of{' '}
+        <code>note</code>, <code>fact</code>, <code>decision</code>, <code>gotcha</code>, <code>procedure</code>,{' '}
+        <code>snippet</code> or <code>import</code>. A <code>procedure</code> is listed first in the digest, with its
+        summary, because a runbook is valid until it is replaced.
       </P>
 
       <H2>memory_tree</H2>
@@ -70,6 +73,14 @@ export default async function ToolsPage() {
         Arguments: <code>files</code> (up to 100, 2 MB total), optional <code>path_prefix</code> (default{' '}
         <code>import</code>). Each file becomes a memory at <code>{'<prefix>/<path>'}</code>. A file whose name cannot
         be a path is listed in <code>skipped</code> instead of failing the batch.
+      </P>
+
+      <H2>memory_learn</H2>
+      <P>
+        Arguments: <code>transcript</code> (up to 32 KB of the conversation, verbatim) and an optional{' '}
+        <code>hint</code>. The project's own model reads it and writes at most three memories, so the agent does not
+        have to decide what is worth keeping. It answers <code>{'{ queued }'}</code> at once and writes in the
+        background, which is why a missing summary a moment later is not a failure.
       </P>
 
       <H2>project_list</H2>

@@ -60,6 +60,11 @@ export default function HowItWorksPage() {
         and starts oriented.
       </P>
 
+      <P>
+        Procedures are always listed first, with their summary, because a procedure is valid until it is replaced,
+        not until it is old.
+      </P>
+
       <H2>Search is two arms and a fuse</H2>
       <P>
         A keyword arm over PostgreSQL full-text search and a vector arm over pgvector run on the same rows. Their ranked

@@ -195,3 +195,19 @@ describe('the name', () => {
     expect(html).toContain('traded an eye')
   })
 })
+
+describe('session learning', () => {
+  it('documents memory_learn and the procedure kind', async () => {
+    const html = renderToStaticMarkup(await ToolsPage())
+
+    expect(html).toContain('memory_learn')
+    expect(html).toContain('procedure')
+  })
+
+  it('says why procedures lead the digest', async () => {
+    const html = renderToStaticMarkup(await HowItWorksPage())
+
+    expect(html).toContain('Procedures are always listed first')
+  })
+})
+

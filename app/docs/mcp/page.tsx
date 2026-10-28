@@ -139,6 +139,8 @@ function purpose(name: string): string {
       return 'List the projects you can reach.'
     case 'memory_ingest':
       return 'Import a batch of files as memories.'
+    case 'memory_learn':
+      return 'Hand over a session; the project model writes what is durable.'
     default:
       return ''
   }

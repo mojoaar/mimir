@@ -20,6 +20,9 @@ export function LanguageSwitcher({
   label: string
   action: (formData: FormData) => Promise<void>
 }) {
+  // Controlled, not defaulted: the account is the source of truth, so the
+  // control must show what the server says after the action, not the value the
+  // browser happened to hold before it.
   return (
     <form action={action} className="contents">
       {/* Without JavaScript the select cannot submit itself, so this button is
@@ -31,7 +34,7 @@ export function LanguageSwitcher({
         id="mimir-language"
         name="locale"
         aria-label={label}
-        defaultValue={value}
+        value={value}
         className="rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1 text-sm"
         onChange={(event) => {
           const form = event.currentTarget.form

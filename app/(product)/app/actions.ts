@@ -20,7 +20,7 @@ export async function signOutAction(): Promise<void> {
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const user = await requireUser()
   const locale = String(formData.get('locale') ?? '')
-  if (!isLocale(locale)) redirect('/app')
+  if (!isLocale(locale)) redirect('/app/settings/profile')
 
   await updateMyLocale(user.id, locale)
 
@@ -34,6 +34,10 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
     httpOnly: false,
   })
 
+  // Back to this page, not the dashboard: the switcher lives here, and coming
+  // back to it says the change took. A render in place is not enough, because
+  // the request already read the old account row and the old cookie, so the
+  // control would come back showing the language you left.
   revalidatePath('/app', 'layout')
-  redirect('/app')
+  redirect('/app/settings/profile')
 }

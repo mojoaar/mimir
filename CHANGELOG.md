@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Changing the language in **Settings → Profile** keeps you on the page and shows the language you picked.
+  It used to send you to the dashboard, and the select could come back showing the previous value, so the
+  control looked stuck.
+
 ## [0.19.0] - 2026-10-28
 
 The mark, and what a newcomer needs to know.

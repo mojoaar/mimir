@@ -9,16 +9,25 @@ permissions:
   packages: write
 
 jobs:
+  # One native runner per architecture. The same build under qemu took an hour
+  # cold and hit the backstop twice, so emulation is gone rather than given
+  # more time.
   image:
-    runs-on: ubuntu-26.04
-    # A warm build takes a few minutes; a cold multi-arch build under qemu has
-    # taken over thirty. Without a limit a stalled buildx step (or its cleanup)
-    # leaves the run "in progress" forever, so this is a backstop, not a target.
-    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-26.04
+            arch: amd64
+          - platform: linux/arm64
+            runner: ubuntu-26.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
-      - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
 
       - uses: docker/login-action@v4
@@ -27,25 +36,64 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: meta
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
-      - uses: docker/build-push-action@v7
+      - id: build
+        uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          # Cold runs re-do every layer; the registry cache makes the next
-          # release a few minutes instead of half an hour.
-          cache-from: type=registry,ref=ghcr.io/mojoaar/mimir:buildcache
-          cache-to: type=registry,ref=ghcr.io/mojoaar/mimir:buildcache,mode=max
-          tags: |
-            ghcr.io/mojoaar/mimir:${{ steps.meta.outputs.version }}
-            ghcr.io/mojoaar/mimir:latest
+          platforms: ${{ matrix.platform }}
+          # Pushed by digest only: the tagged index is assembled after both
+          # legs succeed, so a half-built release never becomes :latest.
+          outputs: type=image,name=ghcr.io/mojoaar/mimir,push-by-digest=true,name-canonical=true,push=true
+          provenance: false
+          cache-from: type=registry,ref=ghcr.io/mojoaar/mimir:buildcache-${{ matrix.arch }}
+          cache-to: type=registry,ref=ghcr.io/mojoaar/mimir:buildcache-${{ matrix.arch }},mode=max
+
+      - name: Keep the digest for the merge
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${DIGEST#sha256:}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-26.04
+    needs: image
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - name: Tag the index
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          images=$(for d in /tmp/digests/*; do echo "ghcr.io/mojoaar/mimir@sha256:$(basename "$d")"; done)
+          docker buildx imagetools create \
+            -t "ghcr.io/mojoaar/mimir:$version" \
+            -t ghcr.io/mojoaar/mimir:latest \
+            $images
 
       - name: Extract changelog section
         run: |
-          version="${{ steps.meta.outputs.version }}"
+          version="${GITHUB_REF_NAME#v}"
           awk -v v="$version" '
             $0 ~ "^## \\[" v "\\]" { found = 1; next }
             found && /^## \[/ { exit }
@@ -59,7 +107,7 @@ jobs:
 
   package:
     runs-on: ubuntu-26.04
-    needs: image
+    needs: merge
     permissions:
       contents: read
     steps:

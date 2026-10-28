@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, test } from 'vitest'
 import { withAdmin } from '../db/tx'
 import { resetFixtures, seedTwoUsersWithProjects } from '../db/seed'
-import { deleteSetting } from './store'
+import { deleteSetting, writeSetting } from './store'
+import { getAnalytics, setAnalytics } from './analytics'
 import {
   getBackupSettings,
   getS3Credentials,
@@ -156,5 +157,42 @@ describe('learning default', () => {
     expect(await getLearningDefault()).toBe(true)
     await setLearningDefault(false, actor)
     expect(await getLearningDefault()).toBe(false)
+  })
+})
+
+describe('analytics', () => {
+  test('is off and empty until it is configured', async () => {
+    expect(await getAnalytics()).toEqual({ enabled: false, scriptUrl: '', websiteId: '' })
+  })
+
+  test('saves the script URL and the website ID', async () => {
+    await setAnalytics({ enabled: true, scriptUrl: 'https://stats.example.com/script.js', websiteId: 'abc-123' }, actor)
+    expect(await getAnalytics()).toEqual({
+      enabled: true,
+      scriptUrl: 'https://stats.example.com/script.js',
+      websiteId: 'abc-123',
+    })
+  })
+
+  test('turning it off keeps no stale requirement on the fields', async () => {
+    await setAnalytics({ enabled: false, scriptUrl: '', websiteId: '' }, actor)
+    expect(await getAnalytics()).toEqual({ enabled: false, scriptUrl: '', websiteId: '' })
+  })
+
+  test('refuses a script URL that is not absolute http(s)', async () => {
+    await expect(
+      setAnalytics({ enabled: true, scriptUrl: '/script.js', websiteId: 'abc-123' }, actor),
+    ).rejects.toThrow('absolute http')
+  })
+
+  test('refuses to enable without a website ID', async () => {
+    await expect(
+      setAnalytics({ enabled: true, scriptUrl: 'https://stats.example.com/script.js', websiteId: '  ' }, actor),
+    ).rejects.toThrow('website ID')
+  })
+
+  test('ignores a corrupt row rather than trusting it', async () => {
+    await writeSetting('analytics', { enabled: true, scriptUrl: 'nonsense', websiteId: '' }, actor)
+    expect(await getAnalytics()).toEqual({ enabled: false, scriptUrl: '', websiteId: '' })
   })
 })

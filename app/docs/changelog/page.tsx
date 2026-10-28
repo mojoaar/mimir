@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
+import Link from 'next/link'
 import { connection } from 'next/server'
-import { Code } from '@/components/docs/code'
 import { H1, H2, P, Prose } from '@/components/docs/prose'
 import { publicMetadata } from '@/lib/seo'
 
@@ -37,7 +37,9 @@ export default async function ChangelogPage() {
         </section>
       ))}
       <H2>Raw file</H2>
-      <Code language="text">{markdown.trim().slice(0, 400)}</Code>
+      <P>
+        The file itself is at <Link href="/changelog.md">/changelog.md</Link>, as Markdown.
+      </P>
     </Prose>
   )
 }
@@ -47,6 +49,7 @@ type Release = { title: string; lines: string[] }
 function parseReleases(markdown: string): Release[] {
   const releases: Release[] = []
   let current: Release | null = null
+  let lastWasBullet = false
 
   for (const raw of markdown.split('\n')) {
     const line = raw.trim()
@@ -54,13 +57,29 @@ function parseReleases(markdown: string): Release[] {
     if (line.startsWith('## ')) {
       current = { title: line.slice(3), lines: [] }
       releases.push(current)
+      lastWasBullet = false
       continue
     }
 
     if (!current) continue
-    if (!line || line.startsWith('#')) continue
+    if (!line || line.startsWith('#')) {
+      lastWasBullet = false
+      continue
+    }
 
-    current.lines.push(line.replace(/^[-*]\s+/, '• ').replace(/\*\*/g, ''))
+    const text = line.replace(/\*\*|`/g, '')
+
+    // The file is hard-wrapped at about 120 characters, so a line that does not
+    // open a new item continues the one above it. Without this every wrapped
+    // bullet renders as several paragraphs, with the bullet on the first only.
+    if (/^[-*]\s+/.test(line)) {
+      current.lines.push(`• ${text.replace(/^[-*]\s+/, '')}`)
+      lastWasBullet = true
+    } else if (lastWasBullet) {
+      current.lines[current.lines.length - 1] += ` ${text}`
+    } else {
+      current.lines.push(text)
+    }
   }
 
   return releases.filter((release) => release.lines.length > 0)

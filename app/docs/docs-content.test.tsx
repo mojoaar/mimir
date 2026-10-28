@@ -87,6 +87,23 @@ describe('docs content', () => {
 
     expect(html).toContain(pkg.version)
   })
+
+  it('keeps a wrapped bullet in one paragraph', async () => {
+    const html = renderToStaticMarkup(await ChangelogPage())
+
+    // The file is hard-wrapped; a continuation line is not a new item.
+    expect(html).toContain('not only write blind. mimir_search and mimir_learn join mimir_digest')
+    expect(html).not.toContain('<p>mimir_digest and mimir_remember')
+  })
+
+  it('links the whole raw file instead of a cut-off sample', async () => {
+    const html = renderToStaticMarkup(await ChangelogPage())
+
+    // The page used to render the first 400 characters of the file, which ended
+    // mid-word and offered no way to the rest of it.
+    expect(html).toContain('href="/changelog.md"')
+    expect(html).not.toContain('All notable changes to this project')
+  })
 })
 
 describe('the import page', () => {

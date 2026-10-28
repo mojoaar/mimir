@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- The **Raw file** block on the changelog page showed only the first 400 characters of the file, ending mid-word,
+  with no way to the rest of it. The page now links the whole file at `/changelog.md`, served as Markdown.
+
+- A release note that wraps onto a second line is now one paragraph, not several. The file is hard-wrapped, and the
+  renderer treated every continuation line as a new item, so a bullet lost its marker after the first line.
+
 ## [0.21.0] - 2026-10-28
 
 The plugin catches up, and a trap gets a name.

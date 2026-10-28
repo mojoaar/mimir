@@ -310,6 +310,11 @@ export const de: Messages = {
   'app.admin.site.learningDefault': 'Aus neuen Projekten lernen',
   'app.admin.site.learningDefaultHint':
     'Ab jetzt erstellte Projekte starten mit aktiviertem Lernen. Die Extraktion sendet den Text einer Erinnerung an deinen Sprach-Anbieter.',
+  'app.admin.site.analyticsEnabled': 'Seitenaufrufe an Umami senden',
+  'app.admin.site.analyticsScriptUrl': 'Skript-URL',
+  'app.admin.site.analyticsWebsiteId': 'Website-ID',
+  'app.admin.site.analyticsHint':
+    'Seitenaufrufe aller Seiten gehen an deine Umami-Instanz. Umami setzt keine Cookies und respektiert Do Not Track.',
   'app.admin.site.requireMfa':
     'Zwei-Faktor für alle Benutzer verlangen (der Bootstrap-Administrator bleibt ausgenommen)',
   'app.admin.site.allowlist': 'IP-Allowlist (ein CIDR pro Zeile, leer erlaubt allen)',

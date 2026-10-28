@@ -10,6 +10,7 @@ import { invalidateAllowlistCache } from '@/lib/http/allowlist'
 import { InvalidSetting } from '@/lib/settings/store'
 import { getTimeFormat, setClock, setTimezone } from '@/lib/settings/time'
 import { getLearningDefault, setLearningDefault } from '@/lib/settings/learning'
+import { getAnalytics, setAnalytics } from '@/lib/settings/analytics'
 import { translator } from '@/lib/i18n/request'
 import { actionMessage } from '@/lib/i18n/errors'
 
@@ -40,6 +41,14 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
     await setClock(text(formData, 'clock') === '12h' ? '12h' : '24h', user.id)
     await setLearningDefault(text(formData, 'learningDefault') === 'on', user.id)
     await setRequireMfa(text(formData, 'requireMfa') === 'on', user.id)
+    await setAnalytics(
+      {
+        enabled: text(formData, 'analyticsEnabled') === 'on',
+        scriptUrl: text(formData, 'analyticsScriptUrl'),
+        websiteId: text(formData, 'analyticsWebsiteId'),
+      },
+      user.id,
+    )
     await setIpAllowlist(allowlist, user.id)
     invalidateAllowlistCache()
 
@@ -73,6 +82,7 @@ export async function saveSiteSettingsAction(formData: FormData): Promise<void> 
         timezone: (await getTimeFormat()).timeZone,
         clock: (await getTimeFormat()).clock,
         learningDefault: await getLearningDefault(),
+        analyticsEnabled: (await getAnalytics()).enabled,
       },
     })
   } catch (thrown) {

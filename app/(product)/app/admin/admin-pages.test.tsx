@@ -152,6 +152,11 @@ import SiteSettingsPage from './settings/site/page'
 
 const nothing = Promise.resolve({})
 
+vi.mock('@/lib/settings/analytics', () => ({
+  getAnalytics: async () => ({ enabled: false, scriptUrl: '', websiteId: '' }),
+  setAnalytics: async () => {},
+}))
+
 vi.mock('@/lib/settings/learning', () => ({
   getLearningDefault: async () => false,
   setLearningDefault: async () => {},
@@ -247,6 +252,10 @@ describe('the admin screens', () => {
     expect(html).toContain('Require two-factor for every user')
     expect(html).toContain('name="learningDefault"')
     expect(html).toContain('Learn from new projects')
+    expect(html).toContain('name="analyticsEnabled"')
+    expect(html).toContain('name="analyticsScriptUrl"')
+    expect(html).toContain('name="analyticsWebsiteId"')
+    expect(html).toContain('Send pageviews to Umami')
   })
 
   it('speaks Danish when the account does', async () => {

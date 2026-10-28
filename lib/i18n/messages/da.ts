@@ -301,6 +301,11 @@ export const da: Messages = {
   'app.admin.site.learningDefault': 'Lær fra nye projekter',
   'app.admin.site.learningDefaultHint':
     'Projekter, der oprettes fremover, starter med læring slået til. Udtræk sender en erindrings tekst til din sprogudbyder.',
+  'app.admin.site.analyticsEnabled': 'Send sidevisninger til Umami',
+  'app.admin.site.analyticsScriptUrl': 'Script-URL',
+  'app.admin.site.analyticsWebsiteId': 'Websteds-ID',
+  'app.admin.site.analyticsHint':
+    'Sidevisninger fra alle sider sendes til din Umami-installation. Umami sætter ingen cookies og respekterer Do Not Track.',
   'app.admin.site.requireMfa':
     'Kræv to-faktor for alle brugere (bootstrap-administratoren er undtaget)',
   'app.admin.site.allowlist': 'IP-allowlist (ét CIDR pr. linje, tom tillader alle)',

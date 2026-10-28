@@ -6,6 +6,7 @@ import { getIpAllowlist, getRequireMfa } from '@/lib/settings/security'
 import { getEmailSettings } from '@/lib/settings/email-settings'
 import { getTimeFormat, timezoneOptions } from '@/lib/settings/time'
 import { getLearningDefault } from '@/lib/settings/learning'
+import { getAnalytics } from '@/lib/settings/analytics'
 import { saveSiteSettingsAction } from './actions'
 
 export const instant = false
@@ -25,7 +26,7 @@ export default async function SiteSettingsPage({
   await requireAdmin()
   const t = await translator()
   const params = await searchParams
-  const [site, requireMfa, allowlist, email, { timeZone, clock }, learningDefault] =
+  const [site, requireMfa, allowlist, email, { timeZone, clock }, learningDefault, analytics] =
     await Promise.all([
       getSiteSettings(),
       getRequireMfa(),
@@ -33,6 +34,7 @@ export default async function SiteSettingsPage({
       getEmailSettings(),
       getTimeFormat(),
       getLearningDefault(),
+      getAnalytics(),
     ])
   const zones = timezoneOptions()
   if (!zones.includes(timeZone)) zones.unshift(timeZone)
@@ -99,6 +101,35 @@ export default async function SiteSettingsPage({
           <span className="text-xs text-[var(--text-muted)]">
             {t('app.admin.site.learningDefaultHint')}
           </span>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="flex items-center gap-2">
+            <input type="checkbox" name="analyticsEnabled" defaultChecked={analytics.enabled} />
+            {t('app.admin.site.analyticsEnabled')}
+          </span>
+          <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.analyticsHint')}</span>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-[var(--text-muted)]">{t('app.admin.site.analyticsScriptUrl')}</span>
+          <input
+            name="analyticsScriptUrl"
+            defaultValue={analytics.scriptUrl}
+            placeholder="https://umami.example.com/script.js"
+            className={FIELD}
+            style={FIELD_STYLE}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-[var(--text-muted)]">{t('app.admin.site.analyticsWebsiteId')}</span>
+          <input
+            name="analyticsWebsiteId"
+            defaultValue={analytics.websiteId}
+            className={FIELD}
+            style={FIELD_STYLE}
+          />
         </label>
 
         <label className="flex items-center gap-2 text-sm">

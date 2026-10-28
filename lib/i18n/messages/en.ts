@@ -299,6 +299,11 @@ export const en = {
   'app.admin.site.learningDefault': 'Learn from new projects',
   'app.admin.site.learningDefaultHint':
     'Projects created from now on start with learning on. Extraction sends a memory\'s text to your language provider.',
+  'app.admin.site.analyticsEnabled': 'Send pageviews to Umami',
+  'app.admin.site.analyticsScriptUrl': 'Script URL',
+  'app.admin.site.analyticsWebsiteId': 'Website ID',
+  'app.admin.site.analyticsHint':
+    'Pageviews from every page go to your Umami instance. Umami sets no cookies and respects Do Not Track.',
   'app.admin.site.requireMfa':
     'Require two-factor for every user (the bootstrap admin stays exempt)',
   'app.admin.site.allowlist': 'IP allowlist (one CIDR per line, empty allows everyone)',

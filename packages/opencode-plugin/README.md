@@ -58,7 +58,7 @@ session carries on.
 The plugin registers a `context` hook that puts the project's digest at the top
 of the system prompt before the first turn, once per session. It asks for 800
 tokens with a 1.5 second timeout, and does nothing at all when Mimir is
-unreachable, slow, or unconfigured — a session never waits on memory.
+unreachable, slow, or unconfigured - a session never waits on memory.
 
 ## Import an existing project
 
@@ -68,8 +68,8 @@ Until the package is published, run the CLI from a checkout:
 node packages/opencode-plugin/dist/bin.js ingest .
 ```
 
-Walks the folder and loads its **documentation and configuration** — READMEs,
-`docs/`, markdown, compose files, `package.json` — under the `import/` path
+Walks the folder and loads its **documentation and configuration** - READMEs,
+`docs/`, markdown, compose files, `package.json` - under the `import/` path
 prefix. Source code is skipped by default; the agent already has it.
 
 | Flag | What it does |

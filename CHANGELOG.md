@@ -5,24 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.18.0] - 2026-10-28
+## [0.19.0] - 2026-10-28
+
+The mark, and what a newcomer needs to know.
 
 ### Added
 
 - Analytics, if you want it. **Admin → Settings → Site** takes your Umami script URL and website ID, and every
   page - landing, docs, app, admin - starts sending pageviews there. Off by default, and nothing is sent until both
   values are filled in. Umami sets no cookies and respects Do Not Track.
+- The landing page says why the project is called Mimir, how a session with an agent goes, what the two kinds of
+  provider do, and what running it on your own box means. In English, Danish and German.
 
-- Every MCP client is told one thing more: one memory is one outcome — what changed, why, and the trap you hit, not
+### Changed
+
+- The header mark lost its tile. It is drawn as a transparent cut-out in the theme's own ink - mint on the dark
+  themes, the dark ground on the light ones - while the favicon and the install icons keep the tile.
+- A plain hyphen replaces the em dash in everything a person reads: the app, the docs, the landing page, the README
+  and this changelog.
+
+### Fixed
+
+- Choosing a language now sticks, English included. Only `/da` and `/de` wrote the cookie, so after one visit to
+  `/de` the whole app stayed German until the cookie expired. The account's own choice in Settings → Profile still
+  wins.
+
+## [0.18.0] - 2026-10-28
+
+### Added
+
+- Every MCP client is told one thing more: one memory is one outcome - what changed, why, and the trap you hit, not
   a log of what you did. It rides the `initialize` handshake, so it reaches clients that never read a file in the
   repository.
 - The OpenCode plugin reminds the agent to write once a session passes twenty turns, and again as soon as the
   transcript has been compacted, because that is the moment the detail worth writing is about to be gone.
 
 ### Changed
-
-- The header mark lost its tile. It is drawn as a transparent cut-out in the theme's own ink - mint on the dark
-  themes, the dark ground on the light ones - while the favicon and the install icons keep the tile.
 
 - The MCP page says where that protocol comes from and what to do when a client ignores it, and the agents page now
   separates what every client gets from what the OpenCode plugin and the Claude Code hook add.
@@ -63,8 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Opening another memory from the tree now shows *that* memory's text. The reader's body box kept the previous
   memory's text while the heading changed, because a client-side navigation left the same editor mounted.
 
-- Testing a provider now says what happened. The button reads **Testing…** while it runs, then **Works.** — with
-  the embedding dimension when the provider is an embedding one — or the provider's error, instead of leaving the
+- Testing a provider now says what happened. The button reads **Testing…** while it runs, then **Works.** - with
+  the embedding dimension when the provider is an embedding one - or the provider's error, instead of leaving the
   row looking untouched until the page is reloaded.
 
 ## [0.15.0] - 2026-10-27
@@ -77,7 +95,7 @@ Every clock in one place.
   and the usage bars follow it instead of hard-coded UTC.
 - A 12-hour or 24-hour clock, set beside the timezone. Dates always read as `YYYY-MM-DD` either way.
 - **Admin → Jobs.** The queue's state, what each job did, embedding calls per purpose for the last day, and how
-  many memories actually carry a vector — with the model that built it.
+  many memories actually carry a vector - with the model that built it.
 
 ### Changed
 
@@ -112,7 +130,7 @@ Your agent starts informed.
 ### Fixed
 
 - Testing an LLM provider no longer fails with `provider responded 404` when the provider has no model-list
-  endpoint — OpenCode Go and OpenCode Console among them. The test now asks the model a one-line question, which is
+  endpoint - OpenCode Go and OpenCode Console among them. The test now asks the model a one-line question, which is
   what Mimir actually uses a language model for.
 
 ## [0.13.0] - 2026-10-26
@@ -131,19 +149,19 @@ Pick the model, not the name.
   more than five times the median of the previous week. Dismissing it hides it for that admin until a new hour spikes.
 - Octen is a new embedding preset (`https://api.octen.ai`), offering `octen-embedding-0.6b`, `-4b` and `-8b` at 768 dimensions, each shown with its price. Embeddings sent to it are marked as a query or a document, which is what the model expects.
 - **Admin → Usage** can prune the call log: delete everything older than the number of days you choose, and it tells
-  you how many rows went. The audit trail is untouched — it ages itself out on its own schedule.
+  you how many rows went. The audit trail is untouched - it ages itself out on its own schedule.
 - Two documentation pages that explain the product rather than the commands: **How Mimir works** (projects, paths,
   versions, digest, hybrid search, teams, audit, backups, accounts) and **Providers and embeddings** (which model does
   what, the preset table, why the column is 768, prices and the usage page). The overview now says what is in the box,
   and why the project is called Mimir.
-- The HTTP API and MCP pages show request *and* response for a full walkthrough — projects, tree, read, write, search,
-  digest as text, versions and restore, ingest, and a raw JSON-RPC call — with a fuller error catalogue.
+- The HTTP API and MCP pages show request *and* response for a full walkthrough - projects, tree, read, write, search,
+  digest as text, versions and restore, ingest, and a raw JSON-RPC call - with a fuller error catalogue.
 - Documentation code blocks are syntax highlighted with Prism, coloured from the theme variables so both themes work.
 - The landing page says what it is selling: a bold opening, three proof chips, an entry link in the header and the
   hero, and a closing call to action. Instead of a lone `docker compose` line it shows a mock OpenCode session where
   the agent calls `memory_digest` and `memory_search` over MCP and answers from the result. The theme switcher is gone
   from it; appearance stays under **Settings → Appearance**.
-- A real icon set — an eye in the well with an M in the pupil — as `icon.svg`, a 192 and 512 png, an Apple touch icon,
+- A real icon set - an eye in the well with an M in the pupil - as `icon.svg`, a 192 and 512 png, an Apple touch icon,
   a regenerated `favicon.ico`, and a web app manifest that opens at `/app` when installed.
 
 ### Changed
@@ -210,7 +228,7 @@ Every screen, in your language.
 
 ### Fixed (review pass)
 
-- The project settings screen, including its sharing and danger-zone copy, is translated too — it was the last
+- The project settings screen, including its sharing and danger-zone copy, is translated too - it was the last
   screen still answering in English.
 - Form errors now speak the reader's language instead of the service layer's English, and a driver message can no
   longer reach a page.
@@ -228,7 +246,7 @@ Room to breathe.
 
 - The app header sits in the same padded, centred column as the admin and docs
   headers, so the navigation no longer hugs the corners of the window.
-- **Docs** and — for an admin — **Admin** are now links in the header, instead
+- **Docs** and - for an admin - **Admin** are now links in the header, instead
   of a URL you had to remember.
 - A footer on every app and docs page: author, GitHub, licence, docs, the
   version you are running, and the year.
@@ -289,7 +307,7 @@ Hardening: fewer ways to be surprised.
   keeps working.
 - Audit failure logs no longer echo a connection string. Passwords inside a
   URL are masked, and a bare token is masked except its last four characters,
-  while table and constraint names stay readable — a log you can act on
+  while table and constraint names stay readable - a log you can act on
   instead of one you have to squint at.
 
 ### Fixed
@@ -391,7 +409,7 @@ Bring your own project.
 ### Added
 
 - `mimir ingest` walks a folder and imports its documentation and
-  configuration — READMEs, `docs/`, markdown, compose files, `package.json` —
+  configuration - READMEs, `docs/`, markdown, compose files, `package.json` -
   in batches the server accepts, into `import/` where search finds them.
   Source code is skipped by default, because the agent already has it.
 - `--project` names a project yourself, for a folder that is not a git
@@ -474,7 +492,7 @@ Seeing what the agents wrote.
 
 ### Fixed
 
-- A URL that is not a page — an unknown locale, an unknown docs agent, any path with no route — answers a real `404` instead of `200` with a not-found body, and `/app/*` keeps its `noindex` header. A valid route with a missing id (a purged memory, a deleted project) still renders the not-found page with `200`, because Next streams a dynamic route's shell before the page can decide.
+- A URL that is not a page - an unknown locale, an unknown docs agent, any path with no route - answers a real `404` instead of `200` with a not-found body, and `/app/*` keeps its `noindex` header. A valid route with a missing id (a purged memory, a deleted project) still renders the not-found page with `200`, because Next streams a dynamic route's shell before the page can decide.
 - An archived project refuses reads and writes through the API instead of failing with an internal error, and the zero-config repo lookup no longer dead-ends on the repo-key unique index.
 - Editing a memory in the browser keeps its title, and a refused or impossible restore says why instead of landing silently.
 - Archiving is owner-only in the UI: a write or read grantee no longer sees a Restore button that cannot work.
@@ -594,13 +612,13 @@ search matches meaning as well as words.
 - Retrieval is hybrid when an embedding model is configured: a keyword arm and
   a vector arm are fused with reciprocal rank fusion. Without one it is
   keyword-only, exactly as before.
-- A write never fails because a provider is down, slow or misconfigured — the
+- A write never fails because a provider is down, slow or misconfigured - the
   memory is stored either way, and search stays on keywords.
 
 ### Fixed (review pass)
 
-- A provider that could not be resolved — an embedding provider whose key was
-  encrypted under another `MIMIR_SECRET`, for example — failed the write
+- A provider that could not be resolved - an embedding provider whose key was
+  encrypted under another `MIMIR_SECRET`, for example - failed the write
   instead of degrading to keyword search.
 - A provider that answered with a full-length vector of non-numbers reached the
   `::vector` cast and failed the write.

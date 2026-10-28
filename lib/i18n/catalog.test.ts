@@ -45,6 +45,14 @@ describe('the message catalogs', () => {
     }
   })
 
+  // The catalogues are not the only copy a person reads, and these two are
+  // rendered by /docs/changelog and shipped to npm, so they are guarded too.
+  it('keeps the changelog and the plugin readme on plain hyphens', () => {
+    for (const file of ['CHANGELOG.md', 'packages/opencode-plugin/README.md']) {
+      expect(readFileSync(join(process.cwd(), file), 'utf8').includes('\u2014'), file).toBe(false)
+    }
+  })
+
   it('keeps every placeholder in the translation', () => {
     for (const [key, value] of Object.entries(en)) {
       for (const locale of ['da', 'de'] as const) {

@@ -1,0 +1,31 @@
+{
+  "name": "@mojoaar/omp-mimir",
+  "version": "0.22.1",
+  "description": "Mimir long-term memory for oh-my-pi sessions",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "omp",
+    "oh-my-pi",
+    "plugin",
+    "memory",
+    "mimir"
+  ],
+  "omp": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}

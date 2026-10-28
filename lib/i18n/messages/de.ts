@@ -21,7 +21,7 @@ export const de: Messages = {
   'cta.body':
     'Lauf es auf deiner eigenen Maschine, richte einen Agenten darauf aus, und die nächste Sitzung beginnt, wo die letzte aufgehört hat.',
   'start.agent':
-    'Dann gib sie einem Agenten. Füge den MCP-Server hinzu, und neun Clients können sie nutzen, oder installiere das OpenCode-Plugin, das außerdem den Digest zu Beginn jeder Sitzung einfügt und den Agenten ans Schreiben erinnert, bevor der Kontext verdichtet wird.',
+    'Dann gib sie einem Agenten. Füge den MCP-Server hinzu, und zehn Clients können sie nutzen, oder installiere das OpenCode-Plugin, das außerdem den Digest zu Beginn jeder Sitzung einfügt und den Agenten ans Schreiben erinnert, bevor der Kontext verdichtet wird.',
   'start.agentLink': 'Einen Agenten einrichten',
 
   'features.title': 'Was es enthält',

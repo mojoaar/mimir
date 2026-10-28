@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { AGENTS, agentById, INSTRUCTION_BLOCK } from './agents';
 
 describe('agent docs', () => {
-  it('lists nine agents with unique ids', () => {
-    expect(AGENTS).toHaveLength(9);
-    expect(new Set(AGENTS.map((a) => a.id)).size).toBe(9);
+  it('lists ten agents with unique ids', () => {
+    expect(AGENTS).toHaveLength(10);
+    expect(new Set(AGENTS.map((a) => a.id)).size).toBe(10);
   });
 
   it('points every snippet at the mcp endpoint', () => {

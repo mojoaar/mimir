@@ -5,6 +5,7 @@ export type AgentId =
   | 'cursor'
   | 'gemini-cli'
   | 'pi'
+  | 'oh-my-pi'
   | 'antigravity'
   | 'hermes'
   | 'muse';
@@ -145,6 +146,33 @@ export const AGENTS: AgentDoc[] = [
         2,
       ),
     notes: ['Same shape as the other mcpServers clients; paste the instruction block into the agent rules file.'],
+  },
+  {
+    id: 'oh-my-pi',
+    name: 'Oh My Pi',
+    tier: 1,
+    file: '~/.omp/agent/mcp.json, or .omp/mcp.json in the project',
+    snippet: (url) =>
+      JSON.stringify(
+        {
+          $schema:
+            'https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json',
+          mcpServers: {
+            mimir: {
+              type: 'http',
+              url: `${url}/mcp`,
+              headers: { Authorization: `Bearer \${${TOKEN}}` },
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    notes: [
+      'Oh My Pi is a fork of Pi with its own plugin loader. Install the Mimir plugin with omp plugin install @mojoaar/omp-mimir to get the digest at the start of every session and the four memory tools.',
+      'It imports MCP servers from OpenCode, Claude Code and Codex when it starts, so a machine already set up for one of those may reach Mimir without this file. Run /mcp test mimir to check.',
+      'MCP tools appear as mcp__mimir__memory_write. The plugin adds mimir_digest, mimir_remember, mimir_search and mimir_learn, and reads MIMIR_URL, MIMIR_TOKEN and MIMIR_REPO.',
+    ],
   },
   {
     id: 'antigravity',

@@ -21,7 +21,7 @@ export const da: Messages = {
   'cta.body':
     'Kør det på din egen maskine, peg én agent på det, og næste session starter, hvor den sidste sluttede.',
   'start.agent':
-    'Giv den så til en agent. Tilføj MCP-serveren, og ni klienter kan bruge den, eller installer OpenCode-pluginnet, som også indsætter digesten ved sessionens start og minder agenten om at skrive, før konteksten komprimeres.',
+    'Giv den så til en agent. Tilføj MCP-serveren, og ti klienter kan bruge den, eller installer OpenCode-pluginnet, som også indsætter digesten ved sessionens start og minder agenten om at skrive, før konteksten komprimeres.',
   'start.agentLink': 'Sæt en agent op',
 
   'features.title': 'Hvad den rummer',

@@ -118,12 +118,19 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npx tsc -p packages/opencode-plugin/tsconfig.json
+      - run: npx tsc -p packages/omp-plugin/tsconfig.json
       - name: Publish @mojoaar/opencode-mimir
         # Skipped silently until the repository has an NPM_TOKEN secret.
         # Run inside the package: from the repo root npm reads the path as a
         # GitHub spec and tries to clone it over ssh.
         if: ${{ env.NODE_AUTH_TOKEN != '' }}
         working-directory: packages/opencode-plugin
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+      - name: Publish @mojoaar/omp-mimir
+        if: ${{ env.NODE_AUTH_TOKEN != '' }}
+        working-directory: packages/omp-plugin
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public

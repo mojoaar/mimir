@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Oh My Pi, as a client and as a plugin.
+
+### Added
+
+- **Oh My Pi** is the tenth agent on `/docs/agents`. omp speaks MCP natively, and it imports server definitions from
+  OpenCode, Claude Code and Codex when it starts, so a machine already configured for one of those may reach Mimir
+  without touching a file.
+- The **`@mojoaar/omp-mimir` plugin** goes further than MCP can: it puts the project's digest in front of the first
+  turn, reminds the agent to write before the context is compacted, and registers `mimir_digest`, `mimir_remember`,
+  `mimir_search` and `mimir_learn`. Install it with `omp plugin install @mojoaar/omp-mimir` and set `MIMIR_URL` and
+  `MIMIR_TOKEN`. It fails soft like the OpenCode plugin, so an unreachable server never holds up a session.
+
 ## [0.22.1] - 2026-10-28
 
 The switch reaches every header, and the tab is mint everywhere.

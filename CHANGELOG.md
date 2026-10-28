@@ -13,7 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with it. The docs index now links the tool reference and the changelog, which until now were reachable only by
   typing the address.
 
+- An agent can hand over a session instead of deciding what was worth keeping. `memory_learn` takes a transcript of up
+  to 32 KB and an optional hint, the project's own model writes at most three memories, and the call answers at once
+  while the writing happens in the background. Mirrored on `/api/v1` as `POST /projects/{slug}/learn`.
+
+- A `procedure` kind, for the runbooks that stay true until replaced. Procedures lead the digest with their summary
+  and date, whatever their age.
+
 ### Changed
+
+- The session-start digest lists procedures first, each with its summary and date, and leaves them out of the list
+  below. A procedure is valid until it is replaced, not until it is old.
 
 - The favicon and the install icons carry the mark in the product mint instead of cream, so the browser tab
   matches the header. They keep the tile, because a transparent mark disappears against a dark tab bar.

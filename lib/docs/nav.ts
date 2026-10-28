@@ -29,6 +29,7 @@ export const DOCS_NAV: DocGroup[] = [
       { href: '/docs/agents/cursor', title: 'Cursor' },
       { href: '/docs/agents/gemini-cli', title: 'Gemini CLI' },
       { href: '/docs/agents/pi', title: 'Pi' },
+      { href: '/docs/agents/oh-my-pi', title: 'Oh My Pi' },
       { href: '/docs/agents/antigravity', title: 'Antigravity' },
       { href: '/docs/agents/hermes', title: 'Hermes' },
       { href: '/docs/agents/muse', title: 'Muse' },

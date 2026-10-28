@@ -68,6 +68,7 @@ describe('mcp server', () => {
       'memory_digest',
       'memory_write',
       'memory_ingest',
+      'memory_learn',
       'memory_delete',
       'project_list',
     ])

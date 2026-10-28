@@ -217,6 +217,42 @@ const TOOLS: ToolDef[] = [
     },
   },
   {
+    name: 'memory_learn',
+    action: 'memory.learn',
+    description:
+      'Distil a session into memories. Send the part of the conversation worth keeping; the project model writes the one to three durable facts it finds. It answers at once and writes in the background, so check memory_digest later.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project: PROJECT_ARG,
+        repo: REPO_ARG,
+        transcript: {
+          type: 'string',
+          maxLength: 32768,
+          description: 'The conversation excerpt, verbatim. Up to 32 KB.',
+        },
+        hint: {
+          type: 'string',
+          maxLength: 500,
+          description: 'What to look for, e.g. "the deploy rollback".',
+        },
+      },
+      required: ['transcript'],
+    },
+    handler: async (args, ctx) => {
+      const transcript = str(args, 'transcript')
+      if (!transcript) throw invalidParams('transcript is required')
+      const p = await projectFor(args, ctx, true)
+      const { sendJob } = await import('@/lib/jobs/boss')
+      const id = await sendJob('learn', {
+        projectId: p.id,
+        transcript: transcript.slice(0, 32768),
+        hint: str(args, 'hint')?.slice(0, 500) ?? null,
+      })
+      return { queued: id !== null }
+    },
+  },
+  {
     name: 'memory_delete',
     action: 'memory.delete',
     description:

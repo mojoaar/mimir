@@ -1,12 +1,13 @@
 import { PgBoss } from 'pg-boss'
 import { getConfig } from '../config'
 
-export type JobName = 'extract' | 'backfill' | 'reembed' | 'backup' | 'prune' | 'purge'
+export type JobName = 'extract' | 'learn' | 'backfill' | 'reembed' | 'backup' | 'prune' | 'purge'
 
 // `short` keeps one queued job per singletonKey, which is what makes the
 // extract debounce work: the tenth write in a minute reuses the first job.
 const POLICIES: Record<JobName, 'short' | 'standard'> = {
   extract: 'short',
+  learn: 'standard',
   backfill: 'standard',
   reembed: 'standard',
   backup: 'standard',

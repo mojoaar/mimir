@@ -19,6 +19,7 @@ export async function register() {
   // land, because a static import of a file that does not exist yet breaks the build.
   await import('./lib/jobs/backfill')
   await import('./lib/jobs/extract')
+  await import('./lib/jobs/learn')
   await import('./lib/jobs/reembed')
   await import('./lib/jobs/backup')
   await import('./lib/jobs/prune')

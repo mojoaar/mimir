@@ -150,6 +150,26 @@ docker compose up -d`}</Code>
         <code>503</code> with <code>{'{"status":"unavailable"}'}</code> when the database is unreachable. The
         authenticated form adds the version, uptime and database latency.
       </P>
+
+      <H2>Pageview analytics</H2>
+      <P>
+        Mimir can send a pageview for every page it serves - the landing page, the docs, the app and the admin pages - to
+        your own Umami instance. It is off until you turn it on, and it stays off until both values are filled in.
+      </P>
+      <P>
+        In <strong>Admin → Settings → Site</strong>, paste the script URL Umami gives you for the website (it ends in{' '}
+        <code>/script.js</code>) and that website's ID. Save, then open a page in a new tab and check Umami's realtime
+        view.
+      </P>
+      <Ul>
+        <li>Every route change counts, so a single-page session is not one pageview.</li>
+        <li>Umami sets no cookies, respects Do Not Track, and Mimir sends no user identity with the pageview.</li>
+        <li>Clearing either field, or unticking the box, stops it on the next page load.</li>
+      </Ul>
+      <Callout kind="tip">
+        The script is the only third-party request the app makes. If you run Mimir on a network with no outbound access,
+        leave analytics off; nothing else breaks.
+      </Callout>
     </Prose>
   )
 }

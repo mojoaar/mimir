@@ -126,6 +126,16 @@ describe('destinations', () => {
   })
 })
 
+describe('pageview analytics', () => {
+  it('says where the values go and what it sends', async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage())
+
+    expect(html).toContain('Pageview analytics')
+    expect(html).toContain('Do Not Track')
+    expect(html).toContain('/script.js')
+  })
+})
+
 describe('the account page', () => {
   it('explains the profile, the password and the sessions', async () => {
     const html = renderToStaticMarkup(await SelfHostingPage())

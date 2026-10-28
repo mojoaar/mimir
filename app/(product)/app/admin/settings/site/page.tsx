@@ -41,25 +41,27 @@ export default async function SiteSettingsPage({
   const proxyWarning = allowlist.length > 0 && getConfig().trustedProxies.length === 0
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-semibold">{t('app.admin.site.title')}</h1>
 
       {params.notice ? <p className="text-sm text-[var(--accent)]">{params.notice}</p> : null}
       {params.error ? <p className="text-sm text-[var(--danger)]">{params.error}</p> : null}
 
       <form action={saveSiteSettingsAction} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-[var(--text-muted)]">{t('app.admin.site.publicUrl')}</span>
-          <input name="publicUrl" defaultValue={site.publicUrl} className={FIELD} style={FIELD_STYLE} />
-          <span className="text-xs text-[var(--text-muted)]">
-            {t('app.admin.site.publicUrlHint')}
-          </span>
-        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">{t('app.admin.site.publicUrl')}</span>
+            <input name="publicUrl" defaultValue={site.publicUrl} className={FIELD} style={FIELD_STYLE} />
+            <span className="text-xs text-[var(--text-muted)]">
+              {t('app.admin.site.publicUrlHint')}
+            </span>
+          </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-[var(--text-muted)]">{t('app.admin.site.siteName')}</span>
-          <input name="siteName" defaultValue={site.siteName} className={FIELD} style={FIELD_STYLE} />
-        </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">{t('app.admin.site.siteName')}</span>
+            <input name="siteName" defaultValue={site.siteName} className={FIELD} style={FIELD_STYLE} />
+          </label>
+        </div>
 
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-[var(--text-muted)]">{t('app.admin.site.metaDescription')}</span>
@@ -72,26 +74,28 @@ export default async function SiteSettingsPage({
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-[var(--text-muted)]">{t('app.admin.site.timezone')}</span>
-          <select name="timezone" defaultValue={timeZone} className={FIELD} style={FIELD_STYLE}>
-            {zones.map((zone) => (
-              <option key={zone} value={zone}>
-                {zone}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.timezoneHint')}</span>
-        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">{t('app.admin.site.timezone')}</span>
+            <select name="timezone" defaultValue={timeZone} className={FIELD} style={FIELD_STYLE}>
+              {zones.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.timezoneHint')}</span>
+          </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-[var(--text-muted)]">{t('app.admin.site.clock')}</span>
-          <select name="clock" defaultValue={clock} className={FIELD} style={FIELD_STYLE}>
-            <option value="24h">{t('app.admin.site.clock24')}</option>
-            <option value="12h">{t('app.admin.site.clock12')}</option>
-          </select>
-          <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.clockHint')}</span>
-        </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">{t('app.admin.site.clock')}</span>
+            <select name="clock" defaultValue={clock} className={FIELD} style={FIELD_STYLE}>
+              <option value="24h">{t('app.admin.site.clock24')}</option>
+              <option value="12h">{t('app.admin.site.clock12')}</option>
+            </select>
+            <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.clockHint')}</span>
+          </label>
+        </div>
 
         <label className="flex flex-col gap-1 text-sm">
           <span className="flex items-center gap-2">
@@ -111,26 +115,28 @@ export default async function SiteSettingsPage({
           <span className="text-xs text-[var(--text-muted)]">{t('app.admin.site.analyticsHint')}</span>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-[var(--text-muted)]">{t('app.admin.site.analyticsScriptUrl')}</span>
-          <input
-            name="analyticsScriptUrl"
-            defaultValue={analytics.scriptUrl}
-            placeholder="https://umami.example.com/script.js"
-            className={FIELD}
-            style={FIELD_STYLE}
-          />
-        </label>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">{t('app.admin.site.analyticsScriptUrl')}</span>
+            <input
+              name="analyticsScriptUrl"
+              defaultValue={analytics.scriptUrl}
+              placeholder="https://umami.example.com/script.js"
+              className={FIELD}
+              style={FIELD_STYLE}
+            />
+          </label>
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-[var(--text-muted)]">{t('app.admin.site.analyticsWebsiteId')}</span>
-          <input
-            name="analyticsWebsiteId"
-            defaultValue={analytics.websiteId}
-            className={FIELD}
-            style={FIELD_STYLE}
-          />
-        </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-[var(--text-muted)]">{t('app.admin.site.analyticsWebsiteId')}</span>
+            <input
+              name="analyticsWebsiteId"
+              defaultValue={analytics.websiteId}
+              className={FIELD}
+              style={FIELD_STYLE}
+            />
+          </label>
+        </div>
 
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="requireMfa" defaultChecked={requireMfa} />
@@ -158,16 +164,18 @@ export default async function SiteSettingsPage({
             <input type="checkbox" name="emailEnabled" defaultChecked={email !== null} />
             {t('app.admin.site.emailEnable')}
           </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">{t('app.admin.site.emailFrom')}</span>
-            <input name="emailFrom" defaultValue={email?.from ?? ''} placeholder="Mimir <mimir.com>" className={FIELD} style={FIELD_STYLE} />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-[var(--text-muted)]">
-              {t(email ? 'app.admin.site.emailKeyKeep' : 'app.admin.site.emailKey')}
-            </span>
-            <input name="emailKey" type="password" autoComplete="off" className={FIELD} style={FIELD_STYLE} />
-          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-[var(--text-muted)]">{t('app.admin.site.emailFrom')}</span>
+              <input name="emailFrom" defaultValue={email?.from ?? ''} placeholder="Mimir <mimir.com>" className={FIELD} style={FIELD_STYLE} />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-[var(--text-muted)]">
+                {t(email ? 'app.admin.site.emailKeyKeep' : 'app.admin.site.emailKey')}
+              </span>
+              <input name="emailKey" type="password" autoComplete="off" className={FIELD} style={FIELD_STYLE} />
+            </label>
+          </div>
         </fieldset>
 
         <div>

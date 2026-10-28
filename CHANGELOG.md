@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A release note that wraps onto a second line is now one paragraph, not several. The file is hard-wrapped, and the
   renderer treated every continuation line as a new item, so a bullet lost its marker after the first line.
 
+- **Admin -> Settings -> Site** now uses the same page width as the rest of the admin area. It was the only page
+  narrower than the navigation above it, and the short fields now sit two to a row instead of one long column.
+
 ## [0.21.0] - 2026-10-28
 
 The plugin catches up, and a trap gets a name.

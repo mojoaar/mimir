@@ -57,7 +57,7 @@ export const de: Messages = {
 
   'data.title': 'Deine Box, deine Daten',
   'data.body':
-    'Ein Container und ein Postgres, das du schon betreibst. Nichts verlässt die Box, außer du richtest einen Anbieter ein, und dann nur der Text, den du geschrieben hast. Backups werden mit einem Schlüssel verschlüsselt, den nur du hast, und das Wiederherstellungsskript liegt im Repo.',
+    'Ein Container und ein Postgres, das du schon betreibst. Nichts verlässt die Box, außer du richtest einen Anbieter ein, und dann nur der Text, den du geschrieben hast. Der optionale Seitenaufruf-Zähler spricht nur mit deiner eigenen Umami-Instanz. Backups werden mit einem Schlüssel verschlüsselt, den nur du hast, und das Wiederherstellungsskript liegt im Repo.',
 
   'app.layout.mfaRequired': 'Zwei-Faktor ist erforderlich',
   'app.layout.mfaRequiredBody':

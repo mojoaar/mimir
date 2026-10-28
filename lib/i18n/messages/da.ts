@@ -57,7 +57,7 @@ export const da: Messages = {
 
   'data.title': 'Din boks, dine data',
   'data.body':
-    'Én container og en Postgres, du allerede kører. Intet forlader boksen, medmindre du opsætter en udbyder, og så kun den tekst, du skrev. Backupper krypteres med en nøgle, kun du har, og gendannelsesscriptet ligger i repoet.',
+    'Én container og en Postgres, du allerede kører. Intet forlader boksen, medmindre du opsætter en udbyder, og så kun den tekst, du skrev. Den valgfrie sidevisningstæller taler kun med din egen Umami-installation. Backupper krypteres med en nøgle, kun du har, og gendannelsesscriptet ligger i repoet.',
 
   'app.layout.mfaRequired': 'Tofaktor er påkrævet',
   'app.layout.mfaRequiredBody':

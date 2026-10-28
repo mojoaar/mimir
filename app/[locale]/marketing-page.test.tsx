@@ -102,4 +102,12 @@ describe('the marketing page', () => {
   test('says why in danish too', async () => {
     expect(renderToStaticMarkup(await page('da'))).toContain('Hvorfor Mimir');
   });
+
+  test('admits that pageviews can leave the box', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    // The privacy paragraph promised that nothing leaves without a provider.
+    // Analytics broke that promise quietly, so the sentence names it.
+    expect(html).toContain('Umami');
+  });
 });

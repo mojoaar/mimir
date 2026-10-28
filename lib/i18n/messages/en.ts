@@ -55,7 +55,7 @@ export const en = {
 
   'data.title': 'Your box, your data',
   'data.body':
-    'One container and a Postgres you already run. Nothing leaves the box unless you configure a provider, and then only the text you wrote. Backups are encrypted with a key only you hold, and the restore script ships in the repo.',
+    'One container and a Postgres you already run. Nothing leaves the box unless you configure a provider, and then only the text you wrote. The optional pageview counter talks to your own Umami instance and nothing else. Backups are encrypted with a key only you hold, and the restore script ships in the repo.',
 
   'app.layout.mfaRequired': 'Two-factor is required',
   'app.layout.mfaRequiredBody':

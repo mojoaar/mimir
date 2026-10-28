@@ -28,7 +28,7 @@ export default function ApiPage() {
 
       <H2>Authentication</H2>
       <Code language="bash">{`export MIMIR_URL=https://mimir.example.com
-export MIMIR_TOKEN=mimir_...        # Settings → API keys, shown once`}</Code>
+export MIMIR_TOKEN=mimir_...        # from your Profile page, shown once`}</Code>
       <P>
         Send the token as <code>Authorization: Bearer $MIMIR_TOKEN</code> on every request. A missing or revoked token
         answers:

@@ -27,7 +27,7 @@ export default function McpPage() {
 
       <H2>Two values</H2>
       <Code language="bash">{`MIMIR_URL=https://mimir.example.com
-MIMIR_TOKEN=mimir_...        # mint one under Settings → API keys`}</Code>
+MIMIR_TOKEN=mimir_...        # mint one on your Profile page`}</Code>
 
       <H2>Repository header</H2>
       <P>

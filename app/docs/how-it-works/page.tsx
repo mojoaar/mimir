@@ -117,15 +117,15 @@ export default function HowItWorksPage() {
       <H2>Your account</H2>
       <Ul>
         <li>
-          <strong>API keys</strong> under Settings → API keys mint the bearer token an agent uses for MCP and REST. The
+          <strong>API keys</strong> on your Profile page mint the bearer token an agent uses for MCP and REST. The
           token is shown once; only its hash is stored. Revoke one and its next call fails.
         </li>
         <li>
-          <strong>Two-factor authentication</strong> under Settings → Security is per account and can be enforced for
-          everyone by an admin. Losing the authenticator means an admin must reset MFA for you.
+          <strong>Two-factor authentication</strong> lives on your Profile page and can be enforced for everyone by an
+          admin. Losing the authenticator means an admin must reset MFA for you.
         </li>
         <li>
-          <strong>Your picture</strong> and name live under Settings → Profile. The avatar is stored on your account, so
+          <strong>Your picture</strong> and name live on your Profile page. The avatar is stored on your account, so
           it follows you to another browser.
         </li>
       </Ul>

@@ -36,7 +36,7 @@ export default function ProvidersPage() {
           [
             'Language model',
             'Each person’s own',
-            'Settings → Providers; a project can pin one provider',
+            'Providers in the header; a project can pin one provider',
           ],
           [
             'Embedding model',
@@ -84,7 +84,7 @@ export default function ProvidersPage() {
       </Callout>
 
       <H2>Adding one</H2>
-      <Code language="text">{`Settings → Providers
+      <Code language="text">{`Providers
 
 Provider   [ Ollama ▾ ]
 Used for   [ Embeddings ▾ ]        one kind per saved row

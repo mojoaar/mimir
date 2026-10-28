@@ -43,7 +43,7 @@ export default async function AgentPage({ params }: { params: Promise<{ agent: s
       <H1>Connect {doc.name}</H1>
       <P>
         {doc.name} talks to Mimir over the Model Context Protocol at <code>{url}/mcp</code>. The token is an API key
-        from Settings → API keys in the Mimir app; export it as <code>MIMIR_TOKEN</code> before starting the agent.
+        from your Profile page in the Mimir app; export it as <code>MIMIR_TOKEN</code> before starting the agent.
       </P>
 
       <H2>1. Add the server</H2>

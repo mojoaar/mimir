@@ -108,11 +108,29 @@ describe('the sharing section', () => {
   })
 })
 
+describe('destinations', () => {
+  // The user's own Settings page went away in 0.17.0: keys, two-factor and the
+  // profile share one page, and Providers sits in the header. A page still
+  // saying "Settings → X" sends people looking for a section that is not there.
+  it.each([
+    ['how-it-works', HowItWorksPage],
+    ['providers', ProvidersPage],
+    ['mcp', McpPage],
+    ['api', ApiPage],
+  ] as const)('%s sends nobody to a Settings section', async (_name, Page) => {
+    const html = renderToStaticMarkup(await Page())
+
+    for (const stale of ['Settings → Providers', 'Settings → API keys', 'Settings → Security', 'Settings → Profile']) {
+      expect(html, stale).not.toContain(stale)
+    }
+  })
+})
+
 describe('the account page', () => {
   it('explains the profile, the password and the sessions', async () => {
     const html = renderToStaticMarkup(await SelfHostingPage())
 
-    expect(html).toContain('Settings → Profile')
+    expect(html).toContain('Profile</strong> in the user menu')
     expect(html).toContain('password change')
     expect(html).toContain('sessions signed in')
   })

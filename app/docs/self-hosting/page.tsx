@@ -112,7 +112,7 @@ docker compose up -d`}</Code>
 
       <H2>Your account</H2>
       <P>
-        <strong>Settings → Profile</strong> (<code>/app/settings/profile</code>) is where a user changes their own name,
+        <strong>Profile</strong> in the user menu (<code>/app/settings/profile</code>) is where a user changes their own name,
         email address and password. Changing the email asks for the current password and refuses an address that is
         already in use; the address is also how you sign in, so the next sign-in uses the new one. A password change
         signs out every other device and keeps the one making the change.

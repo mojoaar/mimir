@@ -27,8 +27,9 @@ const page = (locale: string) => MarketingPage({ params: Promise.resolve({ local
 describe('the marketing page', () => {
   test('renders in danish', async () => {
     const html = renderToStaticMarkup(await page('da'));
-    expect(html).toContain(t('da', 'hero.headline'));
-    expect(html).not.toContain(t('en', 'hero.headline'));
+    expect(html).toContain('Dine agenter glemmer alt.');
+    expect(html).toContain('minutter.');
+    expect(html).not.toContain('Your agents forget everything.');
   });
 
   test('keeps its own footer and does not stack the app footer on top', async () => {
@@ -56,7 +57,7 @@ describe('the marketing page', () => {
 
   test('renders in german', async () => {
     const html = renderToStaticMarkup(await page('de'));
-    expect(html).toContain(t('de', 'hero.headline'));
+    expect(html).toContain('Deine Agenten vergessen alles.');
   });
 
   test('offers a way into the app from the header and the closing call to action', async () => {
@@ -71,7 +72,13 @@ describe('the marketing page', () => {
   test('opens by saying what is wrong and how long the fix takes', async () => {
     const html = renderToStaticMarkup(await page('en'));
 
-    expect(html).toContain(t('en', 'hero.headline'));
+    // The number is wrapped in an accent span, so the sentence is asserted in
+    // two halves: the words either side of it.
+    expect(html).toContain('Your agents forget everything. Fix that in');
+    expect(html).toContain('minutes.');
+    expect(html).toContain(
+      '<span class="text-[var(--accent)]">' + t('en', 'hero.headlineAccent') + '</span>',
+    );
     expect(html).toContain(t('en', 'hero.chip1'));
     expect(html).toContain(t('en', 'hero.dockerLabel'));
     expect(html).toContain(t('en', 'cta.title'));

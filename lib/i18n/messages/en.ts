@@ -8,6 +8,7 @@ export const en = {
   'hero.signIn': 'Sign in',
   'hero.eyebrow': 'Long-term memory for coding agents',
   'hero.headline': 'Your agents forget everything. Fix that in five minutes.',
+  'hero.headlineAccent': 'five',
   'hero.lead':
     'Mimir keeps what an agent learns in your own Postgres - paths, versions, a digest to start from, and search by meaning - and hands it back at the start of the next session.',
   'hero.chip1': 'One container',

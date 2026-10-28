@@ -10,6 +10,7 @@ export const de: Messages = {
   'hero.signIn': 'Anmelden',
   'hero.eyebrow': 'Langzeitgedächtnis für Coding-Agenten',
   'hero.headline': 'Deine Agenten vergessen alles. Behebe das in fünf Minuten.',
+  'hero.headlineAccent': 'fünf',
   'hero.lead':
     'Mimir speichert, was ein Agent lernt, in deinem eigenen Postgres - Pfade, Versionen, einen Überblick zum Start und Bedeutungssuche - und gibt es zu Beginn der nächsten Sitzung zurück.',
   'hero.chip1': 'Ein Container',

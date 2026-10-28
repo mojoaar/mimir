@@ -10,6 +10,7 @@ export const da: Messages = {
   'hero.signIn': 'Log ind',
   'hero.eyebrow': 'Langtidsukommelse til kodeagenter',
   'hero.headline': 'Dine agenter glemmer alt. Ret det på fem minutter.',
+  'hero.headlineAccent': 'fem',
   'hero.lead':
     'Mimir gemmer det, en agent lærer, i din egen Postgres - stier, versioner, et overblik at starte fra og søgning efter betydning - og giver det tilbage, når næste session begynder.',
   'hero.chip1': 'Én container',

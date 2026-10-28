@@ -11,6 +11,24 @@ import { ThemeToggle } from '@/app/theme-toggle'
 import { cookies } from 'next/headers'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 
+/**
+ * The number is the promise, so it takes the accent colour. Which word it is
+ * differs by language, so the catalogue names it rather than a split here.
+ */
+function headline(locale: Locale) {
+  const text = t(locale, 'hero.headline');
+  const accent = t(locale, 'hero.headlineAccent');
+  const at = text.indexOf(accent);
+  if (at === -1) return text;
+  return (
+    <>
+      {text.slice(0, at)}
+      <span className="text-[var(--accent)]">{accent}</span>
+      {text.slice(at + accent.length)}
+    </>
+  );
+}
+
 export const instant = false;
 
 export async function generateMetadata({
@@ -118,7 +136,7 @@ export default async function MarketingPage({
             {t(locale, 'hero.eyebrow')}
           </p>
           <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-            {t(locale, 'hero.headline')}
+            {headline(locale)}
           </h1>
           <p className="max-w-3xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
             {t(locale, 'hero.lead')}

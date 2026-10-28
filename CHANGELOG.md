@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of it and the closing block stopped somewhere else again, which read as three layouts in one page. Text now shares
   a measure and the wide blocks (the session mock, the card grid) still use the full column.
 
+- The **number in the landing headline** takes the accent colour, in every language.
+
 - The landing header has a **light or dark switch** next to the way into the app. It flips the theme you already
   chose, dark to light in the same family, and writes the cookie the app reads.
 
@@ -38,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A release note that wraps onto a second line is now one paragraph, not several. The file is hard-wrapped, and the
   renderer treated every continuation line as a new item, so a bullet lost its marker after the first line.
 
-- **Admin -> Settings -> Site** now uses the same page width as the rest of the admin area. It was the only page
+- **Admin → Settings → Site** now uses the same page width as the rest of the admin area. It was the only page
   narrower than the navigation above it, and the short fields now sit two to a row instead of one long column.
 
 ## [0.21.0] - 2026-10-28

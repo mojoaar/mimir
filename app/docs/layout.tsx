@@ -5,6 +5,7 @@ import { DOCS_NAV } from '@/lib/docs/nav';
 import { parseTheme } from '@/lib/theme';
 import { getCurrentUser } from '@/lib/auth/context';
 import AppFooter from '@/components/app/footer';
+import { Logo } from '@/app/logo'
 
 function Sidebar() {
   return (
@@ -46,8 +47,7 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
       <header className="border-b border-[var(--border)]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3 sm:px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
+            <Logo className="h-7 w-7" />
             Mimir
           </Link>
           <span className="text-sm text-[var(--text-muted)]">Documentation</span>

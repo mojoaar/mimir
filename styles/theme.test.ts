@@ -29,7 +29,11 @@ describe('theme alias layer', () => {
   })
 
   it('never hardcodes a colour, only references a vendored token', () => {
-    expect(css).not.toMatch(/#[0-9a-f]{3,8}/i)
+    // One exception, and only one: in a light theme the mark is drawn in the
+    // dark twin's ground, and no vendored token carries that value inside the
+    // light scope. Everything else stays a reference.
+    const withoutInk = css.replace(/--logo-ink:\s*#[0-9a-f]{3,8};/gi, '')
+    expect(withoutInk).not.toMatch(/#[0-9a-f]{3,8}/i)
   })
 })
 

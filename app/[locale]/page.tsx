@@ -5,6 +5,7 @@ import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i1
 import { connection } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
+import { Logo } from '@/app/logo'
 
 export const instant = false;
 
@@ -83,8 +84,7 @@ export default async function MarketingPage({
 
       <header className="flex flex-wrap items-center justify-between gap-3 py-6">
         <span className="flex items-center gap-2 text-lg font-semibold tracking-tight">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
+          <Logo className="h-7 w-7" />
           {site.siteName}
         </span>
         <nav className="flex items-center gap-4 text-sm">

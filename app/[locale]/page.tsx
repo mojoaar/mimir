@@ -5,7 +5,7 @@ import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i1
 import { connection } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
-import { QuickStart } from './quick-start';
+import { QuickStart, PluginInstall } from './quick-start';
 import { Logo } from '@/app/logo'
 
 export const instant = false;
@@ -225,6 +225,7 @@ export default async function MarketingPage({
           <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'start.agent')}
           </p>
+          <PluginInstall />
           <a className="w-fit text-sm text-[var(--accent)] underline" href="/docs/agents">
             {t(locale, 'start.agentLink')} {'\u2192'}
           </a>

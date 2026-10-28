@@ -75,6 +75,7 @@ describe('the marketing page', () => {
     expect(html).toContain(t('en', 'start.agent'));
     expect(html).toContain('href="/docs/agents"');
     expect(t('en', 'start.agent')).toContain('OpenCode plugin');
+    expect(html).toContain('opencode plugin add @mojoaar/opencode-mimir');
   });
 
   test('names the entry point for someone already signed in', async () => {

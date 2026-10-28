@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The end of the landing page shows the **three commands that actually start it** - clone, copy `.env`, compose up -
   in the same terminal chrome as the session mock. A bare `docker compose up -d` had no file to read and no `.env`,
   so it failed on a fresh machine. Below it, one sentence says how to connect an agent: the MCP server for any
-  client, or the OpenCode plugin, which also injects the digest.
+  client, or the OpenCode plugin, which also injects the digest, with its install command in one line under it.
 
 ### Fixed
 

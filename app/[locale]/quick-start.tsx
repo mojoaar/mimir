@@ -56,3 +56,15 @@ export function QuickStart() {
     </figure>
   )
 }
+
+/** The plugin path in one line, for the readers who run OpenCode. English: a command, not copy. */
+export function PluginInstall() {
+  return (
+    <pre className="w-fit max-w-full overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 font-mono text-xs">
+      <code>
+        <span className="select-none text-[var(--accent)]">$ </span>
+        opencode plugin add @mojoaar/opencode-mimir
+      </code>
+    </pre>
+  )
+}

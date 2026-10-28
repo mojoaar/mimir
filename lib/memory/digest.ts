@@ -17,6 +17,9 @@ const DEFAULT_BUDGET = 800
 const RECENT_SUMMARIES = 5
 const PROCEDURE_LIMIT = 5
 const MAX_ROWS = 200
+// A label on every line would cost a third of the budget and say nothing: a
+// note is the default. These two change how the line is read, so they are named.
+const LABELLED = new Set(['gotcha', 'decision'])
 
 /**
  * Session-start injection. No query, no embedding, one indexed read: an agent
@@ -96,9 +99,10 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
       // The date is the whole point of a session-start digest: a fact from six
       // months ago and one from yesterday read the same without it.
       const day = row.updated_at.toISOString().slice(0, 10)
+      const label = LABELLED.has(row.kind) ? ` [${row.kind}]` : ''
       const chunk = recent.has(row.path)
-        ? `## ${row.path} (${day})\n${row.summary ?? row.title}\n\n`
-        : `- ${row.path.includes('/') ? row.path.slice(dir.length + 1) : row.path} - ${row.title} · ${day}\n`
+        ? `## ${row.path} (${day})${label}\n${row.summary ?? row.title}\n\n`
+        : `- ${row.path.includes('/') ? row.path.slice(dir.length + 1) : row.path}${label} - ${row.title} · ${day}\n`
       const candidate = emittedHeader ? text + chunk : text + header + chunk
 
       if (Math.ceil(candidate.length / 4) > budget) {

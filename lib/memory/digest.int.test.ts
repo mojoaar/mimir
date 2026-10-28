@@ -83,6 +83,35 @@ describe('buildDigest', () => {
     expect(digest.text.match(/runbooks\/rotate-keys/g)).toHaveLength(1)
   })
 
+  // A trap reads like any other fact until you are told it is one, and the
+  // budget cannot afford a label on every line, so only the kinds that change
+  // how the line is read are named.
+  it('names the kinds that change how a line is read, and only those', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'auth/tokens',
+      title: 'Never reuse a refresh token',
+      body: 'rotation',
+      kind: 'gotcha',
+    })
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'deploy/target',
+      title: 'Deploy from the release tag',
+      body: 'reason',
+      kind: 'decision',
+    })
+    await writeMemory({ userId: f.alice, projectId, path: 'notes/plain', body: 'just a note' })
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+
+    expect(digest.text).toContain('[gotcha]')
+    expect(digest.text).toContain('[decision]')
+    expect(digest.text).not.toContain('[note]')
+  })
+
   it('respects the token budget and says it truncated', async () => {
     for (let i = 0; i < 12; i++) {
       await writeMemory({ userId: f.alice, projectId, path: `d${i}/m`, body: 'word '.repeat(40) })

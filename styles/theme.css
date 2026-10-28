@@ -9,6 +9,7 @@
   --accent: var(--nordlys-text-action-primary-base);
   --accent-fg: var(--nordlys-background-base);
   --danger: var(--nordlys-text-feedback-error-base);
+  --logo-ink: var(--nordlys-text-action-primary-base);
 }
 
 [data-theme="nordlys-light"] {
@@ -21,6 +22,7 @@
   --accent: var(--nordlys-text-action-primary-base);
   --accent-fg: var(--nordlys-background-base);
   --danger: var(--nordlys-text-feedback-error-base);
+  --logo-ink: #0b1020;
 }
 
 [data-theme="fjord-dark"] {
@@ -33,6 +35,7 @@
   --accent: var(--fjord-text-action-primary-base);
   --accent-fg: var(--fjord-background-base);
   --danger: var(--fjord-text-feedback-error-base);
+  --logo-ink: var(--fjord-text-action-primary-base);
 }
 
 [data-theme="fjord-light"] {
@@ -45,6 +48,7 @@
   --accent: var(--fjord-text-action-primary-base);
   --accent-fg: var(--fjord-background-base);
   --danger: var(--fjord-text-feedback-error-base);
+  --logo-ink: #0e1620;
 }
 
 [data-theme="ravn-dark"] {
@@ -57,6 +61,7 @@
   --accent: var(--ravn-text-action-primary-base);
   --accent-fg: var(--ravn-background-base);
   --danger: var(--ravn-text-feedback-error-base);
+  --logo-ink: var(--ravn-text-action-primary-base);
 }
 
 [data-theme="ravn-light"] {
@@ -69,6 +74,7 @@
   --accent: var(--ravn-text-action-primary-base);
   --accent-fg: var(--ravn-background-base);
   --danger: var(--ravn-text-feedback-error-base);
+  --logo-ink: #0a0b12;
 }
 
 [data-theme="skumring-dark"] {
@@ -81,6 +87,7 @@
   --accent: var(--skumring-text-action-primary-base);
   --accent-fg: var(--skumring-background-base);
   --danger: var(--skumring-text-feedback-error-base);
+  --logo-ink: var(--skumring-text-action-primary-base);
 }
 
 [data-theme="skumring-light"] {
@@ -93,4 +100,5 @@
   --accent: var(--skumring-text-action-primary-base);
   --accent-fg: var(--skumring-background-base);
   --danger: var(--skumring-text-feedback-error-base);
+  --logo-ink: #111218;
 }

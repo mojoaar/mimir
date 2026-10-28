@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The docs gained a page for the pageview analytics setting: what it sends, what to paste where, and what Umami does
+  with it. The docs index now links the tool reference and the changelog, which until now were reachable only by
+  typing the address.
+
 ### Changed
 
 - The favicon and the install icons carry the mark in the product mint instead of cream, so the browser tab
@@ -14,9 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Changing the language in **Settings → Profile** keeps you on the page and shows the language you picked.
+- Changing the language on your Profile page keeps you there and shows the language you picked.
   It used to send you to the dashboard, and the select could come back showing the previous value, so the
   control looked stuck.
+
+- The README and five docs pages sent readers to Settings sections that have not existed since 0.17.0. API keys and
+  two-factor are on the profile page, providers sits in the header, and the README's tool table was missing
+  `memory_ingest` while claiming seven tools. A test now fails if the README drifts again.
+
+- The landing page promised that nothing leaves the box without a provider. It now says that the optional pageview
+  counter talks to your own Umami instance, in all three languages.
 
 ## [0.19.0] - 2026-10-28
 

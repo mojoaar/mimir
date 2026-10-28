@@ -15,7 +15,8 @@ export const NUDGE_HEADER = '## Memory check (Mimir)\n\n'
 const NUDGE_EVERY = 20
 const NUDGE =
   'If this session settled a decision, a convention or a gotcha that is not in Mimir yet, ' +
-  'call memory_write now at one clear path, before the detail is compacted away.'
+  'call memory_write now at one clear path, or hand the conversation over with mimir_learn, ' +
+  'before the detail is compacted away.'
 
 /**
  * One injection point and two tools. The hook is what puts the project's

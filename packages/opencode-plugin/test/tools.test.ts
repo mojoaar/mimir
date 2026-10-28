@@ -44,13 +44,18 @@ function context(servers: Remote[] = []) {
 const config = { url: 'http://127.0.0.1:3000', token: 't', tools: 'auto' as const }
 
 describe('the plugin tools', () => {
-  it('adds both tools when nothing else serves Mimir', async () => {
+  it('adds every tool when nothing else serves Mimir', async () => {
     mocks.calls.length = 0
     const { fake, added } = context()
 
     await registerTools(fake as never, config, mocks.repo)
 
-    expect(added.map((t) => t.name)).toEqual(['mimir_digest', 'mimir_remember'])
+    expect(added.map((t) => t.name)).toEqual([
+      'mimir_digest',
+      'mimir_remember',
+      'mimir_search',
+      'mimir_learn',
+    ])
     for (const tool of added) expect(tool.input.type).toBe('object')
   })
 
@@ -79,20 +84,20 @@ describe('the plugin tools', () => {
       },
     }
     await registerTools({ tool: fake.tool, mcp: disabled } as never, config, mocks.repo)
-    expect(added).toHaveLength(2)
+    expect(added).toHaveLength(4)
   })
 
   it('still adds them when the mcp probe throws', async () => {
     const { fake, added } = context([])
     const broken = { transform: async () => { throw new Error('mcp exploded') } }
     await registerTools({ tool: fake.tool, mcp: broken } as never, config, mocks.repo)
-    expect(added).toHaveLength(2)
+    expect(added).toHaveLength(4)
   })
 
   it('adds them anyway when the policy is always', async () => {
     const { fake, added } = context([{ type: 'remote', url: 'http://127.0.0.1:3000/mcp' }])
     await registerTools(fake as never, { ...config, tools: 'always' }, mocks.repo)
-    expect(added).toHaveLength(2)
+    expect(added).toHaveLength(4)
   })
 
   it('adds nothing when the policy is never', async () => {

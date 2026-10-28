@@ -26,9 +26,16 @@ type ContextEvent = {
   messages?: unknown[]
 }
 
+type AddedTool = {
+  name: string
+  description: string
+  input: { properties: Record<string, { enum?: string[] }> }
+  execute?: (input: Record<string, unknown>, context?: unknown) => Promise<{ content: string }>
+}
+
 function context(overrides: Record<string, unknown> = {}) {
   const hooks: Record<string, ((event: ContextEvent) => Promise<void>)[]> = {}
-  const added: string[] = []
+  const added: AddedTool[] = []
   const disposed: string[] = []
   const registration = (name: string) => ({ dispose: async () => void disposed.push(name) })
 
@@ -42,8 +49,8 @@ function context(overrides: Record<string, unknown> = {}) {
       },
     },
     tool: {
-      transform: async (callback: (editor: { add: (tool: { name: string }) => void }) => void) => {
-        callback({ add: (tool) => added.push(tool.name) })
+      transform: async (callback: (editor: { add: (tool: AddedTool) => void }) => void) => {
+        callback({ add: (tool) => added.push(tool) })
         return registration('tools')
       },
     },
@@ -252,5 +259,88 @@ describe('the nudge to write', () => {
     await nudge(other)
 
     expect(other.system).toHaveLength(0)
+  })
+})
+
+describe('the tools it adds', () => {
+  it('offers digest, write, search and learn', async () => {
+    const { added } = await setup()
+
+    expect(added.map((tool) => tool.name)).toEqual([
+      'mimir_digest',
+      'mimir_remember',
+      'mimir_search',
+      'mimir_learn',
+    ])
+  })
+
+  it('accepts every kind the server accepts', async () => {
+    const { added } = await setup()
+
+    const remember = added.find((tool) => tool.name === 'mimir_remember')
+    expect(remember?.input.properties.kind?.enum).toEqual([
+      'note',
+      'fact',
+      'decision',
+      'gotcha',
+      'procedure',
+      'snippet',
+      'import',
+    ])
+  })
+
+  it('searches with the prefix and the repo', async () => {
+    mocks.calls.length = 0
+    mocks.repo = 'git@github.com:alice/notes.git'
+    mocks.result = { ok: true, result: [{ path: 'auth/mfa', title: 'MFA', summary: 'TOTP only.' }] }
+    mocks.reject = false
+    const { added } = await setup()
+
+    const search = added.find((tool) => tool.name === 'mimir_search')
+    const out = await search?.execute?.({ query: 'mfa', path_prefix: 'auth' })
+
+    expect(mocks.calls[0]?.name).toBe('memory_search')
+    expect(mocks.calls[0]?.args.path_prefix).toBe('auth')
+    expect(mocks.calls[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+    expect(out?.content).toContain('auth/mfa')
+    expect(out?.content).toContain('TOTP only.')
+  })
+
+  it('hands a session over and reports the queue', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    mocks.reject = false
+    const { added } = await setup()
+
+    const learn = added.find((tool) => tool.name === 'mimir_learn')
+    const out = await learn?.execute?.({ transcript: 'we settled on short-lived tokens' })
+
+    expect(mocks.calls[0]?.name).toBe('memory_learn')
+    expect(mocks.calls[0]?.args.transcript).toBe('we settled on short-lived tokens')
+    expect(out?.content).toContain('Queued')
+  })
+
+  it('says so when the queue is not running', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: false } }
+    const { added } = await setup()
+
+    const learn = added.find((tool) => tool.name === 'mimir_learn')
+    const out = await learn?.execute?.({ transcript: 'anything' })
+
+    expect(out?.content).toContain('queue is not running')
+  })
+
+  it('fails soft when Mimir cannot answer', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: false, error: 'mimir responded 500' }
+    mocks.reject = false
+    const { added } = await setup()
+
+    const search = added.find((tool) => tool.name === 'mimir_search')
+    const learn = added.find((tool) => tool.name === 'mimir_learn')
+
+    expect((await search?.execute?.({ query: 'x' }))?.content).toContain('Mimir is unavailable')
+    expect((await learn?.execute?.({ transcript: 'x' }))?.content).toContain('Could not hand that over')
   })
 })

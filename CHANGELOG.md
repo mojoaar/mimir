@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The landing page uses **one text column**. Its headings ran the full width, its paragraphs stopped at two thirds
+  of it and the closing block stopped somewhere else again, which read as three layouts in one page. Text now shares
+  a measure and the wide blocks (the session mock, the card grid) still use the full column.
+
+- The landing header has a **light or dark switch** next to the way into the app. It flips the theme you already
+  chose, dark to light in the same family, and writes the cookie the app reads.
+
 - The **users** and **projects** counts on the admin overview now open the page behind them, the way the jobs
   count already did.
 

@@ -37,6 +37,23 @@ describe('the marketing page', () => {
     expect(html).not.toContain('Crafted with');
   });
 
+  test('keeps one text measure, so a heading and its paragraph line up', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    // The page used to stop at 976, 768 and 672 pixels in the same column,
+    // which read as three different layouts rather than one.
+    expect(html).not.toContain('max-w-2xl');
+    expect((html.match(/max-w-3xl/g) ?? []).length).toBeGreaterThan(10);
+  });
+
+  test('offers a light or dark switch in the header', async () => {
+    session.user = null;
+    const html = renderToStaticMarkup(await page('en'));
+
+    // The cookie defaults to nordlys-dark, so the first press offers light.
+    expect(html).toContain('aria-label="Switch to the light theme"');
+  });
+
   test('renders in german', async () => {
     const html = renderToStaticMarkup(await page('de'));
     expect(html).toContain(t('de', 'hero.headline'));

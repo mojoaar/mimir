@@ -46,6 +46,15 @@ export function parseTheme(raw: string | undefined | null): ThemeValue {
   return DEFAULT_THEME
 }
 
+/**
+ * The same family, the other way round. The switch on the landing page flips
+ * the mode and keeps whatever theme the reader already picked in the app.
+ */
+export function flipTheme(value: ThemeValue): ThemeValue {
+  const mode = value.endsWith('-light') ? 'dark' : 'light'
+  return `${value.replace(/-(dark|light)$/, '')}-${mode}` as ThemeValue
+}
+
 export function themeColor(value: ThemeValue): string {
   return THEME_COLORS[value]
 }

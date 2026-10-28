@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_THEME, parseTheme, themeColor } from './theme'
+import { DEFAULT_THEME, flipTheme, parseTheme, themeColor } from './theme'
 
 describe('parseTheme', () => {
   it('defaults to nordlys dark when the cookie is absent or empty', () => {
@@ -22,6 +22,11 @@ describe('parseTheme', () => {
     expect(parseTheme('<script>')).toBe(DEFAULT_THEME)
     expect(parseTheme('nordlys-blue')).toBe(DEFAULT_THEME)
     expect(parseTheme('toString')).toBe(DEFAULT_THEME)
+  })
+
+  it('flips the mode and keeps the family', () => {
+    expect(flipTheme('nordlys-dark')).toBe('nordlys-light');
+    expect(flipTheme('skumring-light')).toBe('skumring-dark');
   })
 
   it('has a theme-color for every value', () => {

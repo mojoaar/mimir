@@ -7,6 +7,9 @@ import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
 import { QuickStart, PluginInstall } from './quick-start';
 import { Logo } from '@/app/logo'
+import { ThemeToggle } from '@/app/theme-toggle'
+import { cookies } from 'next/headers'
+import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 
 export const instant = false;
 
@@ -56,7 +59,11 @@ export default async function MarketingPage({
   const { locale: raw } = await params;
   if (!isLocale(raw)) notFound();
   const locale: Locale = raw;
-  const [site, user] = await Promise.all([getSiteSettings(), getCurrentUser()]);
+  const [site, user, theme] = await Promise.all([
+    getSiteSettings(),
+    getCurrentUser(),
+    cookies().then((jar) => parseTheme(jar.get(THEME_COOKIE)?.value)),
+  ]);
   // The same link, named for what it does: enter the app, or sign in first.
   const entry = t(locale, user ? 'hero.openApp' : 'hero.signIn');
 
@@ -98,6 +105,7 @@ export default async function MarketingPage({
           >
             {t(locale, 'hero.github')}
           </a>
+          <ThemeToggle value={theme} />
           <a className={secondary} href="/app">
             {entry}
           </a>
@@ -106,13 +114,13 @@ export default async function MarketingPage({
 
       <main className="flex flex-1 flex-col gap-16 py-10 sm:py-16">
         <section className="flex flex-col gap-6 border-b border-[var(--border)] pb-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+          <p className="max-w-3xl text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
             {t(locale, 'hero.eyebrow')}
           </p>
           <h1 className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
             {t(locale, 'hero.headline')}
           </h1>
-          <p className="max-w-2xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
+          <p className="max-w-3xl text-base leading-relaxed text-[var(--text-muted)] sm:text-lg">
             {t(locale, 'hero.lead')}
           </p>
           <ul className="flex flex-wrap gap-2 text-xs">
@@ -137,17 +145,17 @@ export default async function MarketingPage({
         </section>
 
         <section className="flex flex-col gap-4">
-          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'why.title')}</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'why.title')}</h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'why.p1')}
           </p>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'why.p2')}
           </p>
         </section>
 
         <section className="flex flex-col gap-6">
-          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'features.title')}</h2>
+          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'features.title')}</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             {(
               [
@@ -168,8 +176,8 @@ export default async function MarketingPage({
         </section>
 
         <section className="flex flex-col gap-4">
-          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'session.title')}</h2>
-          <ol className="flex max-w-2xl list-decimal flex-col gap-3 pl-5 text-sm leading-relaxed text-[var(--text-muted)]">
+          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'session.title')}</h2>
+          <ol className="flex max-w-3xl list-decimal flex-col gap-3 pl-5 text-sm leading-relaxed text-[var(--text-muted)]">
             {(['session.s1', 'session.s2', 'session.s3', 'session.s4'] as const).map((key) => {
               // Each line leads with its verb, so the reader can scan the four
               // steps without reading the sentences.
@@ -184,28 +192,28 @@ export default async function MarketingPage({
         </section>
 
         <section className="flex flex-col gap-4">
-          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'providers.title')}</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'providers.title')}</h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'providers.llm')}
           </p>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'providers.embed')}
           </p>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--accent)]">
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--accent)]">
             {t(locale, 'providers.optional')}
           </p>
         </section>
 
         <section className="flex flex-col gap-4">
-          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'data.title')}</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'data.title')}</h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'data.body')}
           </p>
         </section>
 
         <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg-raised)] p-6">
-          <h2 className="text-xl font-semibold tracking-tight">{t(locale, 'cta.title')}</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'cta.title')}</h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'cta.body')}
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -222,7 +230,7 @@ export default async function MarketingPage({
             </p>
             <QuickStart />
           </div>
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'start.agent')}
           </p>
           <PluginInstall />

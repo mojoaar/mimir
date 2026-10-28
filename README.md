@@ -10,8 +10,10 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.19.0` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, searches by keyword and by meaning, backs itself up on a schedule, gives an admin users, MFA, an IP allowlist, an audit log and stats, ships a localised landing page, a docs site with a config per agent, an import command that walks a repository or a plain folder, and lets you read, edit, delete and restore every memory in the browser, with the last twenty versions of each kept and diffable. Projects can be shared with a person or with a team, at read or write, without ever making anyone else the owner, each user can edit their own name, email and password and sign out their other devices, and the whole app is
-available in English, Danish and German with the choice saved on the account, and every remote model call is metered on an admin usage page with spend, failures and a spike alert.
+`0.19.0` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, and searches by keyword and by meaning.
+It backs itself up on a schedule, meters every remote model call on an admin usage page, and ships a localised landing page and a docs site with a config per agent.
+Projects can be shared with a person or a team at read or write, each user owns their name, email and password and can sign out their other devices, and the whole app is available in English, Danish and German.
+Analytics is optional: point it at your own Umami instance in the admin settings and every page sends a pageview, with no cookies and Do Not Track respected.
 
 Everything in the [design](docs/superpowers/specs/2026-10-25-mimir-design.md) has now shipped.
 
@@ -61,7 +63,7 @@ docker compose up -d
 
 An install created before 0.3.0 runs PostgreSQL 17. Moving it needs a dump from a 17 client (`pg_dump -Fc`) and a `pg_restore` into the 18 volume - the new image will not start on the old data directory. There is no automatic migration; a fresh volume with re-entered settings is the alternative.
 
-Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASSWORD`, then create an API key under **Settings**. Point an agent at `http://localhost:3000/mcp`:
+Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASSWORD`, then create an API key from the user menu under **Profile**. Point an agent at `http://localhost:3000/mcp`:
 
 ```json
 {
@@ -79,7 +81,7 @@ Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASS
 
 ## Tools
 
-Seven MCP tools, mirrored one-to-one on `/api/v1`:
+Eight MCP tools, mirrored one-to-one on `/api/v1`:
 
 | Tool | Purpose |
 |---|---|
@@ -88,6 +90,7 @@ Seven MCP tools, mirrored one-to-one on `/api/v1`:
 | `memory_tree` | List a directory of memory (virtual directories, L0 titles only) |
 | `memory_read` | One memory, with its summary and body |
 | `memory_write` | Upsert one path |
+| `memory_ingest` | Bulk import: up to 100 files (2 MB) into one path prefix |
 | `memory_delete` | Soft delete, recoverable for 30 days |
 | `project_list` | Projects the caller can reach |
 
@@ -97,14 +100,12 @@ The client sends the repo key (`X-Mimir-Repo: github.com/owner/repo`), so two ag
 
 Two independent settings, because they answer different questions.
 
-**Learning** (title and summary for each memory) is per user: **Settings → Providers**, add DeepSeek, OpenCode, Mistral or any OpenAI-compatible
-endpoint with your key, press **Test connection**. Extraction reads the project
-owner's provider, so whoever owns the memory pays for it.
+**Learning** (title and summary for each memory) is per project and runs on the project owner's provider: add one under **Providers** in the header, press **Test connection**, then pick it in that project's settings. Extraction reads the project owner's provider, so whoever owns the memory pays for it.
 
 **Search** is install-wide and set by an admin: **Admin → Settings**, point it at an embedding model. Until one is configured, search works on keywords alone - you lose nothing, you just get no semantic matches.
 
 Ollama is the homelab default (`nomic-embed-text`, 768 dimensions). Octen is a
-hosted alternative - add it in **Settings → Providers**, pick one of its three
+hosted alternative - add it under **Providers**, pick one of its three
 models, and give it a key. Mistral's `codestral-embed` works the same way. All of
 them answer at the 768 dimensions the schema stores.
 

@@ -16,8 +16,14 @@ import {
 
 let f: Fixtures
 
+/**
+ * One of the two sets the time. `hoursAgo` pins the call halfway into an hour, so
+ * a test run at 05:01 and one at 05:59 bucket the same way; `minutesAgo` is for
+ * tests that only care about a day or a week.
+ */
 type Call = {
-  minutesAgo: number
+  minutesAgo?: number
+  hoursAgo?: number
   kind?: 'llm' | 'embedding'
   cost?: number | null
   ok?: boolean
@@ -27,13 +33,18 @@ type Call = {
 
 async function seed(calls: Call[]): Promise<void> {
   for (const call of calls) {
+    const pinned = call.hoursAgo !== undefined
     await withAdmin((tx) =>
       tx.query(
         `insert into provider_calls
            (at, user_id, provider_id, preset, model, kind, purpose, prompt_tokens, completion_tokens, cost_micros, status, ok)
-         values (now() - ($1::int || ' minutes')::interval, $2, null, 'deepseek', $3, $4, 'extract', 100, 10, $5, $6, $7)`,
+         values (case when $1::boolean
+                      then date_trunc('hour', now()) - ($2::int * interval '1 hour') + interval '30 minutes'
+                      else now() - ($2::int || ' minutes')::interval end,
+                 $3, null, 'deepseek', $4, $5, 'extract', 100, 10, $6, $7, $8)`,
         [
-          call.minutesAgo,
+          pinned,
+          pinned ? call.hoursAgo : (call.minutesAgo ?? 0),
           call.userId === undefined ? f.alice : call.userId,
           call.model ?? 'deepseek-flash',
           call.kind ?? 'llm',
@@ -98,7 +109,7 @@ test('puts a call on the day and hour of the chosen zone', async () => {
 })
 
 test('keeps an hour slot for every quiet hour', async () => {
-  await seed([{ minutesAgo: 5 }, { minutesAgo: 65 }])
+  await seed([{ hoursAgo: 0 }, { hoursAgo: 1 }])
 
   const hours = await hourly('UTC')
 
@@ -110,7 +121,7 @@ test('keeps an hour slot for every quiet hour', async () => {
 test('reports the current hour when it is far above the quiet week', async () => {
   // Three calls in a quiet hour, three days ago.
   await seed([{ minutesAgo: 3 * 24 * 60 }, { minutesAgo: 3 * 24 * 60 + 1 }, { minutesAgo: 3 * 24 * 60 + 2 }])
-  await seed(Array.from({ length: 40 }, () => ({ minutesAgo: 2 })))
+  await seed(Array.from({ length: 40 }, () => ({ hoursAgo: 0 })))
 
   const found = await spike()
 
@@ -126,7 +137,7 @@ test('stays quiet inside normal volume', async () => {
 })
 
 test('a dismissal hides the spike for that admin only', async () => {
-  await seed(Array.from({ length: 40 }, () => ({ minutesAgo: 2 })))
+  await seed(Array.from({ length: 40 }, () => ({ hoursAgo: 0 })))
   const found = await spike()
   expect(found).not.toBeNull()
 

@@ -126,6 +126,16 @@ describe('destinations', () => {
   })
 })
 
+describe('the index', () => {
+  it('links every page it is the entry point for', async () => {
+    const html = renderToStaticMarkup(await DocsIndex())
+
+    // Tool reference and changelog had no inbound link anywhere.
+    expect(html).toContain('href="/docs/tools"')
+    expect(html).toContain('href="/docs/changelog"')
+  })
+})
+
 describe('pageview analytics', () => {
   it('says where the values go and what it sends', async () => {
     const html = renderToStaticMarkup(await SelfHostingPage())

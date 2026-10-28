@@ -116,6 +116,18 @@ memory_write   remember that deploys run from main`}</Code>
             </Link>{' '}
             - the same operations without MCP, with request and response examples.
           </li>
+          <li>
+            <Link className="text-[var(--accent)] underline" href="/docs/tools">
+              Tool reference
+            </Link>{' '}
+            - all eight tools, their arguments and what each one returns.
+          </li>
+          <li>
+            <Link className="text-[var(--accent)] underline" href="/docs/changelog">
+              Changelog
+            </Link>{' '}
+            - every release, newest first.
+          </li>
         </Ul>
 
         <Callout kind="tip">

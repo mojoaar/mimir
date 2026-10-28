@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { requireUser } from '@/lib/auth/context'
 import { isRequestAllowed } from '@/lib/http/allowlist'
 import { mfaEnabled } from '@/lib/auth/mfa'
@@ -13,6 +13,8 @@ import { UserMenu } from '@/app/user-menu'
 import { avatarVersion } from '@/lib/users/avatar'
 import { translator } from '@/lib/i18n/request'
 import { Logo } from '@/app/logo'
+import { ThemeToggle } from '@/app/theme-toggle'
+import { parseTheme, THEME_COOKIE } from '@/lib/theme'
 
 export const instant = false
 
@@ -20,6 +22,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // The real session check. Middleware only sees that a cookie exists.
   const user = await requireUser()
   const t = await translator()
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
 
   // The layout cannot see the pathname, so under require_mfa the whole app is
   // replaced by the enrolment form until the user is enrolled. The bootstrap
@@ -58,6 +61,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </nav>
           <div className="ml-auto flex items-center gap-3">
             {user.role === 'admin' ? await UsageAlert({ userId: user.id }) : null}
+            <ThemeToggle value={theme} />
             <UserMenu
               email={user.email}
               avatarSrc={`/app/avatar?v=${await avatarVersion(user.id)}`}

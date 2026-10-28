@@ -6,6 +6,7 @@ import { parseTheme } from '@/lib/theme';
 import { getCurrentUser } from '@/lib/auth/context';
 import AppFooter from '@/components/app/footer';
 import { Logo } from '@/app/logo'
+import { ThemeToggle } from '@/app/theme-toggle'
 
 function Sidebar() {
   return (
@@ -51,12 +52,12 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
             Mimir
           </Link>
           <span className="text-sm text-[var(--text-muted)]">Documentation</span>
-          <Link
-            href="/app"
-            className="ml-auto text-sm text-[var(--text-muted)] hover:text-[var(--fg)]"
-          >
-            {user ? 'Open app' : 'Sign in'}
-          </Link>
+          <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle value={theme} />
+            <Link href="/app" className="text-sm text-[var(--text-muted)] hover:text-[var(--fg)]">
+              {user ? 'Open app' : 'Sign in'}
+            </Link>
+          </div>
         </div>
       </header>
 

@@ -41,6 +41,11 @@ describe('the docs shell', () => {
     expect(html).toContain('href="/docs/agents/opencode"');
   });
 
+  it('offers the other theme in the header', async () => {
+    const html = renderToStaticMarkup(await DocsLayout({ children: <p>content</p> }));
+    expect(html).toContain('aria-label="Switch to the light theme"');
+  });
+
   it('renders a disclosure for small screens', async () => {
     const html = renderToStaticMarkup(await DocsLayout({ children: <p>content</p> }));
     expect(html).toContain('<details');

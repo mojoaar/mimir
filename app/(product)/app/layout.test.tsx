@@ -68,6 +68,13 @@ describe('the app shell', () => {
     expect(html).toContain('type="submit"')
   })
 
+  it('offers the other theme beside the account menu', async () => {
+    const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
+
+    // The cookie in this file says nordlys-dark, so the press offers light.
+    expect(html).toContain('aria-label="Switch to the light theme"')
+  })
+
   it('keeps every link a signed-in person needs, including the docs', async () => {
     const html = renderToStaticMarkup(await AppLayout({ children: <p>body</p> }))
 

@@ -54,6 +54,8 @@ export const de: Messages = {
   "providers.title": "Zwei Anbieter, zwei Aufgaben",
   "providers.llm":
     "Ein Sprachmodell liest eine Erinnerung und schreibt Titel und Zusammenfassung. Das kostet Tokens, und es nutzt den Schlüssel des Projekteigentümers.",
+  "providers.llmTitle": "Sprachmodell",
+  "providers.embedTitle": "Einbettungen",
   "providers.embed":
     'Ein Embedding-Modell macht aus Text Vektoren, damit eine Suche nach "secret rollover" die Erinnerung findet, die heißt, wie wir Schlüssel rotieren. Ein Modell dient der ganzen Installation, mit 768 Dimensionen, von einem Admin gewählt.',
   "providers.optional":

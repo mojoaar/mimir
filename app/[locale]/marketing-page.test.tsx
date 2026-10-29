@@ -239,4 +239,13 @@ describe('the marketing page', () => {
     expect(html).toContain('## What this project already knows (Mimir)');
     expect(html).toContain('The Unreleased heading does not survive a release rename');
   });
+
+  test('names the providers it actually ships, by job', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('Language model');
+    expect(html).toContain('DeepSeek');
+    expect(html).toContain('Octen');
+    expect(html).toContain('Mistral');
+  });
 });

@@ -54,6 +54,8 @@ export const da: Messages = {
   "providers.title": "To udbydere, to opgaver",
   "providers.llm":
     "En sprogmodel læser et minde og skriver titel og resumé. Det koster tokens, og den bruger nøglen til den, der ejer projektet.",
+  "providers.llmTitle": "Sprogmodel",
+  "providers.embedTitle": "Indlejringer",
   "providers.embed":
     'En embedding-model laver tekst om til vektorer, så en søgning efter "secret rollover" finder mindet, der hedder hvordan vi roterer nøgler. Én model dækker hele installationen, med 768 dimensioner, valgt af en admin.',
   "providers.optional":

@@ -6,7 +6,7 @@ import { connection } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
 import { QuickStart } from './quick-start';
-import { ClientStrip, DigestCard, SearchMock, StatStrip, WhyMark } from './showcase';
+import { ClientStrip, DigestCard, ProviderChips, SearchMock, StatStrip, WhyMark } from './showcase';
 import { Logo } from '@/app/logo'
 import { ThemeToggle } from '@/app/theme-toggle'
 import { cookies } from 'next/headers'
@@ -265,17 +265,32 @@ export default async function MarketingPage({
           <SearchMock />
         </section>
 
-        <section className="flex flex-col gap-4">
-          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'providers.title')}</h2>
-          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
-            {t(locale, 'providers.llm')}
-          </p>
-          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
-            {t(locale, 'providers.embed')}
-          </p>
-          <p className="max-w-3xl text-sm leading-relaxed text-[var(--accent)]">
-            {t(locale, 'providers.optional')}
-          </p>
+        <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] p-6 sm:p-10">
+          <div className="flex flex-col gap-5">
+            <h2 className="max-w-3xl text-3xl font-semibold tracking-tight sm:text-4xl">
+              {t(locale, 'providers.title')}
+            </h2>
+            <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
+              {(
+                [
+                  ['providers.llmTitle', 'providers.llm', 'llm'],
+                  ['providers.embedTitle', 'providers.embed', 'embedding'],
+                ] as const
+              ).map(([heading, body, kind]) => (
+                <article
+                  key={heading}
+                  className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-sunken)] p-4"
+                >
+                  <h3 className="text-sm font-medium">{t(locale, heading)}</h3>
+                  <p className="text-sm leading-relaxed text-[var(--text-muted)]">{t(locale, body)}</p>
+                  <ProviderChips kind={kind} />
+                </article>
+              ))}
+            </div>
+            <p className="max-w-3xl text-sm leading-relaxed text-[var(--accent)]">
+              {t(locale, 'providers.optional')}
+            </p>
+          </div>
         </section>
 
         <section className="flex flex-col gap-4">

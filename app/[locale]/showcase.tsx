@@ -2,6 +2,7 @@ import { AGENTS } from '@/lib/docs/agents';
 import { TOOL_NAMES } from '@/lib/mcp/tools';
 import { stamp } from '@/lib/format/time'
 import { TypingDigest } from './typing-digest';
+import { PRESETS } from '@/lib/providers/presets';
 
 const FIGURE = 'text-2xl font-semibold tabular-nums';
 const LABEL = 'text-xs uppercase tracking-wide text-[var(--text-muted)]';
@@ -157,5 +158,28 @@ export function SearchMock() {
         </div>
       ))}
     </figure>
+  );
+}
+
+/**
+ * The names come from the presets the app actually ships, so a provider added or
+ * dropped there changes this list without an edit here.
+ */
+export function ProviderChips({ kind }: { kind: 'llm' | 'embedding' }) {
+  const names = Object.values(PRESETS)
+    .filter((preset) => preset.kinds.includes(kind))
+    .map((preset) => preset.label);
+
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {names.map((name) => (
+        <li
+          key={name}
+          className="rounded-full border border-[var(--border)] bg-[var(--bg-raised)] px-2.5 py-1 text-xs text-[var(--fg)]"
+        >
+          {name}
+        </li>
+      ))}
+    </ul>
   );
 }

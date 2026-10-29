@@ -52,6 +52,8 @@ export const en = {
   "providers.title": "Two providers, two jobs",
   "providers.llm":
     "A language model reads a memory and writes its title and summary. It spends tokens, and it uses the key of whoever owns the project.",
+  "providers.llmTitle": "Language model",
+  "providers.embedTitle": "Embeddings",
   "providers.embed":
     'An embedding model turns text into vectors, so a search for "secret rollover" finds the memory called how we rotate keys. One model serves the whole install, at 768 dimensions, chosen by an admin.',
   "providers.optional":

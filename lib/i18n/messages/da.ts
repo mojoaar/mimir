@@ -62,7 +62,7 @@ export const da: Messages = {
   "data.body":
     "Én container og en Postgres, du allerede kører. Intet forlader boksen, medmindre du opsætter en udbyder, og så kun den tekst, du skrev. Den valgfrie sidevisningstæller taler kun med din egen Umami-installation. Backupper krypteres med en nøgle, kun du har, og gendannelsesscriptet ligger i repoet.",
 
-  "clients.title": "Virker med de agenter, du allerede kører",
+  "clients.title": "Virker med de agenter, du allerede kører, over MCP eller et plugin",
   "stats.container": "container",
   "stats.mcp": "MCP-værktøjer",
   "stats.plugin": "plugin-værktøjer",

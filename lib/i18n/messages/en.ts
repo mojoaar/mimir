@@ -60,7 +60,7 @@ export const en = {
   "data.body":
     "One container and a Postgres you already run. Nothing leaves the box unless you configure a provider, and then only the text you wrote. The optional pageview counter talks to your own Umami instance and nothing else. Backups are encrypted with a key only you hold, and the restore script ships in the repo.",
 
-  "clients.title": "Works with the agents you already run",
+  "clients.title": "Works with the agents you already run, over MCP or a plugin",
   "stats.container": "container",
   "stats.mcp": "MCP tools",
   "stats.plugin": "plugin tools",

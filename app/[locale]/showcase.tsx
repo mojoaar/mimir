@@ -18,7 +18,13 @@ export function ClientStrip({ title }: { title: string }) {
         {AGENTS.map((agent) => (
           <li
             key={agent.id}
-            className="rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--text-muted)]"
+            // The two with a plugin of their own, in the accent, because that
+            // is the difference the line above is claiming.
+            className={`rounded-full border px-2.5 py-1 text-xs ${
+              agent.plugin
+                ? 'border-[var(--accent)] text-[var(--accent)]'
+                : 'border-[var(--border)] text-[var(--text-muted)]'
+            }`}
           >
             {agent.name}
           </li>

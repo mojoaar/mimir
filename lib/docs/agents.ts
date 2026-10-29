@@ -17,6 +17,8 @@ export type AgentDoc = {
   file: string;
   snippet: (url: string) => string;
   notes: string[];
+  /** A Mimir plugin exists for this client, not only the MCP server. */
+  plugin?: true;
 };
 
 const TOKEN = 'MIMIR_TOKEN';
@@ -24,6 +26,7 @@ const TOKEN = 'MIMIR_TOKEN';
 export const AGENTS: AgentDoc[] = [
   {
     id: 'opencode',
+    plugin: true,
     name: 'OpenCode',
     tier: 1,
     file: 'opencode.json (project or ~/.config/opencode/opencode.json)',
@@ -149,6 +152,7 @@ export const AGENTS: AgentDoc[] = [
   },
   {
     id: 'oh-my-pi',
+    plugin: true,
     name: 'Oh My Pi',
     tier: 1,
     file: '~/.omp/agent/mcp.json, or .omp/mcp.json in the project',

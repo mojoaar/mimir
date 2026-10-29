@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **The landing page shows rather than tells.** The ten clients it works with, the digest an agent actually receives
-  before its first turn, one search reaching every project, three ways to connect an agent, and the parts of the
-  product the page used to leave out: the audit log, usage and cost, backups and versions, teams and grants. One line
-  at the end says what it is not.
+- **The landing page shows rather than tells.** The ten clients it works with and which two have a plugin of their
+  own, the digest an agent actually receives before its first turn, one search reaching every project, the providers
+  it ships split by job, three ways to connect an agent, the reason for the name set in its own panel, and the parts
+  of the product the page used to leave out: the audit log, usage and cost, backups and versions, teams and grants.
+  One line at the end says what it is not.
+
+- **The page title comes from the site settings.** Admin -> Settings -> Site supplies the name and the description,
+  and the landing page reads `Mimir | Long-term memory for your agents` from them, so an install names itself. A
+  translation is the fallback when the description was never filled in.
 
 - **Sort a project's memories** by path, by when they were first added, or by when they last changed. It is a link
   in the tree, it rides in the URL, and the default is the folder tree you already had. The two date orders drop the

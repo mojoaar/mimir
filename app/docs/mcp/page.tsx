@@ -40,8 +40,10 @@ MIMIR_TOKEN=mimir_...        # mint one on your Profile page`}</Code>
         settings, and every session you start in it or below it writes to that project, which is how a directory
         that is not a git repository still gets its own memory. A claim belongs to the account that made it, so on
         a shared project a teammate's session in that folder does not reach it: they need a checkout of the same
-        repository, or to name the project explicitly. A git remote wins over a folder, and when claims nest the
-        longest match wins.
+        repository, or to name the project explicitly. A Windows path works too, in either slash style:{' '}
+        <code>C:\Users\you\AI</code> and <code>C:/Users/you/AI</code> are the same claim. A tilde is not expanded,
+        because the home it would name is the server's, not yours. A git remote wins over a folder, and when
+        claims nest the longest match wins.
       </P>
 
       <H2>Raw HTTP</H2>

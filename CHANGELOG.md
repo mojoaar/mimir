@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the name taken from **Admin → Settings → Site**, the same way the landing page does it. A page that passes no
   description falls back to the site description instead of shipping an empty one.
 
+### Fixed
+
+- **A Windows folder** can be claimed, and every session below it routes to that project. Backslashes and forward
+  slashes are one path, and the drive letter is case-folded, so `C:\Users\you\AI` and `c:/Users/you/AI` are the
+  same claim. A `~` is now refused in the claim form instead of quietly attaching to the home directory of the
+  server that runs Mimir, which no session would ever report.
+
 ## [0.25.0] - 2026-10-29
 
 A landing page that shows its work, and memories you can sort.

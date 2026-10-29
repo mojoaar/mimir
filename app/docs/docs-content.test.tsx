@@ -308,4 +308,11 @@ describe('folders as a repo', () => {
     expect(renderToStaticMarkup(McpPage())).toContain('the project explicitly')
     expect(renderToStaticMarkup(HowItWorksPage())).toContain('the project explicitly')
   })
+
+  it('says a Windows path works and a home shorthand does not', () => {
+    const html = renderToStaticMarkup(McpPage())
+
+    expect(html).toContain('C:\\Users\\you\\AI')
+    expect(html).toContain('til')
+  })
 })

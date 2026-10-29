@@ -10,7 +10,7 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.25.0` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, and searches by keyword and by meaning.
+`0.26.0` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, and searches by keyword and by meaning.
 It backs itself up on a schedule, meters every remote model call on an admin usage page, and ships a localised landing page and a docs site with a config per agent.
 An agent can hand over a transcript and the project's own model distils it into memories, and a `procedure` is a kind
 that leads the session digest however old it is. The digest names a `gotcha` and a `decision` so a trap does not read
@@ -22,6 +22,7 @@ The landing page shows what an agent actually receives: the ten clients it works
 every project, and three ways to connect an agent. Memories can be sorted by path, by when they were added or by when
 they changed, and both plugins take `/mimir-learn` to hand a session over on demand.
 One search box on the dashboard asks every project you can read at once and groups the answers by where they came from.
+A directory that is not a repository can claim a folder instead, so a session started there writes to the right project, and every memory records the client and the session that wrote it. An archived project can be deleted for good, which also frees the repository or folder it was holding.
 Projects can be shared with a person or a team at read or write, each user owns their name, email and password and can sign out their other devices, and the whole app is available in English, Danish and German.
 Analytics is optional: point it at your own Umami instance in the admin settings and every page sends a pageview, with no cookies and Do Not Track respected.
 

@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.25.0] - 2026-10-29
+
+A landing page that shows its work, and memories you can sort.
 
 ### Added
 
@@ -15,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the product the page used to leave out: the audit log, usage and cost, backups and versions, teams and grants.
   One line at the end says what it is not.
 
-- **The page title comes from the site settings.** Admin -> Settings -> Site supplies the name and the description,
+- **The page title comes from the site settings.** Admin → Settings → Site supplies the name and the description,
   and the landing page reads `Mimir | Long-term memory for your agents` from them, so an install names itself. A
   translation is the fallback when the description was never filled in.
 

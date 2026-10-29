@@ -93,6 +93,14 @@ export MIMIR_TOKEN=mimir_...`}</Code>
         what a folder that is not a repository needs. A new session, or <code>/reload-plugins</code>, picks it up.
       </P>
 
+      <H2>When the context is compacted</H2>
+      <P>
+        Both plugins keep a copy of the transcript they were last handed. When the conversation is compacted, they
+        send that copy to <code>memory_learn</code> before it is gone, and the project model writes at most three
+        memories from it. It happens once per compaction, it spends tokens on the project owner&apos;s provider, and
+        it stays quiet when learning is off for that project.
+      </P>
+
       <H2>Did it work</H2>
       <P>
         Start a session and ask what the project already knows. A working plugin puts a{' '}

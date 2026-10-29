@@ -251,4 +251,12 @@ describe('plugins', () => {
     const html = renderToStaticMarkup(await DocsIndex())
     expect(html).toContain('href="/docs/plugins"')
   })
+
+  it('says what happens when the context is compacted', async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('When the context is compacted')
+    expect(text).toContain('memory_learn')
+    expect(text).toContain('three memories')
+  })
 })

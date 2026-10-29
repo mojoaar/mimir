@@ -62,6 +62,34 @@ export const de: Messages = {
   "data.body":
     "Ein Container und ein Postgres, das du schon betreibst. Nichts verlässt die Box, außer du richtest einen Anbieter ein, und dann nur der Text, den du geschrieben hast. Der optionale Seitenaufruf-Zähler spricht nur mit deiner eigenen Umami-Instanz. Backups werden mit einem Schlüssel verschlüsselt, den nur du hast, und das Wiederherstellungsskript liegt im Repo.",
 
+  "clients.title": "Läuft mit den Agenten, die du schon nutzt",
+  "stats.container": "Container",
+  "stats.mcp": "MCP-Werkzeuge",
+  "stats.plugin": "Plugin-Werkzeuge",
+  "stats.clients": "Clients",
+  "digest.title": "Womit der Agent aufwacht",
+  "digest.body":
+    "Der Digest kommt vor dem ersten Zug, mit Datum, damit der Agent mit dem beginnt, was geklärt ist, statt zu raten. Dies ist der des Demoprojekts, auf fünf Einträge gekürzt.",
+  "search.title": "Eine Suche, alle Projekte",
+  "search.body":
+    "Stichwort und Bedeutung werden zu einer Liste verschmolzen, gruppiert danach, woher die Erinnerung stammt, damit eine Frage nicht bei dem Projekt endet, in dem du gerade bist.",
+  "features.audit.title": "Audit und Kosten",
+  "features.audit.body":
+    "Jeder Modellaufruf wird mit seinen Kosten erfasst, und jede Änderung landet in einem lesbaren Audit-Log.",
+  "features.backup.title": "Backups und Versionen",
+  "features.backup.body":
+    "Verschlüsselte nächtliche Backups nach S3 oder WebDAV, und jede Erinnerung behält den Text, den sie ersetzt hat.",
+  "features.team.title": "Teams und Freigaben",
+  "features.team.body":
+    "Teile ein Projekt mit einer Person oder einem Team, mit Lese- oder Schreibrecht, und nimm es mit einem Klick zurück.",
+  "connect.title": "Einen Agenten verbinden",
+  "connect.opencode": "OpenCode-Plugin",
+  "connect.mcp": "Jeder MCP-Client",
+  "connect.omp": "Oh-My-Pi-Plugin",
+  "connect.hint": "Die beiden Plugins fügen außerdem den Digest ein, was MCP nicht kann.",
+  "data.contrast":
+    "Kein Konto bei uns, keine Lizenz pro Nutzer, und keine Kopie deiner Erinnerungen außerhalb dessen, wohin du sie gelegt hast.",
+
   "app.layout.mfaRequired": "Zwei-Faktor ist erforderlich",
   "app.layout.mfaRequiredBody":
     "Diese Installation verlangt eine Authenticator-App, bevor die App genutzt werden kann.",

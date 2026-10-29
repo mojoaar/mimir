@@ -13,6 +13,10 @@ vi.mock('@/lib/settings/site', () => ({
   }),
 }));
 
+vi.mock('@/lib/settings/time', () => ({
+  getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }),
+}));
+
 vi.mock('@/lib/auth/context', () => ({
   getCurrentUser: async () => session.user,
 }));
@@ -20,6 +24,8 @@ vi.mock('@/lib/auth/context', () => ({
 const session = vi.hoisted(() => ({ user: null as null | { id: string } }));
 
 import { t } from '@/lib/i18n';
+import { AGENTS } from '@/lib/docs/agents';
+import { TOOL_NAMES } from '@/lib/mcp/tools';
 import MarketingPage from './page';
 
 const page = (locale: string) => MarketingPage({ params: Promise.resolve({ locale }) });
@@ -155,5 +161,50 @@ describe('the marketing page', () => {
     // The privacy paragraph promised that nothing leaves without a provider.
     // Analytics broke that promise quietly, so the sentence names it.
     expect(html).toContain('Umami');
+  });
+
+  test('names the clients and puts the numbers in a row', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('Claude Code');
+    expect(html).toContain('Oh My Pi');
+    // Figure and label are separate elements, so match the figure itself.
+    expect(html).toContain(`>${AGENTS.length}</dd>`);
+    expect(html).toContain(`>${TOOL_NAMES.length}</dd>`);
+    expect(html).toContain('clients');
+  });
+
+  test('shows the digest an agent wakes up to, dated today', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+    const day = new Date().toISOString().slice(0, 10);
+
+    expect(html).toContain('deploy/rollback');
+    expect(html).toContain('[gotcha]');
+    expect(html).toContain(day);
+  });
+
+  test('offers three ways to connect, each with its own command', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('opencode plugin add @mojoaar/opencode-mimir');
+    expect(html).toContain('omp plugin install @mojoaar/omp-mimir');
+    expect(html).toContain('/mcp');
+    expect(html).toContain('Any MCP client');
+  });
+
+  test('shows one search reaching every project', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('rotate the signing keys');
+    expect(html).toContain('github.com/mojoaar/mimir');
+  });
+
+  test('says what else is in it, and what it is not', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('Audit and cost');
+    expect(html).toContain('Backups and versions');
+    expect(html).toContain('Teams and grants');
+    expect(html).toContain('no per-seat licence');
   });
 });

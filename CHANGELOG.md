@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The landing page shows rather than tells.** The ten clients it works with, the digest an agent actually receives
+  before its first turn, one search reaching every project, three ways to connect an agent, and the parts of the
+  product the page used to leave out: the audit log, usage and cost, backups and versions, teams and grants. One line
+  at the end says what it is not.
+
 - **Sort a project's memories** by path, by when they were first added, or by when they last changed. It is a link
   in the tree, it rides in the URL, and the default is the folder tree you already had. The two date orders drop the
   folder headings and show one flat, dated list, because a newest-first list inside folders buries the newest memory.

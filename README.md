@@ -18,6 +18,8 @@ like a note, and the OpenCode plugin can search, learn and write every kind the 
 Oh My Pi has a plugin too: `@mojoaar/omp-mimir` puts the digest in front of the first turn, which MCP cannot do.
 Both plugins also hand the messages a compaction is about to replace to `memory_learn`, so a long session writes its
 own memories instead of waiting for the agent to remember.
+The landing page shows what an agent actually receives: the ten clients it works with, the digest, one search across
+every project, and three ways to connect an agent.
 One search box on the dashboard asks every project you can read at once and groups the answers by where they came from.
 Projects can be shared with a person or a team at read or write, each user owns their name, email and password and can sign out their other devices, and the whole app is available in English, Danish and German.
 Analytics is optional: point it at your own Umami instance in the admin settings and every page sends a pageview, with no cookies and Do Not Track respected.

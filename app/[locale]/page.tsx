@@ -5,11 +5,13 @@ import { isLocale, localeAlternates, t, withLocale, type Locale } from '@/lib/i1
 import { connection } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
-import { QuickStart, PluginInstall } from './quick-start';
+import { QuickStart } from './quick-start';
+import { ClientStrip, DigestCard, SearchMock, StatStrip } from './showcase';
 import { Logo } from '@/app/logo'
 import { ThemeToggle } from '@/app/theme-toggle'
 import { cookies } from 'next/headers'
 import { parseTheme, THEME_COOKIE } from '@/lib/theme'
+import { getTimeFormat } from '@/lib/settings/time'
 
 /**
  * The number is the promise, so it takes the accent colour. Which word it is
@@ -77,10 +79,11 @@ export default async function MarketingPage({
   const { locale: raw } = await params;
   if (!isLocale(raw)) notFound();
   const locale: Locale = raw;
-  const [site, user, theme] = await Promise.all([
+  const [site, user, theme, { timeZone }] = await Promise.all([
     getSiteSettings(),
     getCurrentUser(),
     cookies().then((jar) => parseTheme(jar.get(THEME_COOKIE)?.value)),
+    getTimeFormat(),
   ]);
   // The same link, named for what it does: enter the app, or sign in first.
   const entry = t(locale, user ? 'hero.openApp' : 'hero.signIn');
@@ -162,6 +165,16 @@ export default async function MarketingPage({
           <MimirTerminal />
         </section>
 
+        <ClientStrip title={t(locale, 'clients.title')} />
+        <StatStrip
+          labels={{
+            container: t(locale, 'stats.container'),
+            mcp: t(locale, 'stats.mcp'),
+            plugin: t(locale, 'stats.plugin'),
+            clients: t(locale, 'stats.clients'),
+          }}
+        />
+
         <section className="flex flex-col gap-4">
           <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'why.title')}</h2>
           <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
@@ -180,6 +193,9 @@ export default async function MarketingPage({
                 ['features.path.title', 'features.path.body'],
                 ['features.api.title', 'features.api.body'],
                 ['features.private.title', 'features.private.body'],
+                ['features.audit.title', 'features.audit.body'],
+                ['features.backup.title', 'features.backup.body'],
+                ['features.team.title', 'features.team.body'],
               ] as const
             ).map(([heading, body]) => (
               <article
@@ -207,6 +223,21 @@ export default async function MarketingPage({
               )
             })}
           </ol>
+          <p className="max-w-3xl pt-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+            {t(locale, 'digest.title')}
+          </p>
+          <DigestCard timeZone={timeZone} />
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'digest.body')}
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-4">
+          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'search.title')}</h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
+            {t(locale, 'search.body')}
+          </p>
+          <SearchMock />
         </section>
 
         <section className="flex flex-col gap-4">
@@ -226,6 +257,9 @@ export default async function MarketingPage({
           <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'data.title')}</h2>
           <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'data.body')}
+          </p>
+          <p className="max-w-3xl text-sm leading-relaxed text-[var(--accent)]">
+            {t(locale, 'data.contrast')}
           </p>
         </section>
 
@@ -251,7 +285,27 @@ export default async function MarketingPage({
           <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
             {t(locale, 'start.agent')}
           </p>
-          <PluginInstall />
+          <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] p-4">
+            <p className="text-xs uppercase tracking-wide text-[var(--text-muted)]">
+              {t(locale, 'connect.title')}
+            </p>
+            {(
+              [
+                ['connect.opencode', 'opencode plugin add @mojoaar/opencode-mimir'],
+                ['connect.mcp', 'https://mimir.example.com/mcp'],
+                ['connect.omp', 'omp plugin install @mojoaar/omp-mimir'],
+              ] as const
+            ).map(([label, command]) => (
+              <div key={label} className="flex flex-col gap-1">
+                <p className="text-xs text-[var(--text-muted)]">{t(locale, label)}</p>
+                <pre className="w-fit max-w-full overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 font-mono text-xs">
+                  <span className="select-none text-[var(--accent)]">$ </span>
+                  {command}
+                </pre>
+              </div>
+            ))}
+            <p className="text-xs text-[var(--text-muted)]">{t(locale, 'connect.hint')}</p>
+          </div>
           <a className="w-fit text-sm text-[var(--accent)] underline" href="/docs/agents">
             {t(locale, 'start.agentLink')} {'\u2192'}
           </a>

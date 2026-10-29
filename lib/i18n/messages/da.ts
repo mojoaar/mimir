@@ -62,6 +62,34 @@ export const da: Messages = {
   "data.body":
     "Én container og en Postgres, du allerede kører. Intet forlader boksen, medmindre du opsætter en udbyder, og så kun den tekst, du skrev. Den valgfrie sidevisningstæller taler kun med din egen Umami-installation. Backupper krypteres med en nøgle, kun du har, og gendannelsesscriptet ligger i repoet.",
 
+  "clients.title": "Virker med de agenter, du allerede kører",
+  "stats.container": "container",
+  "stats.mcp": "MCP-værktøjer",
+  "stats.plugin": "plugin-værktøjer",
+  "stats.clients": "klienter",
+  "digest.title": "Det, agenten vågner op til",
+  "digest.body":
+    "Digesten kommer før første tur, med dato, så agenten starter fra det, der er afgjort, i stedet for at gætte. Denne er demoprojektets, skåret ned til fem punkter.",
+  "search.title": "Én søgning, alle projekter",
+  "search.body":
+    "Nøgleord og betydning smeltes sammen til én liste, grupperet efter hvor erindringen kommer fra, så et spørgsmål ikke stopper ved det projekt, du tilfældigvis er i.",
+  "features.audit.title": "Revisionsspor og pris",
+  "features.audit.body":
+    "Hvert modelkald registreres med sin pris, og hver ændring havner i en revisionslog, du kan læse.",
+  "features.backup.title": "Backups og versioner",
+  "features.backup.body":
+    "Krypterede natlige backups til S3 eller WebDAV, og hver erindring beholder de tekster, den erstattede.",
+  "features.team.title": "Hold og adgange",
+  "features.team.body":
+    "Del et projekt med en person eller et hold, med læse- eller skriveadgang, og tag det tilbage med ét klik.",
+  "connect.title": "Forbind en agent",
+  "connect.opencode": "OpenCode-plugin",
+  "connect.mcp": "Enhver MCP-klient",
+  "connect.omp": "Oh My Pi-plugin",
+  "connect.hint": "De to plugins indsætter også digesten, hvilket MCP ikke kan.",
+  "data.contrast":
+    "Ingen konto hos os, ingen pris pr. bruger, og ingen kopi af dine erindringer uden for det sted, du selv har lagt dem.",
+
   "app.layout.mfaRequired": "Tofaktor er påkrævet",
   "app.layout.mfaRequiredBody":
     "Denne installation kræver en godkendelsesapp, før appen kan bruges.",

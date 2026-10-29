@@ -60,6 +60,34 @@ export const en = {
   "data.body":
     "One container and a Postgres you already run. Nothing leaves the box unless you configure a provider, and then only the text you wrote. The optional pageview counter talks to your own Umami instance and nothing else. Backups are encrypted with a key only you hold, and the restore script ships in the repo.",
 
+  "clients.title": "Works with the agents you already run",
+  "stats.container": "container",
+  "stats.mcp": "MCP tools",
+  "stats.plugin": "plugin tools",
+  "stats.clients": "clients",
+  "digest.title": "What the agent wakes up to",
+  "digest.body":
+    "The digest arrives before the first turn, dated, so the agent starts from what is settled instead of guessing. This one is the demo project's, cut to five entries.",
+  "search.title": "One search, every project",
+  "search.body":
+    "Keyword and meaning are fused into one list, grouped by where the memory came from, so a question does not stop at the project you happen to be in.",
+  "features.audit.title": "Audit and cost",
+  "features.audit.body":
+    "Every model call is recorded with what it cost, and every change lands in an audit log you can read.",
+  "features.backup.title": "Backups and versions",
+  "features.backup.body":
+    "Encrypted nightly backups to S3 or WebDAV, and every memory keeps the bodies it replaced.",
+  "features.team.title": "Teams and grants",
+  "features.team.body":
+    "Share a project with a person or a team, with read or write access, and take it back in one click.",
+  "connect.title": "Connect an agent",
+  "connect.opencode": "OpenCode plugin",
+  "connect.mcp": "Any MCP client",
+  "connect.omp": "Oh My Pi plugin",
+  "connect.hint": "The two plugins also inject the digest, which MCP cannot do.",
+  "data.contrast":
+    "No account with us, no per-seat licence, and no copy of your memories anywhere you did not put it.",
+
   "app.layout.mfaRequired": "Two-factor is required",
   "app.layout.mfaRequiredBody":
     "This install requires an authenticator app before the app can be used.",

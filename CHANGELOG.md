@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   plugin fills in both, the Oh My Pi plugin fills in the client, because its tool API hands over no session id. Both
   arguments are optional, so an agent that sends neither writes exactly as before.
 
+- **Deleting an archived project.** An archived project can now be deleted for good from the dashboard, by its owner
+  and only after it is archived: type the slug to confirm, and its memories, versions, grants and folder claims go
+  with it. Archiving stays the reversible step. Deleting also frees the repository or folder, which an archived
+  project held for ever, so the same one can start again cleanly.
+
 ### Changed
 
 - **Docs pages carry the install's name.** Every page under `/docs` now reads `Tools | Mimir` rather than `Tools`, with

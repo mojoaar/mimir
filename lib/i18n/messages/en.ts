@@ -216,6 +216,13 @@ export const en = {
   "app.project.gone": "That project no longer exists.",
   "app.project.archiveFailed": "Could not archive the project.",
   "app.project.restoreFailed": "Could not restore the project.",
+  "app.project.delete": "Delete",
+  "app.project.deleteHint":
+    "Deleting an archived project removes its memories, versions, grants and folder claims, and cannot be undone. Type the slug to confirm.",
+  "app.project.confirmPlaceholder": "type the slug",
+  "app.project.confirmLabel": "Type {slug} to delete this project",
+  "app.project.confirmMismatch": "That is not the slug. Nothing was deleted.",
+  "app.project.deleted": "{slug} deleted.",
   "app.admin.overview.title": "Overview",
   "app.admin.overview.users": "Users",
   "app.admin.overview.usersHint": "{pending} pending · {disabled} disabled",

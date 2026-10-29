@@ -22,7 +22,10 @@ vi.mock('@/lib/auth/context', () => ({
 vi.mock('@/lib/projects/service', () => ({ listProjects: async () => state.projects }))
 vi.mock('@/lib/memory/search', () => ({ searchMemories: async () => state.hits }))
 vi.mock('@/lib/i18n/request', () => ({ translator: async () => (key: string) => key }))
-vi.mock('./projects/actions', () => ({ restoreProjectAction: async () => {} }))
+vi.mock('./projects/actions', () => ({
+  restoreProjectAction: async () => {},
+  deleteProjectAction: async () => {},
+}))
 vi.mock('@/lib/settings/time', () => ({ getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }) }))
 
 import DashboardPage from './page'
@@ -105,5 +108,34 @@ describe('searching across projects', () => {
 
     expect(html).toContain('app.refresh.label')
     expect(html).toContain('app.refresh.asOf')
+  })
+})
+
+describe('an archived project', () => {
+  const archived = (role: string) => [
+    {
+      id: 'p2',
+      slug: 'old-project',
+      name: 'Old Project',
+      role,
+      memoryCount: 2,
+      archived: true,
+    },
+  ]
+
+  it('asks the owner to type the slug before it can be deleted', async () => {
+    state.projects = archived('owner')
+    const html = renderToStaticMarkup(await DashboardPage(nothing))
+
+    expect(html).toContain('name="confirmSlug"')
+    expect(html).toContain('placeholder="old-project"')
+    expect(html).toContain('app.project.delete')
+  })
+
+  it('offers no delete to someone the project was only shared with', async () => {
+    state.projects = archived('write')
+    const html = renderToStaticMarkup(await DashboardPage(nothing))
+
+    expect(html).not.toContain('confirmSlug')
   })
 })

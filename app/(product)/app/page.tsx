@@ -7,7 +7,7 @@ import { getTimeFormat } from '@/lib/settings/time'
 import { stamp } from '@/lib/format/time'
 import { RefreshButton } from './refresh'
 import { listProjects } from '@/lib/projects/service'
-import { restoreProjectAction } from './projects/actions'
+import { deleteProjectAction, restoreProjectAction } from './projects/actions'
 
 type Group = { slug: string; name: string; hits: SearchHit[] }
 
@@ -138,6 +138,7 @@ export default async function DashboardPage({
           <h2 className="text-sm font-semibold text-[var(--text-muted)]">
             {t('app.dashboard.archived')}
           </h2>
+          <p className="text-xs text-[var(--text-muted)]">{t('app.project.deleteHint')}</p>
           <ul className="flex flex-col gap-3">
             {archived.map((project) => (
               <li
@@ -151,15 +152,30 @@ export default async function DashboardPage({
                   </p>
                 </div>
                 {project.role === 'owner' ? (
-                  <form action={restoreProjectAction}>
-                    <input type="hidden" name="projectId" value={project.id} />
-                    <button
-                      type="submit"
-                      className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-sunken)]"
-                    >
-                      {t('app.dashboard.restore')}
-                    </button>
-                  </form>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <form action={restoreProjectAction}>
+                      <input type="hidden" name="projectId" value={project.id} />
+                      <button
+                        type="submit"
+                        className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-sunken)]"
+                      >
+                        {t('app.dashboard.restore')}
+                      </button>
+                    </form>
+                    <form action={deleteProjectAction} className="flex items-center gap-1">
+                      <input type="hidden" name="projectId" value={project.id} />
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input
+                        name="confirmSlug"
+                        placeholder={project.slug}
+                        aria-label={t('app.project.confirmLabel', { slug: project.slug })}
+                        className="w-32 rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-1 text-xs"
+                      />
+                      <button type="submit" className="text-xs text-[var(--danger)] underline">
+                        {t('app.project.delete')}
+                      </button>
+                    </form>
+                  </div>
                 ) : null}
               </li>
             ))}

@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { requireUser } from '@/lib/auth/context'
-import { archiveProject, restoreProject } from '@/lib/projects/service'
+import { actionMessage } from '@/lib/i18n/errors'
+import { archiveProject, deleteProject, restoreProject } from '@/lib/projects/service'
 import { translator } from '@/lib/i18n/request'
 
 
@@ -50,4 +51,26 @@ export async function restoreProjectAction(formData: FormData): Promise<void> {
 
   revalidatePath('/app')
   redirect(`/app?notice=${encodeURIComponent(t('app.project.restored'))}`)
+}
+
+/** Irreversible, so the typed slug is checked here for a message, and again in the service. */
+export async function deleteProjectAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const t = await translator()
+  const projectId = String(formData.get('projectId') ?? '')
+  const slug = String(formData.get('slug') ?? '')
+  if (!projectId) redirect(`/app?error=${encodeURIComponent(t('app.project.missing'))}`)
+
+  if (String(formData.get('confirmSlug') ?? '').trim().toLowerCase() !== slug.toLowerCase()) {
+    redirect(`/app?error=${encodeURIComponent(t('app.project.confirmMismatch'))}`)
+  }
+
+  try {
+    await deleteProject(user.id, projectId, slug)
+  } catch (error) {
+    redirect(`/app?error=${encodeURIComponent(actionMessage(error, t))}`)
+  }
+
+  revalidatePath('/app')
+  redirect(`/app?notice=${encodeURIComponent(t('app.project.deleted', { slug }))}`)
 }

@@ -13,6 +13,7 @@ import { claimFolder } from './folders'
 
 import {
   archiveProject,
+  deleteProject,
   getProject,
   getProjectHealth,
   listProjects,
@@ -435,5 +436,65 @@ describe('a new project', () => {
     await setLearningDefault(true, alice)
     const p = await resolveProject(alice, { repo: 'github.com/alice/learning-repo', create: true })
     expect((await getProject(alice, p.slug))?.learningEnabled).toBe(true)
+  })
+})
+
+describe('deleting an archived project', () => {
+  async function counts(projectId: string) {
+    const { rows } = await adminPool().query<{
+      memories: number
+      versions: number
+      grants: number
+      folders: number
+    }>(
+      `select (select count(*) from memories where project_id = $1)::int as memories,
+              (select count(*) from memory_versions where project_id = $1)::int as versions,
+              (select count(*) from project_grants where project_id = $1)::int as grants,
+              (select count(*) from project_folders where project_id = $1)::int as folders`,
+      [projectId],
+    )
+    return rows[0]!
+  }
+
+  it('takes the memories, versions, grants and folder claims with it', async () => {
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'a/one', body: 'first' })
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'a/one', body: 'second' })
+    await grantProject(alice, aliceProjectId, 'user', bob, 'read')
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+    await archiveProject(alice, aliceProjectId)
+
+    await deleteProject(alice, aliceProjectId, 'alice-project')
+
+    expect(await getProject(alice, 'alice-project')).toBeNull()
+    expect(await counts(aliceProjectId)).toEqual({ memories: 0, versions: 0, grants: 0, folders: 0 })
+  })
+
+  it('refuses a project that is still live, so archiving comes first', async () => {
+    await expect(deleteProject(alice, aliceProjectId, 'alice-project')).rejects.toThrow('archive')
+  })
+
+  it('refuses a confirmation that is not the slug', async () => {
+    await archiveProject(alice, aliceProjectId)
+
+    await expect(deleteProject(alice, aliceProjectId, 'wrong')).rejects.toThrow('exactly')
+  })
+
+  it('refuses anyone who does not own it', async () => {
+    await grantProject(alice, aliceProjectId, 'user', bob, 'write')
+    await archiveProject(alice, aliceProjectId)
+
+    await expect(deleteProject(bob, aliceProjectId, 'alice-project')).rejects.toThrow('owner')
+  })
+
+  it('frees the repository, so the same one can start again', async () => {
+    // Before this existed, an archived project held its repo key for ever, and
+    // the unique index refused a clean replacement.
+    const born = await resolveProject(alice, { repo: 'github.com/alice/notes', create: true })
+    await archiveProject(alice, born.id)
+
+    await deleteProject(alice, born.id, born.slug)
+    const again = await resolveProject(alice, { repo: 'github.com/alice/notes', create: true })
+
+    expect(again.id).not.toBe(born.id)
   })
 })

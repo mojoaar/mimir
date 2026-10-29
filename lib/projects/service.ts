@@ -5,6 +5,7 @@ import { withUser } from '@/lib/db/tx'
 import { enqueueExtraction } from '@/lib/jobs/enqueue'
 import { getLearningDefault } from '@/lib/settings/learning'
 import { audit } from '@/lib/audit'
+import { InvalidInput } from '@/lib/memory/path'
 import { slugify } from '@/lib/slug'
 
 import { forbidden, grantRankSql, projectRole, requireProjectRole } from './access'
@@ -351,6 +352,53 @@ export async function archiveProject(userId: string, projectId: string): Promise
 
 export async function restoreProject(userId: string, projectId: string): Promise<void> {
   await setArchived(userId, projectId, false)
+}
+
+/**
+ * The only irreversible thing an owner can do here, so it takes a typed slug and
+ * only works on an archived project: archiving stays the reversible step, and a
+ * live project cannot be lost by one careless submit. Everything a project owns
+ * cascades in the schema, and the audit row outlives the row it names.
+ */
+export async function deleteProject(
+  userId: string,
+  projectId: string,
+  confirmSlug: string,
+): Promise<void> {
+  const role = await projectRole(userId, projectId, { includeArchived: true })
+  if (role !== 'owner') throw forbidden('Only the project owner can change that.')
+
+  await withUser(userId, async (client) => {
+    const { rows } = await client.query<{ slug: string; name: string; memories: number; archived: boolean }>(
+      `SELECT p.slug, p.name, p.archived_at IS NOT NULL AS archived,
+              (SELECT count(*) FROM memories m WHERE m.project_id = p.id)::int AS memories
+         FROM projects p
+        WHERE p.id = $1`,
+      [projectId],
+    )
+    const row = rows[0]
+    if (!row) throw forbidden('Only the project owner can change that.')
+    if (!row.archived) {
+      throw new InvalidInput('archive the project before deleting it')
+    }
+    // Counted in the same transaction as the delete, so the record is not a guess.
+    if (row.slug.toLowerCase() !== confirmSlug.trim().toLowerCase()) {
+      throw new InvalidInput('type the project slug exactly to confirm')
+    }
+
+    await client.query('DELETE FROM projects WHERE id = $1', [projectId])
+    await audit(
+      {
+        actorType: 'user',
+        actorId: userId,
+        action: 'project.delete',
+        targetType: 'project',
+        targetId: projectId,
+        detail: { name: row.name, slug: row.slug, memories: row.memories },
+      },
+      client,
+    )
+  })
 }
 
 async function setArchived(userId: string, projectId: string, archived: boolean): Promise<void> {

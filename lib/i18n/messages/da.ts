@@ -216,6 +216,13 @@ export const da: Messages = {
   "app.project.gone": "Projektet findes ikke længere.",
   "app.project.archiveFailed": "Projektet kunne ikke arkiveres.",
   "app.project.restoreFailed": "Projektet kunne ikke gendannes.",
+  "app.project.delete": "Slet",
+  "app.project.deleteHint":
+    "Når du sletter et arkiveret projekt, fjernes dets erindringer, versioner, tildelinger og mappeknytninger, og det kan ikke fortrydes. Skriv slug for at bekræfte.",
+  "app.project.confirmPlaceholder": "skriv slug",
+  "app.project.confirmLabel": "Skriv {slug} for at slette projektet",
+  "app.project.confirmMismatch": "Det er ikke slug. Intet blev slettet.",
+  "app.project.deleted": "{slug} slettet.",
   "app.admin.overview.title": "Overblik",
   "app.admin.overview.users": "Brugere",
   "app.admin.overview.usersHint": "{pending} afventer · {disabled} deaktiveret",

@@ -225,6 +225,13 @@ export const de: Messages = {
   "app.project.archiveFailed": "Das Projekt konnte nicht archiviert werden.",
   "app.project.restoreFailed":
     "Das Projekt konnte nicht wiederhergestellt werden.",
+  "app.project.delete": "Löschen",
+  "app.project.deleteHint":
+    "Beim Löschen eines archivierten Projekts werden seine Erinnerungen, Versionen, Freigaben und Ordnerzuordnungen entfernt, und das lässt sich nicht rückgängig machen. Tippe den Slug zur Bestätigung.",
+  "app.project.confirmPlaceholder": "Slug eingeben",
+  "app.project.confirmLabel": "Tippe {slug}, um das Projekt zu löschen",
+  "app.project.confirmMismatch": "Das ist nicht der Slug. Es wurde nichts gelöscht.",
+  "app.project.deleted": "{slug} gelöscht.",
   "app.admin.overview.title": "Überblick",
   "app.admin.overview.users": "Benutzer",
   "app.admin.overview.usersHint":

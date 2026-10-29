@@ -33,7 +33,7 @@ const PROJECT_ARG = {
 const REPO_ARG = {
   type: 'string',
   description:
-    'Normalised git remote: host.tld/owner/repo. The client computes it; the server never sees your working directory.',
+    'Normalised git remote (host.tld/owner/repo) or the absolute working directory, which is matched against the folders you claimed. The client computes it; the server never sees your working directory.',
 }
 
 export function str(args: Record<string, unknown>, key: string): string | undefined {

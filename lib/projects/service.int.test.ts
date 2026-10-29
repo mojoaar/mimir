@@ -302,6 +302,26 @@ describe('listProjects', () => {
     await revokeGrant(alice, aliceProjectId, 'team', team)
     expect((await listProjects(carol)).find((p) => p.id === aliceProjectId)).toBeUndefined()
   })
+
+  it('reports the folders a project owns', async () => {
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+
+    const found = (await listProjects(alice)).find((p) => p.id === aliceProjectId)
+
+    expect(found?.folders).toEqual(['/Users/alice/AI'])
+  })
+
+  it('does not count a memory once per folder', async () => {
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'a/one', body: 'one' })
+    await writeMemory({ userId: alice, projectId: aliceProjectId, path: 'a/two', body: 'two' })
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+    await claimFolder(alice, aliceProjectId, '/Users/alice/notes')
+
+    const found = (await listProjects(alice)).find((p) => p.id === aliceProjectId)
+
+    expect(found?.memoryCount).toBe(2)
+    expect(found?.folders).toHaveLength(2)
+  })
 })
 
 describe('a team share reaches every read path', () => {

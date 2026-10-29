@@ -179,6 +179,7 @@ export type ProjectSummary = {
   role: ProjectRole | null
   memoryCount: number
   archived: boolean
+  folders: string[]
 }/** Projects the caller owns or holds a grant on - RLS already hides the rest. */
 export async function listProjects(
   userId: string,
@@ -193,6 +194,7 @@ export async function listProjects(
       rank: number | null
       memory_count: number
       archived: boolean
+      folders: string[]
     }>(
       `SELECT p.id,
               p.slug,
@@ -200,7 +202,12 @@ export async function listProjects(
               p.owner_user_id,
               ${GRANT_RANK} AS rank,
               (p.archived_at IS NOT NULL) AS archived,
-              count(m.id)::int AS memory_count
+              count(m.id)::int AS memory_count,
+              -- A join here would multiply the memory count by the number of
+              -- folders, so the claims come back as one array instead.
+              coalesce((select array_agg(f.path order by f.path)
+                          from project_folders f
+                         where f.project_id = p.id and f.created_by = $1), '{}') AS folders
          FROM projects p
          LEFT JOIN memories m ON m.project_id = p.id AND m.deleted_at IS NULL
         WHERE ($2::boolean OR p.archived_at IS NULL)
@@ -215,6 +222,7 @@ export async function listProjects(
       role: row.owner_user_id === userId ? 'owner' : rankRole(row.rank),
       memoryCount: row.memory_count,
       archived: row.archived,
+      folders: row.folders,
     }))
   })
 }

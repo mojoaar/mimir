@@ -339,6 +339,33 @@ describe('the tools it adds', () => {
     expect(out?.content).toContain('Queued')
   })
 
+  it('tells Mimir which session is writing', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { path: 'a/one', created: true } }
+    mocks.reject = false
+    const { added } = await setup()
+
+    const remember = added.find((tool) => tool.name === 'mimir_remember')
+    await remember?.execute?.({ path: 'a/one', body: 'one' }, { sessionID: 'ses_abc' })
+
+    expect(mocks.calls[0]?.name).toBe('memory_write')
+    expect(mocks.calls[0]?.args.client).toBe('opencode')
+    expect(mocks.calls[0]?.args.session).toBe('ses_abc')
+  })
+
+  it('names the client when it hands a session over', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    mocks.reject = false
+    const { added } = await setup()
+
+    const learn = added.find((tool) => tool.name === 'mimir_learn')
+    await learn?.execute?.({ transcript: 'a settled thing' }, { sessionID: 'ses_abc' })
+
+    expect(mocks.calls[0]?.args.client).toBe('opencode')
+    expect(mocks.calls[0]?.args.session).toBe('ses_abc')
+  })
+
   it('says so when the queue is not running', async () => {
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { queued: false } }
@@ -401,6 +428,19 @@ describe('the transcript it hands over', () => {
     await compact(event)
 
     expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(1)
+  })
+
+  it('names the session the compaction came from', async () => {
+    const { compact } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    mocks.reject = false
+
+    // Two labels so the transcript clears the 500 character floor.
+    await compact({ sessionID: 's2b', system: [], messages: [long('alpha'), long('beta')] })
+
+    expect(mocks.calls[0]?.args.client).toBe('opencode')
+    expect(mocks.calls[0]?.args.session).toBe('s2b')
   })
 
   it('sends nothing when the compacted part has no text', async () => {
@@ -484,6 +524,19 @@ describe('the command to hand it over now', () => {
 
     mocks.reject = false
     expect(notices[0]).toContain('unreachable')
+  })
+
+  it('names the session the command came from', async () => {
+    const { nudge, command } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    mocks.reject = false
+
+    await nudge({ sessionID: 'c5', system: [], messages: [long('alpha'), long('beta')] })
+    await command.execute({ sessionID: 'c5' })
+
+    expect(mocks.calls[0]?.args.client).toBe('opencode')
+    expect(mocks.calls[0]?.args.session).toBe('c5')
   })
 
   it('does not send the same session twice', async () => {

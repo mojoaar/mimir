@@ -143,7 +143,13 @@ describe('the plugin tools', () => {
 
     expect(mocks.calls[0]).toEqual({
       name: 'memory_write',
-      args: { path: 'deploy/rollback', body: 'blue-green', kind: 'note', repo: 'git@github.com:alice/notes.git' },
+      args: {
+        path: 'deploy/rollback',
+        body: 'blue-green',
+        kind: 'note',
+        repo: 'git@github.com:alice/notes.git',
+        client: 'opencode',
+      },
       options: { timeoutMs: 8000 },
     })
     expect(result).toEqual({ content: 'Updated deploy/rollback.' })

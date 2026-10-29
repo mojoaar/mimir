@@ -191,6 +191,22 @@ describe('the tools', () => {
     expect(mocks.calls[0]?.args.body).toBe('Redeploy the last image.')
   })
 
+  it('names the client, because this API has no session id to send', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { path: 'deploy/rollback', created: true } }
+    const { tools } = await setup()
+    const remember = tools.find((tool) => tool.name === 'mimir_remember')
+    const learn = tools.find((tool) => tool.name === 'mimir_learn')
+
+    await remember?.execute('1', { path: 'deploy/rollback', body: 'Redeploy.' }, undefined, undefined, ctx)
+    expect(mocks.calls[0]?.args.client).toBe('oh-my-pi')
+
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    await learn?.execute('2', { transcript: 'a settled thing' }, undefined, undefined, ctx)
+    expect(mocks.calls[0]?.args.client).toBe('oh-my-pi')
+  })
+
   it('renders search hits as path and summary', async () => {
     mocks.result = {
       ok: true,

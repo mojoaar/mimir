@@ -124,7 +124,13 @@ export default Plugin.define({
 
       const sent = await callTool(
         'memory_learn',
-        { repo: repo ?? undefined, transcript: text, hint: LEARN_HINT },
+        {
+          repo: repo ?? undefined,
+          transcript: text,
+          hint: LEARN_HINT,
+          client: 'opencode',
+          session: event.sessionID,
+        },
         { ...config, timeoutMs: 4000 },
       ).catch(() => null)
 
@@ -145,7 +151,13 @@ export default Plugin.define({
           if (text.length >= MIN_TRANSCRIPT) {
             const sent = await callTool(
               'memory_learn',
-              { repo: repo ?? undefined, transcript: text, hint: LEARN_NOW_HINT },
+              {
+                repo: repo ?? undefined,
+                transcript: text,
+                hint: LEARN_NOW_HINT,
+                client: 'opencode',
+                session: sessionID,
+              },
               { ...config, timeoutMs: 4000 },
             ).catch(() => null)
             const queued = sent?.ok ? (sent.result as { queued?: boolean }).queued : undefined

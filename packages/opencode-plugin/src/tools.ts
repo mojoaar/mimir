@@ -114,10 +114,18 @@ function rememberTool(repo: string | null): ToolDefinition {
       required: ['path', 'body'],
       additionalProperties: false,
     },
-    async execute(input) {
+    // `client` and `session` are provenance, so history can say who wrote it.
+    async execute(input, context) {
       const result = await callTool(
         'memory_write',
-        { path: input.path, body: input.body, kind: input.kind, repo: repo ?? undefined },
+        {
+          path: input.path,
+          body: input.body,
+          kind: input.kind,
+          repo: repo ?? undefined,
+          client: 'opencode',
+          session: context?.sessionID,
+        },
         { timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Could not store that (${result.error}).` }
@@ -173,10 +181,16 @@ function learnTool(repo: string | null): ToolDefinition {
       required: ['transcript'],
       additionalProperties: false,
     },
-    async execute(input) {
+    async execute(input, context) {
       const result = await callTool(
         'memory_learn',
-        { transcript: input?.transcript, hint: input?.hint, repo: repo ?? undefined },
+        {
+          transcript: input?.transcript,
+          hint: input?.hint,
+          repo: repo ?? undefined,
+          client: 'opencode',
+          session: context?.sessionID,
+        },
         { timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Could not hand that over (${result.error}).` }

@@ -50,7 +50,9 @@ export function registerTools(
       const body = String(params.body ?? '')
       const written = await callTool(
         'memory_write',
-        { path, body, title: params.title, kind: params.kind, repo: repo(ctx) },
+        // This API hands the tool no session id, so the client is all we can
+        // honestly say about who wrote it.
+        { path, body, title: params.title, kind: params.kind, repo: repo(ctx), client: 'oh-my-pi' },
         { ...config, timeoutMs: 8000 },
       )
       if (!written.ok) return result(`Could not store that (${written.error}).`)
@@ -95,7 +97,12 @@ export function registerTools(
     async execute(_id, params, _signal, _update, ctx) {
       const queued = await callTool(
         'memory_learn',
-        { transcript: params.transcript, hint: params.hint, repo: repo(ctx) },
+        {
+          transcript: params.transcript,
+          hint: params.hint,
+          repo: repo(ctx),
+          client: 'oh-my-pi',
+        },
         { ...config, timeoutMs: 8000 },
       )
       if (!queued.ok) return result(`Could not hand that over (${queued.error}).`)

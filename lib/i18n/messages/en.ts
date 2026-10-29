@@ -459,7 +459,7 @@ export const en = {
   "app.projectSettings.folderAdd": "Add folder",
   "app.projectSettings.folderRemove": "Remove",
   "app.projectSettings.folderHint":
-    "An absolute path. A folder already claimed by another of your projects must be released there first.",
+    "An absolute path, in the style your machine uses: /Users/you/AI or C:\\Users\\you\\AI. A folder already claimed by another of your projects must be released there first.",
   "app.projectSettings.folderClaimed": "Folder claimed.",
   "app.projectSettings.folderReleased": "Folder released.",
   "app.projectSettings.folderTaken":

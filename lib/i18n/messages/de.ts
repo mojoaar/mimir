@@ -477,7 +477,7 @@ export const de: Messages = {
   "app.projectSettings.folderAdd": "Ordner hinzufügen",
   "app.projectSettings.folderRemove": "Entfernen",
   "app.projectSettings.folderHint":
-    "Ein absoluter Pfad. Ein Ordner, der bereits zu einem anderen deiner Projekte gehört, muss dort zuerst freigegeben werden.",
+    "Ein absoluter Pfad im Stil deines Rechners: /Users/you/AI oder C:\\Users\\you\\AI. Ein Ordner, der bereits zu einem anderen deiner Projekte gehört, muss dort zuerst freigegeben werden.",
   "app.projectSettings.folderClaimed": "Ordner zugeordnet.",
   "app.projectSettings.folderReleased": "Ordner freigegeben.",
   "app.projectSettings.folderTaken":

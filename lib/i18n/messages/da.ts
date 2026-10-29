@@ -461,7 +461,7 @@ export const da: Messages = {
   "app.projectSettings.folderAdd": "Tilføj mappe",
   "app.projectSettings.folderRemove": "Fjern",
   "app.projectSettings.folderHint":
-    "En absolut sti. En mappe, der allerede er knyttet til et andet af dine projekter, skal frigives der først.",
+    "En absolut sti i den stil, din maskine bruger: /Users/you/AI eller C:\\Users\\you\\AI. En mappe, der allerede er knyttet til et andet af dine projekter, skal frigives der først.",
   "app.projectSettings.folderClaimed": "Mappe knyttet til projektet.",
   "app.projectSettings.folderReleased": "Mappe frigivet.",
   "app.projectSettings.folderTaken":

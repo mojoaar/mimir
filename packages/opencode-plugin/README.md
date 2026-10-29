@@ -47,8 +47,8 @@ one the MCP header can use.
 | `mimir_search` | Hybrid search over this project's memories. |
 | `mimir_learn` | Hands a transcript over; the project's own model writes at most three memories from it. |
 
-When the context is compacted it also hands that part of the session to Mimir,
-which distils at most three memories from it.
+When OpenCode compacts the conversation it also hands those messages to Mimir,
+which distils at most three memories from them.
 
 `tools` decides whether they are added: `auto` (default) leaves them out when an
 MCP server already points at the same `/mcp` endpoint, `always` adds them

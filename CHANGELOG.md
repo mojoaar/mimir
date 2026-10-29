@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **A compacted session now writes itself.** Both plugins hand the part of the conversation that was about to be
   summarised away to `memory_learn`, so the project model distils it into at most three memories instead of the
-  agent having to remember to write. It runs once per compaction, spends tokens on the project owner's provider,
-  and does nothing when learning is off for that project.
+  agent having to remember to write. It runs when the client really compacts, not whenever another plugin shortens
+  the context, once per compaction, spends tokens on the project owner's provider, and does nothing when learning
+  is off for that project.
 
 ## [0.23.1] - 2026-10-28
 

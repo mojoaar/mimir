@@ -95,10 +95,11 @@ export MIMIR_TOKEN=mimir_...`}</Code>
 
       <H2>When the context is compacted</H2>
       <P>
-        Both plugins keep a copy of the transcript they were last handed. When the conversation is compacted, they
-        send that copy to <code>memory_learn</code> before it is gone, and the project model writes at most three
-        memories from it. It happens once per compaction, it spends tokens on the project owner&apos;s provider, and
-        it stays quiet when learning is off for that project.
+        When the conversation is compacted, the client hands the messages being replaced to <code>memory_learn</code>,
+        and the project model writes at most three memories from them. OpenCode does it on its own compaction, Oh My
+        Pi on its compaction event, so a context compressed by another plugin does not count. It happens once per
+        compaction, it spends tokens on the project owner&apos;s provider, and it stays quiet when learning is off for
+        that project.
       </P>
 
       <H2>Did it work</H2>

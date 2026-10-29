@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
   listProviders: vi.fn(async () => []),
   listGrants: vi.fn(async () => [] as unknown[]),
   listTeams: vi.fn(async () => [] as unknown[]),
+  listFolders: vi.fn(async () => [] as { id: string; path: string }[]),
+  claimFolder: vi.fn(async () => {}),
+  releaseFolder: vi.fn(async () => ({})),
   grantProject: vi.fn(async () => {}),
   revokeGrant: vi.fn(async () => {}),
   findUserId: vi.fn(async () => 'u2' as string | null),
@@ -30,6 +33,11 @@ vi.mock('@/lib/projects/access', () => ({
   revokeGrant: mocks.revokeGrant,
 }))
 vi.mock('@/lib/teams/service', () => ({ listTeams: mocks.listTeams }))
+vi.mock('@/lib/projects/folders', () => ({
+  listFolders: mocks.listFolders,
+  claimFolder: mocks.claimFolder,
+  releaseFolder: mocks.releaseFolder,
+}))
 vi.mock('@/lib/users/lookup', () => ({ findActiveUserIdByEmail: mocks.findUserId }))
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
 vi.mock('@/lib/audit', () => ({ audit: async () => {} }))
@@ -43,7 +51,12 @@ vi.mock('next/navigation', () => ({
 }))
 
 import ProjectSettingsPage from './[slug]/settings/page'
-import { grantProjectAction, revokeProjectGrantAction } from './[slug]/settings/actions'
+import {
+  claimFolderAction,
+  grantProjectAction,
+  releaseFolderAction,
+  revokeProjectGrantAction,
+} from './[slug]/settings/actions'
 
 const project = {
   id: 'p1',
@@ -151,6 +164,66 @@ describe('project settings page', () => {
 
     expect(html).not.toContain('Share this project')
     expect(html).not.toContain('Revoke')
+  })
+
+  it('lists the folders a project answers for, for its owner', async () => {
+    mocks.getProject.mockResolvedValueOnce(project)
+    mocks.listFolders.mockResolvedValueOnce([{ id: 'f1', path: '/Users/alice/AI' }])
+
+    const html = await render()
+
+    expect(html).toContain('Folders')
+    expect(html).toContain('/Users/alice/AI')
+    expect(html).toContain('name="folder"')
+  })
+
+  it('shows a grantee the folders, so a session landing there makes sense', async () => {
+    mocks.getProject.mockResolvedValueOnce({ ...project, role: 'write' })
+    mocks.listFolders.mockResolvedValueOnce([{ id: 'f1', path: '/Users/alice/AI' }])
+
+    const html = await render()
+
+    expect(html).toContain('/Users/alice/AI')
+    expect(html).not.toContain('name="folder"')
+  })
+})
+
+describe('folder actions', () => {
+  it('claims the folder the owner typed', async () => {
+    const form = new FormData()
+    form.set('projectId', 'p1')
+    form.set('slug', 'mimir')
+    form.set('folder', '/Users/alice/AI')
+
+    await expect(claimFolderAction(form)).rejects.toThrow(
+      'NEXT_REDIRECT:/app/projects/mimir/settings?notice=Folder%20claimed.',
+    )
+    expect(mocks.claimFolder).toHaveBeenCalledWith('u1', 'p1', '/Users/alice/AI')
+  })
+
+  it('releases the folder the owner removed', async () => {
+    const form = new FormData()
+    form.set('folderId', 'f1')
+    form.set('slug', 'mimir')
+
+    await expect(releaseFolderAction(form)).rejects.toThrow(
+      'NEXT_REDIRECT:/app/projects/mimir/settings?notice=Folder%20released.',
+    )
+    expect(mocks.releaseFolder).toHaveBeenCalledWith('u1', 'f1')
+  })
+
+  it('says why a folder could not be claimed', async () => {
+    mocks.claimFolder.mockRejectedValueOnce(
+      Object.assign(new Error('that folder is already claimed by another project'), {
+        code: 'invalid_params',
+      }),
+    )
+    const form = new FormData()
+    form.set('projectId', 'p1')
+    form.set('slug', 'mimir')
+    form.set('folder', '/Users/alice/AI')
+
+    await expect(claimFolderAction(form)).rejects.toThrow('NEXT_REDIRECT:/app/projects/mimir/settings?error=')
   })
 })
 

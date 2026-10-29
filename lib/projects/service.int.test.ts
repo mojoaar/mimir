@@ -9,6 +9,7 @@ import { setLearningDefault } from '@/lib/settings/learning'
 
 import { deleteMemory, readMemory, writeMemory } from '@/lib/memory/service'
 import { grantProject, projectRole, revokeGrant } from './access'
+import { claimFolder } from './folders'
 
 import {
   archiveProject,
@@ -53,6 +54,71 @@ describe('resolveProject', () => {
     )
 
     expect(rows[0]?.owner_user_id).toBe(bob)
+  })
+
+  it('names a project after the folder it came from', async () => {
+    const p = await resolveProject(alice, { repo: '/Users/alice/AI', create: true })
+
+    expect(p.slug).toBe('ai')
+  })
+
+  it('prefers a git remote over a claimed folder', async () => {
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+    const repoProject = await resolveProject(alice, { repo: 'github.com/alice/AI', create: true })
+
+    expect(repoProject.id).not.toBe(aliceProjectId)
+  })
+
+  it('never creates a project on a read', async () => {
+    await expect(resolveProject(alice, { repo: '/Users/alice/nowhere' })).rejects.toThrow(
+      'no accessible project',
+    )
+  })
+
+  it('routes a session in a claimed folder to that project', async () => {
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+
+    const p = await resolveProject(alice, { repo: '/Users/alice/AI', create: true })
+
+    expect(p.id).toBe(aliceProjectId)
+  })
+
+  it('routes a subfolder to the project that claimed its parent', async () => {
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+
+    expect((await resolveProject(alice, { repo: '/Users/alice/AI/homelab', create: true })).id).toBe(
+      aliceProjectId,
+    )
+  })
+
+  it('does not match a sibling folder that merely starts with the same letters', async () => {
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+
+    expect((await resolveProject(alice, { repo: '/Users/alice/AI2', create: true })).id).not.toBe(
+      aliceProjectId,
+    )
+  })
+
+  it('routes to the deepest claim', async () => {
+    const work = await resolveProject(alice, { project: 'work', create: true })
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+    await claimFolder(alice, work.id, '/Users/alice/AI/work')
+
+    expect((await resolveProject(alice, { repo: '/Users/alice/AI/work/deep', create: true })).id).toBe(
+      work.id,
+    )
+    expect((await resolveProject(alice, { repo: '/Users/alice/AI/other', create: true })).id).toBe(
+      aliceProjectId,
+    )
+  })
+
+  it('ignores the claim of an archived project', async () => {
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
+    await archiveProject(alice, aliceProjectId)
+
+    expect((await resolveProject(alice, { repo: '/Users/alice/AI', create: true })).id).not.toBe(
+      aliceProjectId,
+    )
   })
 })
 

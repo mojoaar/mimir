@@ -1,4 +1,5 @@
 import type { PoolClient } from 'pg'
+import path from 'node:path'
 
 import { withUser } from '@/lib/db/tx'
 import { enqueueExtraction } from '@/lib/jobs/enqueue'
@@ -7,7 +8,8 @@ import { audit } from '@/lib/audit'
 import { slugify } from '@/lib/slug'
 
 import { forbidden, grantRankSql, projectRole, requireProjectRole } from './access'
-import { normaliseRepoKey, repoSlug } from './repo'
+import { folderForPath } from './folders'
+import { localPath, normaliseRepoKey, repoSlug } from './repo'
 
 export type ProjectRole = 'owner' | 'write' | 'read'
 
@@ -37,15 +39,18 @@ function toRole(row: AccessRow): ProjectRole {
 }
 
 /**
- * Resolution order from the spec: explicit slug, then a repo key the caller can
- * already reach, then a new project owned by the caller. Finding a shared
- * project before creating one is what keeps two agents on one repo together.
+ * Resolution order: explicit slug, then a repo key the caller can already
+ * reach, then a folder the caller has claimed, then a new project owned by the
+ * caller. Finding a shared project before creating one is what keeps two agents
+ * on one repo together; a git remote wins over a folder because a repository is
+ * the more specific thing to say about a working directory.
  */
 export async function resolveProject(
   userId: string,
   opts: { project?: string; repo?: string; create?: boolean } = {},
 ): Promise<ResolvedProject> {
   const repoKey = opts.repo ? normaliseRepoKey(opts.repo) : null
+  const local = opts.repo ? localPath(opts.repo) : null
 
   return withUser(userId, async (client) => {
     if (opts.project) {
@@ -68,6 +73,14 @@ export async function resolveProject(
       return { id: row.id, slug: row.slug, role: toRole(row) }
     }
 
+    if (local) {
+      // Only the owner can claim a folder, so a match is the caller's own
+      // project. This is what makes a session inherit the project of the
+      // directory it started in.
+      const claimed = await folderForPath(client, userId, local)
+      if (claimed) return { id: claimed.projectId, slug: claimed.slug, role: 'owner' }
+    }
+
     if (repoKey) {
       const found = await client.query<AccessRow>(
         `SELECT p.id, p.slug, (p.owner_user_id = $1) AS is_owner,
@@ -86,7 +99,10 @@ export async function resolveProject(
     // read must be a 404, not a new empty project.
     if (opts.create !== true) throw new ProjectNotFoundError(opts.project ?? opts.repo ?? 'project')
 
-    return createProject(userId, repoKey, client)
+    // A directory that is not a repository names its project after itself, so
+    // `~/AI` becomes `ai` instead of the literal `project` every path used to
+    // get, which made the second one `project-2`.
+    return createProject(userId, repoKey, client, local ? path.basename(local) : undefined)
   })
 }
 

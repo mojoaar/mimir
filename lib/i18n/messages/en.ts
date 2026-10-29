@@ -296,6 +296,8 @@ export const en = {
   "app.admin.users.userGone": "That user no longer exists.",
   "app.admin.audit.title": "Audit log",
   "app.admin.audit.export": "Export CSV",
+  "app.admin.audit.retention":
+    "Entries are kept for {kept} days, and memory reads for {reads}, because they are most of the log. Nothing here can be edited or deleted; use Export CSV if you need a copy.",
   "app.admin.audit.allActions": "All actions",
   "app.admin.audit.action": "Action",
   "app.admin.audit.from": "From",
@@ -550,6 +552,8 @@ export const en = {
   "app.settings.keyCreate": "Create key",
   "app.settings.keyCreating": "Creating…",
   "app.settings.keyCopyNow": "Copy this now - it is not shown again.",
+  "app.settings.keyCopy": "Copy",
+  "app.settings.keyCopied": "Copied",
   "app.settings.keyEmpty": "No keys yet. Your agents need one to reach /mcp.",
   "app.settings.keyRevoked": "revoked",
   "app.settings.keyNeverUsed": "never used",

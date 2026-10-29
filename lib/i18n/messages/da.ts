@@ -295,6 +295,8 @@ export const da: Messages = {
   "app.admin.users.userGone": "Brugeren findes ikke længere.",
   "app.admin.audit.title": "Revisionslog",
   "app.admin.audit.export": "Eksportér CSV",
+  "app.admin.audit.retention":
+    "Poster gemmes i {kept} dage, og læsninger af erindringer i {reads} dage, fordi de udgør størstedelen af loggen. Intet her kan redigeres eller slettes; brug Eksportér CSV, hvis du skal have en kopi.",
   "app.admin.audit.allActions": "Alle handlinger",
   "app.admin.audit.action": "Handling",
   "app.admin.audit.from": "Fra",
@@ -551,6 +553,8 @@ export const da: Messages = {
   "app.settings.keyCreate": "Opret nøgle",
   "app.settings.keyCreating": "Opretter…",
   "app.settings.keyCopyNow": "Kopiér den nu - den vises ikke igen.",
+  "app.settings.keyCopy": "Kopier",
+  "app.settings.keyCopied": "Kopieret",
   "app.settings.keyEmpty":
     "Ingen nøgler endnu. Dine agenter skal bruge en for at nå /mcp.",
   "app.settings.keyRevoked": "tilbagekaldt",

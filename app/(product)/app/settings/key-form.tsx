@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { createKeyAction, revokeKeyAction, type CreateKeyState } from './actions'
 
 type Key = {
@@ -17,6 +17,8 @@ export type KeyFormLabels = {
   create: string
   creating: string
   copyNow: string
+  copy: string
+  copied: string
 }
 
 export type KeyListLabels = {
@@ -55,12 +57,41 @@ export function KeyForm({ labels }: { labels: KeyFormLabels }) {
 
       {state.error && <p className="text-sm text-[var(--danger)]">{state.error}</p>}
 
-      {state.token && (
-        <div className="rounded border border-[var(--accent)] p-3 text-sm">
-          <p className="mb-2 font-medium">{labels.copyNow}</p>
-          <code className="block break-all rounded bg-[var(--bg-sunken)] p-2">{state.token}</code>
-        </div>
-      )}
+      {state.token && <KeyToken token={state.token} labels={labels} />}
+    </div>
+  )
+}
+
+/**
+ * The one moment the key is readable. The copy control is here rather than in
+ * the list below, where only a prefix is ever shown.
+ */
+export function KeyToken({ token, labels }: { token: string; labels: KeyFormLabels }) {
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(token)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // A browser can refuse the clipboard; the key stays selectable below.
+    }
+  }
+
+  return (
+    <div className="rounded border border-[var(--accent)] p-3 text-sm">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="font-medium">{labels.copyNow}</p>
+        <button
+          type="button"
+          onClick={copy}
+          className="rounded border border-[var(--accent)] px-2 py-0.5 text-xs text-[var(--accent)] hover:bg-[var(--bg-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+        >
+          {copied ? labels.copied : labels.copy}
+        </button>
+      </div>
+      <code className="block break-all rounded bg-[var(--bg-sunken)] p-2">{token}</code>
     </div>
   )
 }

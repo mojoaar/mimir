@@ -306,6 +306,8 @@ export const de: Messages = {
   "app.admin.users.userGone": "Diesen Benutzer gibt es nicht mehr.",
   "app.admin.audit.title": "Protokoll",
   "app.admin.audit.export": "CSV exportieren",
+  "app.admin.audit.retention":
+    "Einträge werden {kept} Tage aufbewahrt, Lesezugriffe auf Erinnerungen {reads} Tage, weil sie den Großteil des Protokolls ausmachen. Nichts hier lässt sich bearbeiten oder löschen; nutze CSV exportieren, wenn du eine Kopie brauchst.",
   "app.admin.audit.allActions": "Alle Aktionen",
   "app.admin.audit.action": "Aktion",
   "app.admin.audit.from": "Von",
@@ -568,6 +570,8 @@ export const de: Messages = {
   "app.settings.keyCreate": "Schlüssel erstellen",
   "app.settings.keyCreating": "Wird erstellt…",
   "app.settings.keyCopyNow": "Jetzt kopieren - er wird nicht erneut angezeigt.",
+  "app.settings.keyCopy": "Kopieren",
+  "app.settings.keyCopied": "Kopiert",
   "app.settings.keyEmpty":
     "Noch keine Schlüssel. Deine Agenten brauchen einen für /mcp.",
   "app.settings.keyRevoked": "widerrufen",

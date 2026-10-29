@@ -8,8 +8,10 @@ const LABEL = 'text-xs uppercase tracking-wide text-[var(--text-muted)]';
 const DAY = 24 * 60 * 60 * 1000;
 
 export function ClientStrip({ title }: { title: string }) {
+  // No top border: the hero above already ends with one, and two rules with
+  // nothing between them read as a mistake.
   return (
-    <section className="flex flex-col gap-3 border-y border-[var(--border)] py-6">
+    <section className="flex flex-col gap-3 border-b border-[var(--border)] py-6">
       <p className={LABEL}>{title}</p>
       <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--text-muted)]">
         {AGENTS.map((agent) => (

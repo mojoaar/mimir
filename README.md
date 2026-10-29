@@ -105,7 +105,7 @@ Eight MCP tools, mirrored one-to-one on `/api/v1`:
 | `memory_delete` | Soft delete, recoverable for 30 days |
 | `project_list` | Projects the caller can reach |
 
-The client sends the repo key (`X-Mimir-Repo: github.com/owner/repo`), so two agents working in one checkout share one project without configuration.
+The client sends the repo key (`X-Mimir-Repo: github.com/owner/repo`), so two agents working in one checkout share one project without configuration. A directory that is not a repository can claim a folder instead: claim it on the project's settings page and every session you start in it or below it writes there, with a git remote still winning over a folder. A write can also carry the `client` and `session` that made it, which the memory's history then shows.
 
 ## Connect a model
 

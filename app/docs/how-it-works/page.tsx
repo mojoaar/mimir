@@ -28,12 +28,14 @@ export default function HowItWorksPage() {
         blowing the agent’s context.
       </P>
 
-      <H2>A project is a repository</H2>
+      <H2>A project is a repository, or a folder you claim</H2>
       <P>
         An agent names its project with the <code>X-Mimir-Repo: github.com/owner/repo</code> header, or with a{' '}
         <code>repo</code> argument on a tool call. The first call creates the project; later calls from any client land
-        in the same one. A project holds memories, members and grants, and nothing is shared between projects unless
-        you grant it.
+        in the same one. A directory that is not a repository can name its project too: claim the folder in that
+        project's settings, and every session you start in it or below it writes there, with the deepest claim
+        winning. A git remote always beats a folder. A project holds memories, members and grants, and nothing is
+        shared between projects unless you grant it.
       </P>
 
       <H2>Paths are the index</H2>

@@ -279,6 +279,19 @@ describe('provenance', () => {
 })
 
 describe('folders as a repo', () => {
+  it('explains on the how-it-works page that a project can be a folder', () => {
+    const html = renderToStaticMarkup(HowItWorksPage())
+
+    expect(html).toContain('or a folder you claim')
+    expect(html).toContain('deepest claim winning')
+  })
+
+  it('lists a project\'s folders in the tool reference', async () => {
+    const text = renderToStaticMarkup(await ToolsPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('the absolute folders each one answers for')
+  })
+
   it('explains that a folder can stand in for a repository', () => {
     const html = renderToStaticMarkup(McpPage())
 

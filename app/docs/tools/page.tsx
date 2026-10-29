@@ -89,7 +89,7 @@ export default async function ToolsPage() {
       <H2>project_list</H2>
       <P>
         Returns the projects the caller owns or has been granted, with <code>slug</code>, <code>name</code>,{' '}
-        <code>role</code> and <code>memoryCount</code>.
+        <code>role</code>, <code>memoryCount</code> and the absolute <code>folders</code> each one answers for.
       </P>
     </Prose>
   )

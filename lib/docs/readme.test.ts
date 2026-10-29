@@ -5,6 +5,10 @@ import { describe, expect, it } from 'vitest'
 const readme = readFileSync(join(process.cwd(), 'README.md'), 'utf8')
 
 describe('the readme', () => {
+  it('says a project can be a folder, not only a repository', () => {
+    expect(readme).toContain('claim a folder')
+  })
+
   it('documents every tool the server exposes', () => {
     for (const tool of [
       'memory_digest',

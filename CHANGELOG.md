@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Sort a project's memories** by path, by when they were first added, or by when they last changed. It is a link
+  in the tree, it rides in the URL, and the default is the folder tree you already had. The two date orders drop the
+  folder headings and show one flat, dated list, because a newest-first list inside folders buries the newest memory.
+
 - **`/mimir-learn` hands the session over on demand.** Both plugins take the command, send the conversation so far to
   `memory_learn`, and let the project model write at most three memories from it. Nothing is sent twice, and a
   session too short to be worth a model call says so instead.

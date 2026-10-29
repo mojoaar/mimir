@@ -5,9 +5,9 @@ import { embedText } from './embeddings'
 import { archiveVersion } from './versions'
 import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
 import { MEMORY_KINDS } from './types'
-import type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
+import type { MemoryRow, TreeEntry, TreeOrder, WriteInput, WriteResult } from './types'
 
-export type { MemoryRow, TreeEntry, WriteInput, WriteResult } from './types'
+export type { MemoryRow, TreeEntry, TreeOrder, WriteInput, WriteResult } from './types'
 
 type Row = {
   id: string
@@ -167,11 +167,19 @@ export async function readMemory(
  * Directories are virtual: depth is counted from the path itself, so there is no
  * folder table and no empty directory to keep in sync.
  */
+/** A named ordering, never a column from the request. */
+const TREE_ORDER: Record<TreeOrder, string> = {
+  path: 'path',
+  added: 'created_at desc, path',
+  updated: 'updated_at desc, path',
+}
+
 export async function treeMemory(
   userId: string,
   projectId: string,
   pathPrefix: string,
   depth: number,
+  order: TreeOrder = 'path',
 ): Promise<TreeEntry[]> {
   const prefix = pathPrefix.trim() === '' ? '' : normalisePath(pathPrefix)
   const levels = Number.isFinite(depth) ? Math.max(1, Math.trunc(depth)) : 1
@@ -184,21 +192,23 @@ export async function treeMemory(
       path: string
       title: string
       has_summary: boolean
+      created_at: Date
       updated_at: Date
     }>(
-      `select path, title, (summary is not null) as has_summary, updated_at
+      `select path, title, (summary is not null) as has_summary, created_at, updated_at
          from memories
         where project_id = $1
           and deleted_at is null
           and ($2 = '' or path = $2 or starts_with(path, $2 || '/'))
           and array_length(string_to_array(path, '/'), 1) <= $3
-        order by path`,
+        order by ${TREE_ORDER[order]}`,
       [projectId, prefix, prefixDepth + levels],
     )
     return rows.map((row) => ({
       path: row.path,
       title: row.title,
       hasSummary: row.has_summary,
+      createdAt: row.created_at,
       updatedAt: row.updated_at,
     }))
   })

@@ -19,10 +19,14 @@ export type MemoryRow = {
   updatedAt: Date
 }
 
+/** Path is the shipped default; the two dates are newest first. */
+export type TreeOrder = 'path' | 'added' | 'updated'
+
 export type TreeEntry = {
   path: string
   title: string
   hasSummary: boolean
+  createdAt: Date
   updatedAt: Date
 }
 

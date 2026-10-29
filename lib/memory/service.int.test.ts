@@ -233,3 +233,25 @@ describe('treeMemory path prefixes', () => {
     expect(rows[0]?.n).toBe('1')
   })
 })
+
+describe('treeMemory order', () => {
+  it('orders by when a memory was first written, and by when it changed', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'alpha/old', body: 'a' })
+    await writeMemory({ userId: f.alice, projectId, path: 'zulu/new', body: 'b' })
+    // created_at is never touched by the upsert, so backdating it is a genuine "added".
+    await adminPool().query(
+      `update memories set created_at = now() - interval '2 days', updated_at = now() - interval '2 days'
+        where path = 'alpha/old'`,
+    )
+    await writeMemory({ userId: f.alice, projectId, path: 'alpha/old', body: 'a again' })
+
+    const byPath = await treeMemory(f.alice, projectId, '', 12)
+    const byAdded = await treeMemory(f.alice, projectId, '', 12, 'added')
+    const byUpdated = await treeMemory(f.alice, projectId, '', 12, 'updated')
+
+    expect(byPath.map((entry) => entry.path)).toEqual(['alpha/old', 'zulu/new'])
+    expect(byAdded.map((entry) => entry.path)).toEqual(['zulu/new', 'alpha/old'])
+    expect(byUpdated.map((entry) => entry.path)).toEqual(['alpha/old', 'zulu/new'])
+    expect(byAdded[0]?.createdAt).toBeInstanceOf(Date)
+  })
+})

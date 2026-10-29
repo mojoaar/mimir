@@ -21,14 +21,19 @@ export async function folderForPath(
   absolute: string,
 ): Promise<FolderMatch | null> {
   const { rows } = await client.query<{ project_id: string; slug: string }>(
-    // The trailing slash is what stops `/Users/me/AI` matching `/Users/me/AI2`.
+    // The trailing slash is what stops `/Users/me/AI` matching `/Users/me/AI2`,
+    // and a plain string compare is what stops a `_` or `%` in a claim matching
+    // a character that is not in the path (LIKE would treat both as wildcards).
     // Longest claim wins, so a claim inside a claimed folder takes over.
     `select f.project_id, p.slug
        from project_folders f
        join projects p on p.id = f.project_id
       where f.created_by = $1
         and p.archived_at is null
-        and (lower($2) = lower(f.path) or lower($2) like lower(f.path) || '/%')
+        and (
+          lower($2) = lower(f.path)
+          or left(lower($2), length(f.path) + 1) = lower(f.path) || '/'
+        )
       order by length(f.path) desc
       limit 1`,
     [userId, absolute],

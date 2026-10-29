@@ -37,9 +37,10 @@ MIMIR_TOKEN=mimir_...        # mint one on your Profile page`}</Code>
       </P>
       <P>
         The <code>repo</code> argument also takes an absolute working directory. Claim a folder under a project's
-        settings, and every session that starts in it or below it writes to that project, which is how a directory
-        that is not a git repository still gets its own memory. A git remote wins over a folder, and when claims
-        nest the longest match wins.
+        settings, and every session you start in it or below it writes to that project, which is how a directory
+        that is not a git repository still gets its own memory. A claim belongs to the account that made it, so a
+        teammate starting a session in the same folder is unaffected. A git remote wins over a folder, and when
+        claims nest the longest match wins.
       </P>
 
       <H2>Raw HTTP</H2>

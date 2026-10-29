@@ -455,13 +455,16 @@ export const en = {
   "app.projectSettings.queued": "Queued. It runs in the background.",
   "app.projectSettings.folders": "Folders",
   "app.projectSettings.foldersBody":
-    "A session that starts in one of these folders writes to this project. A git repository still wins over a folder.",
+    "A session you start in one of these folders writes to this project. The claim is yours, so a teammate's session is unaffected. A git repository still wins over a folder.",
   "app.projectSettings.folderAdd": "Add folder",
   "app.projectSettings.folderRemove": "Remove",
   "app.projectSettings.folderHint":
     "An absolute path. A folder already claimed by another of your projects must be released there first.",
   "app.projectSettings.folderClaimed": "Folder claimed.",
   "app.projectSettings.folderReleased": "Folder released.",
+  "app.projectSettings.folderTaken":
+    "That folder is already claimed by another of your projects. Release it there first.",
+  "app.projectSettings.folderAbsolute": "That is not an absolute path. It has to start with /.",
   "app.projectSettings.saving": "Saving…",
   "app.projectSettings.sharedTeam": "Shared with the team.",
   "app.projectSettings.shared": "Shared.",

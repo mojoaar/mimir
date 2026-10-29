@@ -177,14 +177,14 @@ describe('project settings page', () => {
     expect(html).toContain('name="folder"')
   })
 
-  it('shows a grantee the folders, so a session landing there makes sense', async () => {
+  it('keeps the folders section to the owner, because a claim is their own', async () => {
     mocks.getProject.mockResolvedValueOnce({ ...project, role: 'write' })
     mocks.listFolders.mockResolvedValueOnce([{ id: 'f1', path: '/Users/alice/AI' }])
 
     const html = await render()
 
-    expect(html).toContain('/Users/alice/AI')
-    expect(html).not.toContain('name="folder"')
+    expect(html).not.toContain('/Users/alice/AI')
+    expect(html).not.toContain('Add folder')
   })
 })
 

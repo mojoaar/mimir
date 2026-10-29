@@ -54,9 +54,9 @@ export default async function ProjectSettingsPage({
     getEmbeddingConfig().then((config) => config !== null),
   ])
 
-  // Visible to anyone with access, because it explains where their session
-  // wrote; only the owner may change it.
-  const folders = project.role ? await listFolders(user.id, project.id) : []
+  // A claim is private to the account that made it (RLS), so only the owner can
+  // ever see or use this section; showing a grantee an empty box would lie.
+  const folders = project.role === 'owner' ? await listFolders(user.id, project.id) : []
 
   // Sharing is the owner's to change; a grantee only ever sees what it was given.
   const [grants, teams] =
@@ -154,20 +154,20 @@ export default async function ProjectSettingsPage({
         providers={providers}
       />
 
-      <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-4">
-        <h2 className="text-sm font-semibold">{t('app.projectSettings.folders')}</h2>
-        <p className="text-sm text-[var(--text-muted)]">
-          {t('app.projectSettings.foldersBody')}
-        </p>
-        {folders.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {folders.map((folder) => (
-              <li
-                key={folder.id}
-                className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2"
-              >
-                <span className="font-mono text-xs">{folder.path}</span>
-                {project.role === 'owner' ? (
+      {project.role === 'owner' ? (
+        <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-4">
+          <h2 className="text-sm font-semibold">{t('app.projectSettings.folders')}</h2>
+          <p className="text-sm text-[var(--text-muted)]">
+            {t('app.projectSettings.foldersBody')}
+          </p>
+          {folders.length > 0 ? (
+            <ul className="flex flex-col gap-2">
+              {folders.map((folder) => (
+                <li
+                  key={folder.id}
+                  className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2"
+                >
+                  <span className="font-mono text-xs">{folder.path}</span>
                   <form action={releaseFolderAction} className="ml-auto">
                     <input type="hidden" name="folderId" value={folder.id} />
                     <input type="hidden" name="slug" value={project.slug} />
@@ -178,12 +178,10 @@ export default async function ProjectSettingsPage({
                       {t('app.projectSettings.folderRemove')}
                     </button>
                   </form>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {project.role === 'owner' ? (
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <form action={claimFolderAction} className="flex flex-wrap items-center gap-2">
             <input type="hidden" name="projectId" value={project.id} />
             <input type="hidden" name="slug" value={project.slug} />
@@ -199,13 +197,14 @@ export default async function ProjectSettingsPage({
               {t('app.projectSettings.folderAdd')}
             </button>
           </form>
-        ) : null}
-        <p className="text-xs text-[var(--text-muted)]">{t('app.projectSettings.folderHint')}</p>
-      </section>
+          <p className="text-xs text-[var(--text-muted)]">{t('app.projectSettings.folderHint')}</p>
+        </section>
+      ) : null}
 
       {project.role === 'owner' ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold">{t('app.projectSettings.sharing')}</h2>          {grants.length === 0 ? (
+          <h2 className="text-sm font-semibold">{t('app.projectSettings.sharing')}</h2>
+          {grants.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">{t('app.projectSettings.noShares')}</p>
           ) : (
             <ul className="flex flex-col gap-2">

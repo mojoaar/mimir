@@ -284,5 +284,7 @@ describe('folders as a repo', () => {
 
     expect(html).toContain('Claim a folder under a project')
     expect(html).toContain('A git remote wins')
+    // A claim is per account, so it cannot promise anything for a teammate.
+    expect(html).toContain('every session you start')
   })
 })

@@ -55,6 +55,15 @@ describe('a claimed folder', () => {
     expect(await lookup(alice, '/Users/alice/AI2')).toBeNull()
   })
 
+  it('treats a wildcard character in the path as a character', async () => {
+    await claimFolder(alice, aliceProjectId, '/Users/alice/AI_v2')
+
+    // A `_` in the claim used to match the `/` here, sending these writes into
+    // the wrong project without an error.
+    expect(await lookup(alice, '/Users/alice/AI/v2/work')).toBeNull()
+    expect((await lookup(alice, '/Users/alice/AI_v2/work'))?.projectId).toBe(aliceProjectId)
+  })
+
   it('lets the deeper claim win, whatever was claimed first', async () => {
     const work = await newProject(alice, 'alice-work')
     await claimFolder(alice, aliceProjectId, '/Users/alice/AI')

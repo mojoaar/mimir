@@ -120,6 +120,18 @@ describe('resolveProject', () => {
       aliceProjectId,
     )
   })
+
+  it('says an archived project is archived, instead of handing it back', async () => {
+    // A project born from a path already holds that path's repo key, and the
+    // unique index keeps it after archiving, so no second project can take it.
+    const born = await resolveProject(alice, { repo: '/Users/alice/Work', create: true })
+    await claimFolder(alice, born.id, '/Users/alice/Work')
+    await archiveProject(alice, born.id)
+
+    await expect(resolveProject(alice, { repo: '/Users/alice/Work', create: true })).rejects.toThrow(
+      'archived',
+    )
+  })
 })
 
 describe('project settings', () => {
@@ -224,21 +236,20 @@ describe('archiving', () => {
     expect(rows[0]?.count).toBe(1)
   })
 
-  it('refuses agent writes to an archived project instead of failing inside a dead transaction', async () => {
+  it('refuses to resolve an archived project, and resolves it again once restored', async () => {
     const p = await resolveProject(alice, { repo: 'github.com/alice/archived-repo', create: true })
     await writeMemory({ userId: alice, projectId: p.id, path: 'a/b', body: 'kept' })
     await archiveProject(alice, p.id)
 
-    // What the plugin actually does: resolve by repo, then write.
-    const again = await resolveProject(alice, { repo: 'github.com/alice/archived-repo', create: true })
-
-    expect(again.id).toBe(p.id)
-    await expect(
-      writeMemory({ userId: alice, projectId: again.id, path: 'a/b', body: 'new' }),
-    ).rejects.toMatchObject({ code: 'forbidden' })
-    await expect(readMemory(alice, again.id, 'a/b')).rejects.toMatchObject({ code: 'forbidden' })
+    // What the plugin actually does: resolve by repo, then write. Handing back
+    // the archived project would turn that write into a bare 403.
+    await expect(resolveProject(alice, { repo: 'github.com/alice/archived-repo', create: true })).rejects.toMatchObject(
+      { code: 'forbidden' },
+    )
 
     await restoreProject(alice, p.id)
+    const again = await resolveProject(alice, { repo: 'github.com/alice/archived-repo', create: true })
+    expect(again.id).toBe(p.id)
     expect((await readMemory(alice, again.id, 'a/b'))?.body).toBe('kept')
   })
 

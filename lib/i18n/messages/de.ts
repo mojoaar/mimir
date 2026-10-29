@@ -473,13 +473,16 @@ export const de: Messages = {
     "In die Warteschlange gestellt. Es läuft im Hintergrund.",
   "app.projectSettings.folders": "Ordner",
   "app.projectSettings.foldersBody":
-    "Eine Sitzung, die in einem dieser Ordner startet, schreibt in dieses Projekt. Ein Git-Repository gewinnt weiterhin gegen einen Ordner.",
+    "Eine Sitzung, die du in einem dieser Ordner startest, schreibt in dieses Projekt. Die Zuordnung gehört dir, eine Sitzung von Kollegen bleibt unberührt. Ein Git-Repository gewinnt weiterhin gegen einen Ordner.",
   "app.projectSettings.folderAdd": "Ordner hinzufügen",
   "app.projectSettings.folderRemove": "Entfernen",
   "app.projectSettings.folderHint":
     "Ein absoluter Pfad. Ein Ordner, der bereits zu einem anderen deiner Projekte gehört, muss dort zuerst freigegeben werden.",
   "app.projectSettings.folderClaimed": "Ordner zugeordnet.",
   "app.projectSettings.folderReleased": "Ordner freigegeben.",
+  "app.projectSettings.folderTaken":
+    "Dieser Ordner gehört bereits zu einem anderen deiner Projekte. Gib ihn dort zuerst frei.",
+  "app.projectSettings.folderAbsolute": "Das ist kein absoluter Pfad. Er muss mit / beginnen.",
   "app.projectSettings.saving": "Wird gespeichert…",
   "app.projectSettings.sharedTeam": "Mit dem Team geteilt.",
   "app.projectSettings.shared": "Geteilt.",

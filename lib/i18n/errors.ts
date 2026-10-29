@@ -10,6 +10,8 @@ const PHRASES: { test: RegExp; key: string }[] = [
   { test: /already in use/i, key: 'app.error.emailTaken' },
   { test: /you have not set a password yet/i, key: 'app.error.noPassword' },
   { test: /is not a CIDR block/i, key: 'app.error.badCidr' },
+  { test: /already claimed by another project/i, key: 'app.projectSettings.folderTaken' },
+  { test: /must be an absolute path/i, key: 'app.projectSettings.folderAbsolute' },
 ]
 
 const BY_CODE: Record<string, string> = {

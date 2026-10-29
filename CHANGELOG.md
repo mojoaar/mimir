@@ -13,10 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page was read, which re-runs the page's queries in place. Scroll position, the open memory and text you have typed
   but not saved all survive, which a browser reload does not guarantee.
 
-- **A folder stands in for a repository.** Claim a folder under a project's settings and every session started in it,
-  or below it, writes to that project, so a directory that is not a git repository gets its own memory instead of
-  everything landing in one bucket. A git remote still wins over a folder, the deepest claim wins when they nest, and
-  `project_list` reports the folders a project answers for.
+- **A folder stands in for a repository.** Claim a folder under a project's settings and every session you start in
+  it, or below it, writes to that project, so a directory that is not a git repository gets its own memory instead of
+  everything landing in one bucket. A claim belongs to your account, so a teammate's session in the same folder is
+  unaffected. A git remote still wins over a folder, the deepest claim wins when they nest, and `project_list` reports
+  the folders a project answers for.
 
 - **Every memory records who wrote it.** A write can carry a `client` and a `session`; both are kept on the memory
   and on every version it replaces, and the history panel shows them beside the date and the size. The OpenCode

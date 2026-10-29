@@ -161,12 +161,20 @@ async function createProject(
       // A named project has no repo key, so match it by the slug that collided;
       // otherwise an archived project would silently fork into `name-2`.
       const existing = await client.query<{ id: string; slug: string }>(
-        'SELECT id, slug FROM projects WHERE owner_user_id = $1 AND (repo_key = $2 OR slug = $3)',
+        `SELECT id, slug FROM projects
+          WHERE owner_user_id = $1 AND archived_at IS NULL AND (repo_key = $2 OR slug = $3)`,
         [userId, repoKey, slug],
       )
       const row = existing.rows[0]
       if (row) return { id: row.id, slug: row.slug, role: 'owner' }
     }
+  }
+
+  if (repoKey) {
+    // An archived project keeps its repo key (the unique index outlives it), so
+    // a folder or repository can never be reused while it is archived. Returning
+    // it would hand back a project every write refuses with a bare 403.
+    throw forbidden('the project for that folder or repository is archived; restore it before writing here')
   }
 
   throw new Error(`could not allocate a project slug for ${repoKey ?? 'project'}`)

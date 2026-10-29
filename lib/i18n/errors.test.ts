@@ -13,6 +13,19 @@ describe('action messages', () => {
     expect(actionMessage(error, da)).toBe('Din nuværende adgangskode er forkert.')
   })
 
+  it('says which folder rule was broken, not that the input was odd', () => {
+    const taken = Object.assign(new Error('that folder is already claimed by another project'), {
+      code: 'invalid_params',
+    })
+    const relative = Object.assign(
+      new Error('a folder must be an absolute path, for example /Users/you/AI'),
+      { code: 'invalid_params' },
+    )
+
+    expect(actionMessage(taken, da)).toBe(t('da', 'app.projectSettings.folderTaken'))
+    expect(actionMessage(relative, da)).toBe(t('da', 'app.projectSettings.folderAbsolute'))
+  })
+
   it('falls back to the code when the sentence is not one we translate', () => {
     const error = Object.assign(new Error('insert violates constraint'), { code: 'forbidden' })
 

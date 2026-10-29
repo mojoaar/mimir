@@ -6,7 +6,7 @@ import { connection } from 'next/server';
 import { getCurrentUser } from '@/lib/auth/context';
 import { MimirTerminal } from './terminal';
 import { QuickStart } from './quick-start';
-import { ClientStrip, DigestCard, SearchMock, StatStrip } from './showcase';
+import { ClientStrip, DigestCard, SearchMock, StatStrip, WhyMark } from './showcase';
 import { Logo } from '@/app/logo'
 import { ThemeToggle } from '@/app/theme-toggle'
 import { cookies } from 'next/headers'
@@ -192,14 +192,22 @@ export default async function MarketingPage({
           }}
         />
 
-        <section className="flex flex-col gap-4">
-          <h2 className="max-w-3xl text-xl font-semibold tracking-tight">{t(locale, 'why.title')}</h2>
-          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
-            {t(locale, 'why.p1')}
-          </p>
-          <p className="max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
-            {t(locale, 'why.p2')}
-          </p>
+        <section className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] p-6 sm:p-10">
+          {/* The eye bleeds off the corner, so it reads as a watermark rather
+              than a logo someone placed. */}
+          <WhyMark className="pointer-events-none absolute -right-14 -top-16 w-[300px] text-[var(--accent)] opacity-[0.09]" />
+          <div className="relative flex flex-col gap-5">
+            <p className="max-w-3xl text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+              {t(locale, 'why.title')}
+            </p>
+            <h2 className="max-w-3xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+              {t(locale, 'why.headline')}
+            </h2>
+            <div className="grid max-w-3xl gap-5 sm:grid-cols-2">
+              <p className="text-base leading-relaxed text-[var(--text-muted)]">{t(locale, 'why.p1')}</p>
+              <p className="text-sm leading-relaxed text-[var(--text-muted)]">{t(locale, 'why.p2')}</p>
+            </div>
+          </div>
         </section>
 
         <section className="flex flex-col gap-6">

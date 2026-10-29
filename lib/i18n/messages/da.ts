@@ -35,6 +35,7 @@ export const da: Messages = {
   "features.private.body":
     "Kører i dit eget hjemmenetværk på én container og én database. Brugere, projektadgang, tofaktor og krypterede backupper.",
   "why.title": "Hvorfor Mimir",
+  "why.headline": "Et øje for én tår",
   "why.p1":
     "Mimir var den nordiske gud, hvis brønd rummede visdom og erindring. Odin gav et øje for en enkelt tår af den.",
   "why.p2":

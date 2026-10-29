@@ -163,6 +163,15 @@ describe('the marketing page', () => {
     expect(html).toContain('Umami');
   });
 
+  test('sets the reason in a panel, with the eye behind it', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    // The myth is the only illustrated block, so it is the only one with a mark.
+    expect(html).toContain('viewBox="0 0 240 240"');
+    expect(html).toContain('An eye for one draught');
+    expect(html).toContain('Odin traded an eye');
+  });
+
   test('names the clients and puts the numbers in a row', async () => {
     const html = renderToStaticMarkup(await page('en'));
 

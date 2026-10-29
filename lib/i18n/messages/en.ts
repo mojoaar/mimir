@@ -33,6 +33,7 @@ export const en = {
   "features.private.body":
     "Runs in your homelab on one container and one database. User accounts, per-project grants, two-factor sign-in, encrypted backups.",
   "why.title": "Why Mimir",
+  "why.headline": "An eye for one draught",
   "why.p1":
     "Mimir was the Norse god whose well held wisdom and memory. Odin traded an eye for a single draught from it.",
   "why.p2":

@@ -50,6 +50,24 @@ function labelled(title: string, accent: string) {
   );
 }
 
+/**
+ * The well and the eye it was paid for, as one mark. Inline so it takes the
+ * accent of whichever theme is on, with no image to fall out of date.
+ */
+export function WhyMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 240 240" fill="none" aria-hidden="true">
+      <g stroke="currentColor" strokeWidth="2">
+        <circle cx="120" cy="120" r="86" />
+        <circle cx="120" cy="120" r="66" />
+        <circle cx="120" cy="120" r="48" />
+        <path d="M62 120c18-24 40-36 58-36s40 12 58 36c-18 24-40 36-58 36s-40-12-58-36z" />
+      </g>
+      <circle cx="120" cy="120" r="13" fill="currentColor" />
+    </svg>
+  );
+}
+
 type StatLabels = Record<'container' | 'mcp' | 'plugin' | 'clients', string>;
 
 export function StatStrip({ labels }: { labels: StatLabels }) {

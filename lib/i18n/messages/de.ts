@@ -35,6 +35,7 @@ export const de: Messages = {
   "features.private.body":
     "Läuft im eigenen Heimnetz auf einem Container und einer Datenbank. Benutzerkonten, Projektfreigaben, Zwei-Faktor-Anmeldung, verschlüsselte Backups.",
   "why.title": "Warum Mimir",
+  "why.headline": "Ein Auge für einen Schluck",
   "why.p1":
     "Mimir war der nordische Gott, dessen Brunnen Weisheit und Erinnerung barg. Odin gab ein Auge für einen einzigen Schluck daraus.",
   "why.p2":

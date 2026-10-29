@@ -18,7 +18,6 @@ const NUDGE =
   'call memory_write now at one clear path, or hand the conversation over with mimir_learn, ' +
   'before the detail is compacted away.'
 
-export const NOTICE_HEADER = '## Mimir took notes\n\n'
 export const MAX_TRANSCRIPT = 32_000
 /** A compaction of nothing is not worth a model call. */
 export const MIN_TRANSCRIPT = 500
@@ -89,36 +88,39 @@ export default Plugin.define({
       event.system.push({ type: 'text', text: `${DIGEST_HEADER}${text}` })
     })
 
+    // The reminder rides the message count. A shrink means a compaction just
+    // happened, which is the worst moment to lose a detail, so it nudges early.
     const counts = new Map<string, { turns: number; nudgedAt: number }>()
-    const snapshots = new Map<string, string>()
     const nudge = await ctx.session.hook('context', async (event) => {
       const state = counts.get(event.sessionID) ?? { turns: 0, nudgedAt: 0 }
       const turns = event.messages?.length ?? 0
-      const shrank = turns < state.turns
-      const due = shrank || turns - state.nudgedAt >= NUDGE_EVERY
+      const due = turns < state.turns || turns - state.nudgedAt >= NUDGE_EVERY
       counts.set(event.sessionID, { turns, nudgedAt: due ? turns : state.nudgedAt })
 
-      // A shrink is a compaction. The snapshot is the transcript that was just
-      // summarised away, so it is the only copy of that detail left.
-      if (shrank) {
-        const compacted = snapshots.get(event.sessionID) ?? ''
-        snapshots.delete(event.sessionID)
-        if (compacted.length >= MIN_TRANSCRIPT) {
-          const sent = await callTool(
-            'memory_learn',
-            { repo: repo ?? undefined, transcript: compacted, hint: LEARN_HINT },
-            { ...config, timeoutMs: 4000 },
-          ).catch(() => null)
-          const queued = sent?.ok ? (sent.result as { queued?: boolean }).queued : undefined
-          if (sent?.ok && queued !== false) {
-            event.system.push({ type: 'text', text: `${NOTICE_HEADER}Mimir is writing what this session settled.` })
-          }
-        }
-      } else {
-        snapshots.set(event.sessionID, transcript(event.messages ?? []))
-      }
-
       if (due) event.system.push({ type: 'text', text: `${NUDGE_HEADER}${NUDGE}` })
+    })
+
+    // OpenCode fires this for its own compaction and hands over the messages
+    // being replaced. A compressed view swapped in by another plugin never
+    // reaches it, which is why the message count is not a signal.
+    const compacted = new Set<string>()
+    const compaction = await ctx.session.hook('compaction', async (event) => {
+      // One compaction can ask twice. The second call must not write again.
+      if (compacted.has(event.sessionID)) return
+      const text = transcript(event.messages ?? [])
+      if (text.length < MIN_TRANSCRIPT) return
+      compacted.add(event.sessionID)
+
+      const sent = await callTool(
+        'memory_learn',
+        { repo: repo ?? undefined, transcript: text, hint: LEARN_HINT },
+        { ...config, timeoutMs: 4000 },
+      ).catch(() => null)
+
+      // Nothing is written to event.system here: this request's prompt becomes
+      // the summary that replaces the conversation. A failure gives the session
+      // its one chance back, so an outage does not use the compaction up.
+      if (!sent?.ok) compacted.delete(event.sessionID)
     })
 
     const tools = await registerTools(ctx, config, repo)
@@ -127,6 +129,7 @@ export default Plugin.define({
       await tools.dispose()
       await session.dispose()
       await nudge.dispose()
+      await compaction.dispose()
     }
   },
 })

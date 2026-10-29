@@ -68,9 +68,11 @@ async function setup(overrides: Record<string, unknown> = {}) {
   const built = context(overrides)
   const cleanup = await plugin.setup(built.fake as never)
   const [hook, nudge] = built.hooks.context ?? []
+  const [compact] = built.hooks.compaction ?? []
   if (!hook) throw new Error('the plugin registers no context hook')
   if (!nudge) throw new Error('the plugin registers no nudge hook')
-  return { ...built, hook, nudge, cleanup }
+  if (!compact) throw new Error('the plugin registers no compaction hook')
+  return { ...built, hook, nudge, compact, cleanup }
 }
 
 function transform(sessionId = 'session-1', turns = 0) {
@@ -207,7 +209,7 @@ describe('the session-start digest', () => {
 
     // The MCP probe is disposed during setup; the two live registrations last
     // until the plugin is cleaned up.
-    expect(disposed).toEqual(['mcp', 'tools', 'session:context', 'session:context'])
+    expect(disposed).toEqual(['mcp', 'tools', 'session:context', 'session:context', 'session:compaction'])
   })
 })
 
@@ -348,54 +350,80 @@ describe('the tools it adds', () => {
 describe('the transcript it hands over', () => {
   const long = (label: string) => ({ role: 'user', content: `${label} `.repeat(60) })
 
-  it('sends the part that was compacted, once', async () => {
-    const { nudge } = await setup()
+  it('sends the messages OpenCode is about to compact', async () => {
+    const { compact } = await setup()
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { queued: true } }
-    mocks.reject = false
 
-    const big = [long('one'), long('two'), long('three'), long('four'), long('five')]
-    await nudge({ sessionID: 's1', system: [], messages: big })
-    await nudge({ sessionID: 's1', system: [], messages: big.slice(0, 2) })
+    await compact({ sessionID: 's1', system: [], messages: [long('one'), long('five')] })
 
     const learn = mocks.calls.filter((call) => call.name === 'memory_learn')
     expect(learn).toHaveLength(1)
     expect(String(learn[0]?.args.transcript)).toContain('five')
     expect(learn[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+    expect(learn[0]?.options?.timeoutMs).toBe(4000)
   })
 
-  it('stays quiet while the list only grows', async () => {
-    const { nudge } = await setup()
+  it('leaves the compaction prompt alone', async () => {
+    const { compact } = await setup()
+    mocks.result = { ok: true, result: { queued: true } }
+    const event = { sessionID: 's1', system: [] as { type: string; text: string }[], messages: [long('a')] }
+
+    await compact(event)
+
+    expect(event.system).toHaveLength(0)
+  })
+
+  it('sends once for a compaction that asks twice', async () => {
+    const { compact } = await setup()
     mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    const event = { sessionID: 's2', system: [], messages: [long('a'.repeat(60))] }
 
-    const one = [long('a'), long('b')]
-    await nudge({ sessionID: 's2', system: [], messages: one })
-    await nudge({ sessionID: 's2', system: [], messages: [...one, long('c')] })
+    await compact(event)
+    await compact(event)
 
-    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(1)
   })
 
   it('sends nothing when the compacted part has no text', async () => {
-    const { nudge } = await setup()
+    const { compact } = await setup()
     mocks.calls.length = 0
 
-    await nudge({ sessionID: 's3', system: [], messages: [{}, {}, {}] })
-    await nudge({ sessionID: 's3', system: [], messages: [{}] })
+    await compact({ sessionID: 's3', system: [], messages: [{}, {}] })
 
     expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
   })
 
   it('survives a Mimir that is down', async () => {
-    const { nudge } = await setup()
+    const { compact } = await setup()
     mocks.calls.length = 0
     mocks.reject = true
 
-    const big = [long('x'), long('y')]
-    await nudge({ sessionID: 's4', system: [], messages: big })
-    const shrunk: ContextEvent = { sessionID: 's4', system: [], messages: [big[0]] }
-    await expect(nudge(shrunk)).resolves.toBeUndefined()
+    await expect(compact({ sessionID: 's4', system: [], messages: [long('x')] })).resolves.toBeUndefined()
 
     mocks.reject = false
-    expect(shrunk.system.some((line) => line.text.includes('Mimir took notes'))).toBe(false)
+  })
+
+  it('does not treat a shorter list as a compaction', async () => {
+    const { nudge } = await setup()
+    mocks.calls.length = 0
+
+    const big = [long('one'), long('two'), long('three')]
+    await nudge({ sessionID: 's5', system: [], messages: big })
+    await nudge({ sessionID: 's5', system: [], messages: [big[0]] })
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+  })
+
+  it('cuts an oversized transcript to its tail', async () => {
+    const { compact } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+
+    await compact({ sessionID: 's6', system: [], messages: [long('x'.repeat(600))] })
+
+    expect(mocks.calls[0]?.name).toBe('memory_learn')
+    expect(String(mocks.calls[0]?.args.transcript).length).toBe(32_000)
   })
 })

@@ -1,8 +1,6 @@
+import { AUDIT_READ_RETENTION_DAYS, AUDIT_RETENTION_DAYS } from '../audit/retention'
 import { withAdmin } from '../db/tx'
 import { registerWorker } from './boss'
-
-export const AUDIT_READ_RETENTION_DAYS = 30
-export const AUDIT_RETENTION_DAYS = 365
 
 export type PruneResult = { reads: number; other: number }
 

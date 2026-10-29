@@ -93,6 +93,21 @@ describe('the profile page', () => {
     }
   })
 
+  it('ends with the sessions, after the things you set once', async () => {
+    mocks.sessions = [current]
+
+    const html = await render()
+    const appearance = html.indexOf('>Appearance</h2>')
+    const keys = html.indexOf('>API keys</h2>')
+    const sessions = html.indexOf('>Sessions</h2>')
+
+    expect(appearance).toBeGreaterThan(-1)
+    expect(keys).toBeGreaterThan(appearance)
+    // Revoking a device is the thing you come here for when something feels
+    // wrong, so it sits last rather than interrupting the settings above.
+    expect(sessions).toBeGreaterThan(keys)
+  })
+
   it('shows the name and email in an editable form', async () => {
     mocks.sessions = []
 

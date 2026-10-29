@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth/admin'
 import { listAudit, listAuditActions, type AuditRow } from '@/lib/audit/query'
+import { AUDIT_READ_RETENTION_DAYS, AUDIT_RETENTION_DAYS } from '@/lib/audit/retention'
 import { stamp } from '@/lib/format/time'
 import { translator } from '@/lib/i18n/request'
 import { getTimeFormat } from '@/lib/settings/time'
@@ -82,6 +83,13 @@ export default async function AuditPage({
           {t('app.admin.audit.export')}
         </Link>
       </div>
+
+      <p className="text-sm text-[var(--text-muted)]">
+        {t('app.admin.audit.retention', {
+          kept: AUDIT_RETENTION_DAYS,
+          reads: AUDIT_READ_RETENTION_DAYS,
+        })}
+      </p>
 
       <form method="get" className="flex flex-wrap items-end gap-3 text-sm">
         <label className="flex flex-col gap-1">

@@ -168,6 +168,49 @@ export default async function ProfilePage({
       </div>
 
       <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">{t('app.settings.appearanceTitle')}</h2>
+        <p className="text-sm text-[var(--text-muted)]">{t('app.settings.appearanceBody')}</p>
+        <div className="flex flex-wrap items-center gap-6 text-sm">
+          <LanguageSwitcher
+            value={locale}
+            label={t('app.language.label')}
+            action={setLocaleAction}
+          />
+          <ThemeSwitcher value={theme} />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-medium">{t('app.settings.keysTitle')}</h2>
+        <p className="text-sm text-[var(--text-muted)]">
+          {t('app.settings.keysBody', { mcp: `${base}/mcp`, api: `${base}/api/v1` })}
+        </p>
+        <KeyForm
+          labels={{
+            name: t('app.settings.keyName'),
+            placeholder: t('app.settings.keyNamePlaceholder'),
+            create: t('app.settings.keyCreate'),
+            creating: t('app.settings.keyCreating'),
+            copyNow: t('app.settings.keyCopyNow'),
+            copy: t('app.settings.keyCopy'),
+            copied: t('app.settings.keyCopied'),
+          }}
+        />
+        <KeyList
+          keys={keys.map((key) => ({
+            ...key,
+            lastUsedAt: key.lastUsedAt ? stamp(key.lastUsedAt, timeZone, { dateOnly: true }) : null,
+          }))}
+          labels={{
+            empty: t('app.settings.keyEmpty'),
+            revoked: t('app.settings.keyRevoked'),
+            neverUsed: t('app.settings.keyNeverUsed'),
+            lastUsed: t('app.settings.keyLastUsed'),
+            revoke: t('app.settings.keyRevoke'),
+          }}
+        />
+      </div>
+      <div className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">{t('app.profile.sessions')}</h2>
         <p className="text-sm text-[var(--text-muted)]">{t('app.profile.sessionsBody')}</p>
 
@@ -221,47 +264,6 @@ export default async function ProfilePage({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">{t('app.settings.appearanceTitle')}</h2>
-        <p className="text-sm text-[var(--text-muted)]">{t('app.settings.appearanceBody')}</p>
-        <div className="flex flex-wrap items-center gap-6 text-sm">
-          <LanguageSwitcher
-            value={locale}
-            label={t('app.language.label')}
-            action={setLocaleAction}
-          />
-          <ThemeSwitcher value={theme} />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">{t('app.settings.keysTitle')}</h2>
-        <p className="text-sm text-[var(--text-muted)]">
-          {t('app.settings.keysBody', { mcp: `${base}/mcp`, api: `${base}/api/v1` })}
-        </p>
-        <KeyForm
-          labels={{
-            name: t('app.settings.keyName'),
-            placeholder: t('app.settings.keyNamePlaceholder'),
-            create: t('app.settings.keyCreate'),
-            creating: t('app.settings.keyCreating'),
-            copyNow: t('app.settings.keyCopyNow'),
-          }}
-        />
-        <KeyList
-          keys={keys.map((key) => ({
-            ...key,
-            lastUsedAt: key.lastUsedAt ? stamp(key.lastUsedAt, timeZone, { dateOnly: true }) : null,
-          }))}
-          labels={{
-            empty: t('app.settings.keyEmpty'),
-            revoked: t('app.settings.keyRevoked'),
-            neverUsed: t('app.settings.keyNeverUsed'),
-            lastUsed: t('app.settings.keyLastUsed'),
-            revoke: t('app.settings.keyRevoke'),
-          }}
-        />
-      </div>
     </section>
   )
 }

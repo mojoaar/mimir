@@ -30,7 +30,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with it. Archiving stays the reversible step. Deleting also frees the repository or folder, which an archived
   project held for ever, so the same one can start again cleanly.
 
+- **A copy button for a new API key.** The one moment the key is readable now has a **Copy** control beside the
+  warning that it will not be shown again, instead of asking you to select the characters by hand. A browser that
+  refuses the clipboard leaves the key selectable.
+
 ### Changed
+
+- **Your profile ends with your sessions.** The list of signed-in browsers, and the button that signs out the
+  others, now sit after appearance and the API keys instead of splitting them. They are what you come here for when
+  something feels wrong, not something you pass on the way.
+
+- **The audit log says how long it keeps entries.** The page now names the window itself, a year for the auth and
+  admin trail and thirty days for memory reads, taken from the same constants the nightly prune job uses. It also
+  says plainly that nothing in it can be edited or deleted, and points at the CSV export.
 
 - **Docs pages carry the install's name.** Every page under `/docs` now reads `Tools | Mimir` rather than `Tools`, with
   the name taken from **Admin → Settings → Site**, the same way the landing page does it. A page that passes no

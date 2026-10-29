@@ -268,6 +268,16 @@ describe('plugins', () => {
   })
 })
 
+describe('provenance', () => {
+  it('says where a memory came from, and that it is optional', async () => {
+    const html = renderToStaticMarkup(await ToolsPage())
+
+    expect(html).toContain('traced back to the conversation')
+    expect(html).toContain('client')
+    expect(html).toContain('session')
+  })
+})
+
 describe('folders as a repo', () => {
   it('explains that a folder can stand in for a repository', () => {
     const html = renderToStaticMarkup(McpPage())

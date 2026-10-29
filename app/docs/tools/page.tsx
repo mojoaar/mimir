@@ -53,7 +53,9 @@ export default async function ToolsPage() {
         runs on the new text. Returns <code>{'{ path, created }'}</code>. An optional <code>kind</code> is one of{' '}
         <code>note</code>, <code>fact</code>, <code>decision</code>, <code>gotcha</code>, <code>procedure</code>,{' '}
         <code>snippet</code> or <code>import</code>. A <code>procedure</code> is listed first in the digest, with its
-        summary, because a runbook is valid until it is replaced.
+        summary, because a runbook is valid until it is replaced. Optional <code>client</code> and{' '}
+        <code>session</code> arguments are recorded with the memory and with every version it replaces, so a memory
+        can be traced back to the conversation that wrote it. Sending neither is normal.
       </P>
 
       <H2>memory_tree</H2>
@@ -80,7 +82,8 @@ export default async function ToolsPage() {
         Arguments: <code>transcript</code> (up to 32 KB of the conversation, verbatim) and an optional{' '}
         <code>hint</code>. The project's own model reads it and writes at most three memories, so the agent does not
         have to decide what is worth keeping. It answers <code>{'{ queued }'}</code> at once and writes in the
-        background, which is why a missing summary a moment later is not a failure.
+        background, which is why a missing summary a moment later is not a failure. The same <code>client</code> and{' '}
+        <code>session</code> are optional here, and the memories it writes carry them.
       </P>
 
       <H2>project_list</H2>

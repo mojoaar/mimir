@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   everything landing in one bucket. A git remote still wins over a folder, the deepest claim wins when they nest, and
   `project_list` reports the folders a project answers for.
 
+- **Every memory records who wrote it.** A write can carry a `client` and a `session`; both are kept on the memory
+  and on every version it replaces, and the history panel shows them beside the date and the size. The OpenCode
+  plugin fills in both, the Oh My Pi plugin fills in the client, because its tool API hands over no session id. Both
+  arguments are optional, so an agent that sends neither writes exactly as before.
+
 ### Changed
 
 - **Docs pages carry the install's name.** Every page under `/docs` now reads `Tools | Mimir` rather than `Tools`, with

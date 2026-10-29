@@ -85,6 +85,10 @@ export function MemoryHistory({
                   <span className="min-w-0 truncate">{version.title}</span>
                   <span className="text-[var(--text-muted)]">
                     {version.updatedAt.toISOString()} · {version.bytes} B
+                    {/* An identifier, not a sentence: no label key, and the
+                        session is shortened to what tells two apart. */}
+                    {version.client ? ` · ${version.client}` : ''}
+                    {version.session ? ` ${version.session.slice(0, 8)}` : ''}
                   </span>
                 </Link>
               </li>

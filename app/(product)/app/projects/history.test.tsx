@@ -77,6 +77,23 @@ describe('diffLines', () => {
 })
 
 describe('the history panel', () => {
+  it('names the client and the start of the session that wrote it', () => {
+    const html = render({
+      versions: [
+        {
+          ...versions[0]!,
+          client: 'curl',
+          session: 'manual-1234567890',
+        },
+        versions[1]!,
+      ],
+    })
+
+    expect(html).toContain('curl')
+    expect(html).toContain('manual-1')
+    expect(html).not.toContain('manual-1234567890')
+  })
+
   it('lists every version with its time and size', () => {
     const html = render()
 

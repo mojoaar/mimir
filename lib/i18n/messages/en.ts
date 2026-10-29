@@ -56,6 +56,7 @@ export const en = {
   "providers.embedTitle": "Embeddings",
   "providers.embed":
     'An embedding model turns text into vectors, so a search for "secret rollover" finds the memory called how we rotate keys. One model serves the whole install, at 768 dimensions, chosen by an admin.',
+  "providers.optionalWord": "required",
   "providers.optional":
     "Neither is required. Without them, memories are still stored, versioned, backed up and searchable by keyword.",
 

@@ -58,6 +58,7 @@ export const da: Messages = {
   "providers.embedTitle": "Indlejringer",
   "providers.embed":
     'En embedding-model laver tekst om til vektorer, så en søgning efter "secret rollover" finder mindet, der hedder hvordan vi roterer nøgler. Én model dækker hele installationen, med 768 dimensioner, valgt af en admin.',
+  "providers.optionalWord": "påkrævet",
   "providers.optional":
     "Ingen af dem er påkrævet. Uden dem bliver minder stadig gemt, versioneret, sikkerhedskopieret og søgbare på nøgleord.",
 

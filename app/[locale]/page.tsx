@@ -31,6 +31,22 @@ function headline(locale: Locale) {
   );
 }
 
+/**
+ * Underlines the word the sentence turns on. Which word it is differs by
+ * language, so the catalogue names it rather than this file.
+ */
+function emphasise(text: string, word: string) {
+  const at = text.indexOf(word);
+  if (at === -1) return text;
+  return (
+    <>
+      {text.slice(0, at)}
+      <strong className="font-semibold underline underline-offset-2">{word}</strong>
+      {text.slice(at + word.length)}
+    </>
+  );
+}
+
 export const instant = false;
 
 export async function generateMetadata({
@@ -292,7 +308,7 @@ export default async function MarketingPage({
               ))}
             </div>
             <p className="max-w-3xl text-sm leading-relaxed text-[var(--accent)]">
-              {t(locale, 'providers.optional')}
+              {emphasise(t(locale, 'providers.optional'), t(locale, 'providers.optionalWord'))}
             </p>
           </div>
         </section>

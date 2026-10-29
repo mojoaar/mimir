@@ -58,6 +58,7 @@ export const de: Messages = {
   "providers.embedTitle": "Einbettungen",
   "providers.embed":
     'Ein Embedding-Modell macht aus Text Vektoren, damit eine Suche nach "secret rollover" die Erinnerung findet, die heißt, wie wir Schlüssel rotieren. Ein Modell dient der ganzen Installation, mit 768 Dimensionen, von einem Admin gewählt.',
+  "providers.optionalWord": "nötig",
   "providers.optional":
     "Keiner von beiden ist nötig. Ohne sie werden Erinnerungen trotzdem gespeichert, versioniert, gesichert und nach Schlüsselwort durchsuchbar.",
 

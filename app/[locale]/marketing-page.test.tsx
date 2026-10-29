@@ -261,4 +261,10 @@ describe('the marketing page', () => {
     // Both halves are Admin -> Settings -> Site: the name, then the description.
     expect(meta.title).toBe('Mimir | Long-term memory for your agents.');
   });
+
+  test('underlines the word the provider sentence turns on', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('<strong class="font-semibold underline underline-offset-2">required</strong>');
+  });
 });

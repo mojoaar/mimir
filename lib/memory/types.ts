@@ -16,6 +16,8 @@ export type MemoryRow = {
   summary: string | null
   body: string
   kind: string
+  client: string | null
+  session: string | null
   updatedAt: Date
 }
 
@@ -38,6 +40,8 @@ export type WriteInput = {
   title?: string
   kind?: string
   source?: string
+  client?: string
+  session?: string
 }
 
 export type WriteResult = { path: string; created: boolean }

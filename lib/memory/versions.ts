@@ -13,6 +13,8 @@ export type MemoryVersion = {
   body: string
   kind: string
   source: string
+  client: string | null
+  session: string | null
   updatedAt: Date
   createdAt: Date
 }
@@ -25,6 +27,8 @@ type SummaryRow = {
   title: string
   kind: string
   source: string
+  client: string | null
+  session: string | null
   updated_at: Date
   created_at: Date
   bytes: number
@@ -56,13 +60,15 @@ export async function archiveVersion(
     body: string
     kind: string
     source: string
+    client: string | null
+    session: string | null
     updatedAt: Date
   },
 ): Promise<void> {
   await tx.query(
     `insert into memory_versions
-       (memory_id, project_id, path, title, summary, body, kind, source, updated_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+       (memory_id, project_id, path, title, summary, body, kind, source, updated_at, client, session)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
     [
       input.memoryId,
       input.projectId,
@@ -73,6 +79,8 @@ export async function archiveVersion(
       input.kind,
       input.source,
       input.updatedAt,
+      input.client,
+      input.session,
     ],
   )
 
@@ -101,7 +109,8 @@ export async function listVersions(
 
   return withUser(userId, async (tx) => {
     const { rows } = await tx.query<SummaryRow>(
-      `select id, path, title, kind, source, updated_at, created_at, octet_length(body) as bytes
+      `select id, path, title, kind, source, client, session, updated_at, created_at,
+              octet_length(body) as bytes
          from memory_versions
         where project_id = $1 and lower(path) = $2
         order by created_at desc, id desc
@@ -115,6 +124,8 @@ export async function listVersions(
       title: row.title,
       kind: row.kind,
       source: row.source,
+      client: row.client,
+      session: row.session,
       updatedAt: row.updated_at,
       createdAt: row.created_at,
       bytes: Number(row.bytes),
@@ -133,7 +144,7 @@ export async function getVersion(
 
   return withUser(userId, async (tx) => {
     const { rows } = await tx.query<VersionRow>(
-      `select id, path, title, summary, body, kind, source, updated_at, created_at,
+      `select id, path, title, summary, body, kind, source, client, session, updated_at, created_at,
               octet_length(body) as bytes
          from memory_versions
         where id = $1 and project_id = $2`,
@@ -150,6 +161,8 @@ export async function getVersion(
       body: row.body,
       kind: row.kind,
       source: row.source,
+      client: row.client,
+      session: row.session,
       updatedAt: row.updated_at,
       createdAt: row.created_at,
     }

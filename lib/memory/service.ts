@@ -16,6 +16,8 @@ type Row = {
   summary: string | null
   body: string
   kind: string
+  client: string | null
+  session: string | null
   updated_at: Date
 }
 
@@ -42,6 +44,10 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   const title = (input.title?.trim() || titleFromBody(input.body)).slice(0, 120)
   const kind = input.kind ?? 'note'
   const source = input.source ?? 'agent'
+  // Who wrote it is a courtesy, not a key: an older client sends nothing and
+  // the write must still land, so both are trimmed, capped and nullable.
+  const client = input.client?.trim().slice(0, 64) || null
+  const session = input.session?.trim().slice(0, 128) || null
 
   // Before the transaction: a provider round trip inside it would hold a
   // pooled connection for the duration of someone else's network call.
@@ -60,14 +66,16 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
       old_body: string | null
       old_kind: string | null
       old_source: string | null
+      old_client: string | null
+      old_session: string | null
       old_updated_at: Date | null
       old_deleted_at: Date | null
     }>(
-      `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id, embedding, embedded_at, embedding_model)
+      `insert into memories (project_id, path, title, summary, body, tsv, kind, source, author_user_id, embedding, embedded_at, embedding_model, client, session)
        select $1, $2, $3, null, $4,
               to_tsvector(coalesce(p.fts_language, 'english')::regconfig, $2 || ' ' || $3 || ' ' || $4),
               $5, $6, $7, $8::vector,
-              case when $8::text is null then null else now() end, $9
+              case when $8::text is null then null else now() end, $9, $10, $11
          from projects p where p.id = $1
        on conflict (project_id, lower(path)) do update
           set title = excluded.title,
@@ -80,6 +88,8 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
               embedding = excluded.embedding,
               embedded_at = excluded.embedded_at,
               embedding_model = excluded.embedding_model,
+              client = excluded.client,
+              session = excluded.session,
               updated_at = now(),
               deleted_at = null
        returning (xmax = 0) as created,
@@ -89,6 +99,8 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
                  old.body as old_body,
                  old.kind as old_kind,
                  old.source as old_source,
+                 old.client as old_client,
+                 old.session as old_session,
                  old.updated_at as old_updated_at,
                  old.deleted_at as old_deleted_at`,
       [
@@ -101,6 +113,8 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
         input.userId,
         embedding,
         embedded?.model ?? null,
+        client,
+        session,
       ],
     )
 
@@ -123,6 +137,8 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
         body: written.old_body,
         kind: written.old_kind ?? kind,
         source: written.old_source ?? source,
+        client: written.old_client,
+        session: written.old_session,
         updatedAt: written.old_updated_at ?? new Date(),
       })
     }
@@ -144,7 +160,7 @@ export async function readMemory(
 
   return withUser(userId, async (tx) => {
     const { rows } = await tx.query<Row>(
-      `select id, path, title, summary, body, kind, updated_at
+      `select id, path, title, summary, body, kind, client, session, updated_at
          from memories
         where project_id = $1 and lower(path) = $2 and deleted_at is null`,
       [projectId, normalised],
@@ -158,6 +174,8 @@ export async function readMemory(
       summary: row.summary,
       body: row.body,
       kind: row.kind,
+      client: row.client,
+      session: row.session,
       updatedAt: row.updated_at,
     }
   })

@@ -35,6 +35,30 @@ describe('memory versions', () => {
     expect(versions[0]?.bytes).toBe('second'.length)
   })
 
+  it('keeps the previous writer on the version it replaced', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'auth/who',
+      body: 'one',
+      client: 'opencode',
+      session: 'ses_abc',
+    })
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'auth/who',
+      body: 'two',
+      client: 'oh-my-pi',
+      session: 'ses_xyz',
+    })
+
+    const [version] = await listVersions(f.alice, projectId, 'auth/who')
+
+    expect(version?.client).toBe('opencode')
+    expect(version?.session).toBe('ses_abc')
+  })
+
   it('archives nothing on the first write', async () => {
     await writeMemory({ userId: f.alice, projectId, path: 'auth/fresh', body: 'only' })
 

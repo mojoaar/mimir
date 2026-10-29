@@ -42,6 +42,47 @@ describe('memory service', () => {
     expect(rows[0]?.embedding_model).toBeNull()
   })
 
+  it('remembers which client and session wrote a memory', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'a/one',
+      body: 'one',
+      client: 'opencode',
+      session: 'ses_abc',
+    })
+
+    const found = await readMemory(f.alice, projectId, 'a/one')
+
+    expect(found?.client).toBe('opencode')
+    expect(found?.session).toBe('ses_abc')
+  })
+
+  it('stores no blank writer, because an empty string is not an answer', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'a/two', body: 'two', client: '  ', session: '' })
+
+    const found = await readMemory(f.alice, projectId, 'a/two')
+
+    expect(found?.client).toBeNull()
+    expect(found?.session).toBeNull()
+  })
+
+  it('trims the client and caps the session id', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'a/three',
+      body: 'three',
+      client: ' opencode ',
+      session: 'x'.repeat(200),
+    })
+
+    const found = await readMemory(f.alice, projectId, 'a/three')
+
+    expect(found?.client).toBe('opencode')
+    expect(found?.session).toHaveLength(128)
+  })
+
   it('upserts one path instead of appending', async () => {
     await writeMemory({ userId: f.alice, projectId, path: 'conventions/commits', body: 'first' })
     const second = await writeMemory({

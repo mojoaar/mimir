@@ -344,3 +344,58 @@ describe('the tools it adds', () => {
     expect((await learn?.execute?.({ transcript: 'x' }))?.content).toContain('Could not hand that over')
   })
 })
+
+describe('the transcript it hands over', () => {
+  const long = (label: string) => ({ role: 'user', content: `${label} `.repeat(60) })
+
+  it('sends the part that was compacted, once', async () => {
+    const { nudge } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    mocks.reject = false
+
+    const big = [long('one'), long('two'), long('three'), long('four'), long('five')]
+    await nudge({ sessionID: 's1', system: [], messages: big })
+    await nudge({ sessionID: 's1', system: [], messages: big.slice(0, 2) })
+
+    const learn = mocks.calls.filter((call) => call.name === 'memory_learn')
+    expect(learn).toHaveLength(1)
+    expect(String(learn[0]?.args.transcript)).toContain('five')
+    expect(learn[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+  })
+
+  it('stays quiet while the list only grows', async () => {
+    const { nudge } = await setup()
+    mocks.calls.length = 0
+
+    const one = [long('a'), long('b')]
+    await nudge({ sessionID: 's2', system: [], messages: one })
+    await nudge({ sessionID: 's2', system: [], messages: [...one, long('c')] })
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+  })
+
+  it('sends nothing when the compacted part has no text', async () => {
+    const { nudge } = await setup()
+    mocks.calls.length = 0
+
+    await nudge({ sessionID: 's3', system: [], messages: [{}, {}, {}] })
+    await nudge({ sessionID: 's3', system: [], messages: [{}] })
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+  })
+
+  it('survives a Mimir that is down', async () => {
+    const { nudge } = await setup()
+    mocks.calls.length = 0
+    mocks.reject = true
+
+    const big = [long('x'), long('y')]
+    await nudge({ sessionID: 's4', system: [], messages: big })
+    const shrunk = { sessionID: 's4', system: [], messages: [big[0]] }
+    await expect(nudge(shrunk)).resolves.toBeUndefined()
+
+    mocks.reject = false
+    expect(shrunk.system.some((line) => line.text.includes('Mimir took notes'))).toBe(false)
+  })
+})

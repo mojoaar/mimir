@@ -26,6 +26,12 @@ type ContextEvent = {
   messages?: unknown[]
 }
 
+type AddedCommand = {
+  name: string
+  description?: string
+  execute: (input: { sessionID: string }) => Promise<void>
+}
+
 type AddedTool = {
   name: string
   description: string
@@ -36,6 +42,8 @@ type AddedTool = {
 function context(overrides: Record<string, unknown> = {}) {
   const hooks: Record<string, ((event: ContextEvent) => Promise<void>)[]> = {}
   const added: AddedTool[] = []
+  const commands: AddedCommand[] = []
+  const notices: string[] = []
   const disposed: string[] = []
   const registration = (name: string) => ({ dispose: async () => void disposed.push(name) })
 
@@ -46,6 +54,13 @@ function context(overrides: Record<string, unknown> = {}) {
       hook: async (name: string, callback: (event: ContextEvent) => Promise<void>) => {
         hooks[name] = [...(hooks[name] ?? []), callback]
         return registration(`session:${name}`)
+      },
+      synthetic: async ({ text }: { text: string }) => void notices.push(text),
+    },
+    command: {
+      transform: async (callback: (editor: { add: (command: AddedCommand) => void }) => void) => {
+        callback({ add: (command) => commands.push(command) })
+        return registration('commands')
       },
     },
     tool: {
@@ -61,7 +76,7 @@ function context(overrides: Record<string, unknown> = {}) {
       },
     },
   }
-  return { fake, hooks, added, disposed }
+  return { fake, hooks, added, commands, notices, disposed }
 }
 
 async function setup(overrides: Record<string, unknown> = {}) {
@@ -69,10 +84,12 @@ async function setup(overrides: Record<string, unknown> = {}) {
   const cleanup = await plugin.setup(built.fake as never)
   const [hook, nudge] = built.hooks.context ?? []
   const [compact] = built.hooks.compaction ?? []
+  const [command] = built.commands
   if (!hook) throw new Error('the plugin registers no context hook')
   if (!nudge) throw new Error('the plugin registers no nudge hook')
   if (!compact) throw new Error('the plugin registers no compaction hook')
-  return { ...built, hook, nudge, compact, cleanup }
+  if (!command) throw new Error('the plugin registers no command')
+  return { ...built, hook, nudge, compact, command, cleanup }
 }
 
 function transform(sessionId = 'session-1', turns = 0) {
@@ -209,7 +226,7 @@ describe('the session-start digest', () => {
 
     // The MCP probe is disposed during setup; the two live registrations last
     // until the plugin is cleaned up.
-    expect(disposed).toEqual(['mcp', 'tools', 'session:context', 'session:context', 'session:compaction'])
+    expect(disposed).toEqual(['mcp', 'tools', 'session:context', 'session:context', 'session:compaction', 'commands'])
   })
 })
 
@@ -425,5 +442,60 @@ describe('the transcript it hands over', () => {
 
     expect(mocks.calls[0]?.name).toBe('memory_learn')
     expect(String(mocks.calls[0]?.args.transcript).length).toBe(32_000)
+  })
+})
+
+describe('the command to hand it over now', () => {
+  // Two of these clear the 500 character floor with room to spare.
+  const long = (label: string) => ({ role: 'user', content: `${label} `.repeat(80) })
+
+  it('sends the session the command was typed in', async () => {
+    const { nudge, command, notices } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+
+    await nudge({ sessionID: 'c1', system: [], messages: [long('one'), long('two')] })
+    await command.execute({ sessionID: 'c1' })
+
+    const learn = mocks.calls.filter((call) => call.name === 'memory_learn')
+    expect(learn).toHaveLength(1)
+    expect(String(learn[0]?.args.transcript)).toContain('two')
+    expect(learn[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+    expect(notices[0]).toContain('Mimir is writing')
+  })
+
+  it('says so when there is nothing worth sending', async () => {
+    const { command, notices } = await setup()
+    mocks.calls.length = 0
+
+    await command.execute({ sessionID: 'c2' })
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+    expect(notices[0]).toContain('Nothing worth handing over')
+  })
+
+  it('reports an unreachable Mimir instead of throwing', async () => {
+    const { nudge, command, notices } = await setup()
+    mocks.calls.length = 0
+    mocks.reject = true
+
+    await nudge({ sessionID: 'c3', system: [], messages: [long('alpha'), long('beta')] })
+    await expect(command.execute({ sessionID: 'c3' })).resolves.toBeUndefined()
+
+    mocks.reject = false
+    expect(notices[0]).toContain('unreachable')
+  })
+
+  it('does not send the same session twice', async () => {
+    const { nudge, command } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    mocks.reject = false
+
+    await nudge({ sessionID: 'c4', system: [], messages: [long('xray'), long('yankee')] })
+    await command.execute({ sessionID: 'c4' })
+    await command.execute({ sessionID: 'c4' })
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(1)
   })
 })

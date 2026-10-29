@@ -23,6 +23,12 @@ export const MAX_TRANSCRIPT = 32_000
 export const MIN_TRANSCRIPT = 500
 const LEARN_HINT =
   'This session was just compacted. Keep what was decided, what broke and any convention, and skip what Mimir already has.'
+const LEARN_NOW_HINT =
+  'The user asked for this session to be kept now. Keep what was decided, what broke and any convention, and skip what Mimir already has.'
+const NOTHING_TO_SEND = 'Nothing worth handing over yet.'
+const SENT = 'Mimir is writing what this session settled.'
+const QUEUE_OFF = 'Mimir took it, but its queue is not running.'
+const UNREACHABLE = 'Mimir is unreachable, so nothing was sent.'
 
 /** Message text is shaped differently by each provider, so read what we can and skip the rest. */
 export function transcript(messages: unknown[]): string {
@@ -91,9 +97,14 @@ export default Plugin.define({
     // The reminder rides the message count. A shrink means a compaction just
     // happened, which is the worst moment to lose a detail, so it nudges early.
     const counts = new Map<string, { turns: number; nudgedAt: number }>()
+    // The command below is handed no messages, only a session id, so the hook
+    // keeps the newest transcript for it. One string per live session, at most
+    // 32 KB, dropped once it has been sent.
+    const snapshots = new Map<string, string>()
     const nudge = await ctx.session.hook('context', async (event) => {
       const state = counts.get(event.sessionID) ?? { turns: 0, nudgedAt: 0 }
       const turns = event.messages?.length ?? 0
+      if (turns > state.turns) snapshots.set(event.sessionID, transcript(event.messages ?? []))
       const due = turns < state.turns || turns - state.nudgedAt >= NUDGE_EVERY
       counts.set(event.sessionID, { turns, nudgedAt: due ? turns : state.nudgedAt })
 
@@ -123,6 +134,34 @@ export default Plugin.define({
       if (!sent?.ok) compacted.delete(event.sessionID)
     })
 
+    // A manual handover, for the sessions that end before they ever compact.
+    const command = await ctx.command.transform((editor) => {
+      editor.add({
+        name: 'mimir-learn',
+        description: 'Hand this session to Mimir now.',
+        execute: async ({ sessionID }) => {
+          const text = snapshots.get(sessionID) ?? ''
+          let notice = NOTHING_TO_SEND
+          if (text.length >= MIN_TRANSCRIPT) {
+            const sent = await callTool(
+              'memory_learn',
+              { repo: repo ?? undefined, transcript: text, hint: LEARN_NOW_HINT },
+              { ...config, timeoutMs: 4000 },
+            ).catch(() => null)
+            const queued = sent?.ok ? (sent.result as { queued?: boolean }).queued : undefined
+            if (!sent?.ok) notice = UNREACHABLE
+            else if (queued === false) notice = QUEUE_OFF
+            else {
+              notice = SENT
+              // Kept on failure above, so a retry has something to send.
+              snapshots.delete(sessionID)
+            }
+          }
+          await ctx.session.synthetic({ sessionID, text: notice }).catch(() => null)
+        },
+      })
+    })
+
     const tools = await registerTools(ctx, config, repo)
 
     return async () => {
@@ -130,6 +169,7 @@ export default Plugin.define({
       await session.dispose()
       await nudge.dispose()
       await compaction.dispose()
+      await command.dispose()
     }
   },
 })

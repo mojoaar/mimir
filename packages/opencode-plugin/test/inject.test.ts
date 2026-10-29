@@ -392,7 +392,7 @@ describe('the transcript it hands over', () => {
 
     const big = [long('x'), long('y')]
     await nudge({ sessionID: 's4', system: [], messages: big })
-    const shrunk = { sessionID: 's4', system: [], messages: [big[0]] }
+    const shrunk: ContextEvent = { sessionID: 's4', system: [], messages: [big[0]] }
     await expect(nudge(shrunk)).resolves.toBeUndefined()
 
     mocks.reject = false

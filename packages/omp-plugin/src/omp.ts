@@ -16,7 +16,12 @@ export type Zod = {
   string(): StringSchema
 }
 
-export type ExtensionContext = { cwd: string }
+export type ExtensionContext = {
+  cwd: string
+  /** False in rpc, json and print modes, where there is nobody to notify. */
+  hasUI: boolean
+  ui: { notify(text: string): void }
+}
 
 export type DeveloperMessage = {
   role: 'developer'
@@ -54,8 +59,14 @@ export type ToolDefinition = {
   ): Promise<ToolResult>
 }
 
+export type CommandDefinition = {
+  description?: string
+  handler(args: unknown, ctx: ExtensionContext): Promise<void> | void
+}
+
 export type ExtensionAPI = {
   zod: Zod
   on<E = unknown>(event: string, handler: (event: E, ctx: ExtensionContext) => unknown | Promise<unknown>): void
   registerTool(tool: ToolDefinition): void
+  registerCommand(name: string, definition: CommandDefinition): void
 }

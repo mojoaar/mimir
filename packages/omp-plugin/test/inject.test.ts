@@ -20,6 +20,12 @@ vi.mock('../src/client.js', () => ({
 import mimir, { DIGEST_HEADER, NUDGE_HEADER } from '../src/index.js'
 
 type Message = Record<string, unknown>
+type Command = {
+  name: string
+  description?: string
+  handler: (args: unknown, ctx: { cwd: string; hasUI: boolean; ui: { notify: (text: string) => void } }) => Promise<void>
+}
+
 type Tool = {
   name: string
   approval?: string
@@ -37,6 +43,7 @@ type Tool = {
 function fake() {
   const handlers: Record<string, ((event: unknown, ctx: { cwd: string }) => Promise<unknown>)[]> = {}
   const tools: Tool[] = []
+  const commands: Command[] = []
   const schema = {
     describe: () => schema,
     optional: () => schema,
@@ -47,11 +54,14 @@ function fake() {
       handlers[event] = [...(handlers[event] ?? []), handler]
     },
     registerTool: (tool: Tool) => void tools.push(tool),
+    registerCommand: (name: string, definition: Omit<Command, 'name'>) =>
+      void commands.push({ name, ...definition }),
   }
-  return { pi, handlers, tools }
+  return { pi, handlers, tools, commands }
 }
 
-const ctx = { cwd: '/tmp/project' }
+const notices: string[] = []
+const ctx = { cwd: '/tmp/project', hasUI: true, ui: { notify: (text: string) => void notices.push(text) } }
 
 async function setup() {
   const built = fake()
@@ -262,5 +272,66 @@ describe('the transcript it hands over', () => {
     await expect(compact?.({}, ctx)).resolves.toBeUndefined()
 
     mocks.result = { ok: true, result: { text: '### auth' } }
+  })
+})
+
+describe('the command to hand it over now', () => {
+  const long = (label: string) => ({ role: 'user', content: `${label} `.repeat(80) })
+
+  it('sends the session the command was typed in', async () => {
+    const { commands, context } = await setup()
+    mocks.calls.length = 0
+    notices.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+
+    await context({ type: 'context', messages: [long('one'), long('two')] }, ctx)
+    const command = commands.find((entry) => entry.name === 'mimir-learn')
+    await command?.handler(undefined, ctx)
+
+    const learn = mocks.calls.filter((call) => call.name === 'memory_learn')
+    expect(learn).toHaveLength(1)
+    expect(String(learn[0]?.args.transcript)).toContain('two')
+    expect(learn[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+    expect(notices[0]).toContain('Mimir is writing')
+  })
+
+  it('says so when there is nothing worth sending', async () => {
+    const { commands } = await setup()
+    mocks.calls.length = 0
+    notices.length = 0
+
+    const command = commands.find((entry) => entry.name === 'mimir-learn')
+    await command?.handler(undefined, ctx)
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+    expect(notices[0]).toContain('Nothing worth handing over')
+  })
+
+  it('reports an unreachable Mimir instead of throwing', async () => {
+    const { commands, context } = await setup()
+    mocks.calls.length = 0
+    notices.length = 0
+    mocks.result = { ok: false, error: 'connect ECONNREFUSED' }
+
+    await context({ type: 'context', messages: [long('alpha'), long('beta')] }, ctx)
+    const command = commands.find((entry) => entry.name === 'mimir-learn')
+    await expect(command?.handler(undefined, ctx)).resolves.toBeUndefined()
+
+    mocks.result = { ok: true, result: { text: '### auth' } }
+    expect(notices[0]).toContain('unreachable')
+  })
+
+  it('does not send the same session twice', async () => {
+    const { commands, context } = await setup()
+    mocks.calls.length = 0
+    notices.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+
+    await context({ type: 'context', messages: [long('xray'), long('yankee')] }, ctx)
+    const command = commands.find((entry) => entry.name === 'mimir-learn')
+    await command?.handler(undefined, ctx)
+    await command?.handler(undefined, ctx)
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(1)
   })
 })

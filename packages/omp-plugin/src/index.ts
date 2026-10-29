@@ -22,6 +22,12 @@ export const MAX_TRANSCRIPT = 32_000
 export const MIN_TRANSCRIPT = 500
 const LEARN_HINT =
   'This session was just compacted. Keep what was decided, what broke and any convention, and skip what Mimir already has.'
+const LEARN_NOW_HINT =
+  'The user asked for this session to be kept now. Keep what was decided, what broke and any convention, and skip what Mimir already has.'
+const NOTHING_TO_SEND = 'Nothing worth handing over yet.'
+const SENT = 'Mimir is writing what this session settled.'
+const QUEUE_OFF = 'Mimir took it, but its queue is not running.'
+const UNREACHABLE = 'Mimir is unreachable, so nothing was sent.'
 
 /** Message text is shaped differently by each provider, so read what we can and skip the rest. */
 export function transcript(messages: unknown[]): string {
@@ -129,6 +135,31 @@ export default function mimir(pi: ExtensionAPI): void {
   })
 
   registerTools(pi, config, (ctx) => repo(ctx.cwd))
+
+  // A manual handover, for the sessions that end before they ever compact.
+  pi.registerCommand('mimir-learn', {
+    description: 'Hand this session to Mimir now.',
+    async handler(_args, eventCtx) {
+      const text = pending
+      let notice = NOTHING_TO_SEND
+      if (text.length >= MIN_TRANSCRIPT) {
+        const sent = await callTool(
+          'memory_learn',
+          { repo: repo(eventCtx.cwd), transcript: text, hint: LEARN_NOW_HINT },
+          { ...config, timeoutMs: 4000 },
+        ).catch(() => null)
+        const queued = sent?.ok ? (sent.result as { queued?: boolean }).queued : undefined
+        if (!sent?.ok) notice = UNREACHABLE
+        else if (queued === false) notice = QUEUE_OFF
+        else {
+          notice = SENT
+          // Kept on failure above, so a retry has something to send.
+          pending = ''
+        }
+      }
+      if (eventCtx.hasUI) eventCtx.ui.notify(notice)
+    },
+  })
 }
 
 /**

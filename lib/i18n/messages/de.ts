@@ -63,6 +63,7 @@ export const de: Messages = {
     "Ein Container und ein Postgres, das du schon betreibst. Nichts verlässt die Box, außer du richtest einen Anbieter ein, und dann nur der Text, den du geschrieben hast. Der optionale Seitenaufruf-Zähler spricht nur mit deiner eigenen Umami-Instanz. Backups werden mit einem Schlüssel verschlüsselt, den nur du hast, und das Wiederherstellungsskript liegt im Repo.",
 
   "clients.title": "Läuft mit den Agenten, die du schon nutzt, über MCP oder ein Plugin",
+  "clients.titleAccent": "Plugin",
   "stats.container": "Container",
   "stats.mcp": "MCP-Werkzeuge",
   "stats.plugin": "Plugin-Werkzeuge",

@@ -171,6 +171,9 @@ describe('the marketing page', () => {
     // Figure and label are separate elements, so match the figure itself.
     expect(html).toContain(`>${AGENTS.length}</dd>`);
     expect(html).toContain(`>${TOOL_NAMES.length}</dd>`);
+    // The word "plugin" in the label carries the accent, so the row's claim
+    // and the chips it points at are the same colour.
+    expect(html).toContain('>plugin</span>');
     expect(html).toContain('clients');
   });
 

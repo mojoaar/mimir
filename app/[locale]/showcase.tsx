@@ -7,13 +7,13 @@ const FIGURE = 'text-2xl font-semibold tabular-nums';
 const LABEL = 'text-xs uppercase tracking-wide text-[var(--text-muted)]';
 const DAY = 24 * 60 * 60 * 1000;
 
-export function ClientStrip({ title }: { title: string }) {
+export function ClientStrip({ title, accent }: { title: string; accent: string }) {
   // It sits inside the hero, not after it: as its own section it inherited the
   // page's sixty-four pixel gap and then added its own padding, which left a
   // hole under the terminal. No rule either, the hero already ends with one.
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-      <p className={`${LABEL} mr-1`}>{title}</p>
+      <p className={`${LABEL} mr-1`}>{labelled(title, accent)}</p>
       <ul className="flex flex-wrap gap-2">
         {AGENTS.map((agent) => (
           <li
@@ -31,6 +31,22 @@ export function ClientStrip({ title }: { title: string }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * The word the row is about takes the accent, and which word it is differs by
+ * language, so the catalogue names it instead of this file.
+ */
+function labelled(title: string, accent: string) {
+  const at = title.indexOf(accent);
+  if (at === -1) return title;
+  return (
+    <>
+      {title.slice(0, at)}
+      <span className="text-[var(--accent)]">{accent}</span>
+      {title.slice(at + accent.length)}
+    </>
   );
 }
 

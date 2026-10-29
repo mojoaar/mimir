@@ -177,7 +177,10 @@ export default async function MarketingPage({
             </a>
           </div>
           <MimirTerminal />
-          <ClientStrip title={t(locale, 'clients.title')} />
+          <ClientStrip
+            title={t(locale, 'clients.title')}
+            accent={t(locale, 'clients.titleAccent')}
+          />
         </section>
 
         <StatStrip

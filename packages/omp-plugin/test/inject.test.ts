@@ -219,3 +219,48 @@ describe('the tools', () => {
     expect(result?.content[0]?.text).toContain('Mimir is unavailable')
   })
 })
+
+describe('the transcript it hands over', () => {
+  const long = (label: string) => ({ role: 'user', content: `${label} `.repeat(60) })
+
+  it('sends the part that was compacted, once', async () => {
+    const { handlers, context } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+
+    const big = [long('one'), long('two'), long('three'), long('four'), long('five')]
+    await context({ type: 'context', messages: big }, ctx)
+
+    const [compact] = handlers.session_compact ?? []
+    expect(compact).toBeDefined()
+    await compact?.({}, ctx)
+    await compact?.({}, ctx)
+
+    const learn = mocks.calls.filter((call) => call.name === 'memory_learn')
+    expect(learn).toHaveLength(1)
+    expect(String(learn[0]?.args.transcript)).toContain('five')
+    expect(learn[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+  })
+
+  it('sends nothing when there is nothing to send', async () => {
+    const { handlers } = await setup()
+    mocks.calls.length = 0
+
+    const [compact] = handlers.session_compact ?? []
+    await compact?.({}, ctx)
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+  })
+
+  it('survives a Mimir that is down', async () => {
+    const { handlers, context } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: false, error: 'connect ECONNREFUSED' }
+
+    await context({ type: 'context', messages: [long('x'), long('y')] }, ctx)
+    const [compact] = handlers.session_compact ?? []
+    await expect(compact?.({}, ctx)).resolves.toBeUndefined()
+
+    mocks.result = { ok: true, result: { text: '### auth' } }
+  })
+})

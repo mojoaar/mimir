@@ -17,6 +17,38 @@ const NUDGE =
   'call mimir_remember now at one clear path, or hand the conversation over with mimir_learn, ' +
   'before the detail is compacted away.'
 
+export const MAX_TRANSCRIPT = 32_000
+/** A compaction of nothing is not worth a model call. */
+export const MIN_TRANSCRIPT = 500
+const LEARN_HINT =
+  'This session was just compacted. Keep what was decided, what broke and any convention, and skip what Mimir already has.'
+
+/** Message text is shaped differently by each provider, so read what we can and skip the rest. */
+export function transcript(messages: unknown[]): string {
+  const lines: string[] = []
+  for (const message of messages) {
+    if (typeof message !== 'object' || message === null) continue
+    const record = message as { role?: unknown; content?: unknown; parts?: unknown }
+    const role = typeof record.role === 'string' ? record.role : 'message'
+    const body = textOf(record.content) || textOf(record.parts)
+    if (body) lines.push(`${role}: ${body}`)
+  }
+  return lines.join('\n\n').slice(-MAX_TRANSCRIPT)
+}
+
+function textOf(value: unknown): string {
+  if (typeof value === 'string') return value.trim()
+  if (!Array.isArray(value)) return ''
+  return value
+    .map((part) => {
+      if (typeof part === 'string') return part
+      const text = (part as { text?: unknown })?.text
+      return typeof text === 'string' ? text : ''
+    })
+    .join('\n')
+    .trim()
+}
+
 /**
  * One injection point and four tools. The digest goes in front of the model
  * before the first call, so a session starts informed without spending a tool
@@ -34,15 +66,33 @@ export default function mimir(pi: ExtensionAPI): void {
 
   let injected = false
   let state = { messages: 0, nudgedAt: 0 }
+  let pending = ''
 
   const reset = () => {
     injected = false
     state = { messages: 0, nudgedAt: 0 }
   }
-  pi.on('session_start', reset)
-  // A compacted transcript has lost the digest with everything else, so it is
-  // fetched again for the next call rather than waiting for a new session.
-  pi.on('session_compact', reset)
+  pi.on('session_start', () => {
+    pending = ''
+    reset()
+  })
+
+  // omp says when a compaction is happening, which OpenCode does not, so the
+  // handover lives on this event rather than on a shrink in the message count.
+  // It fires before the shortened list is seen, which is why reset leaves the
+  // snapshot alone. The reset itself is what makes the digest come back, since
+  // the compaction took it with everything else.
+  pi.on('session_compact', async (_event, eventCtx) => {
+    const compacted = pending
+    pending = ''
+    reset()
+    if (compacted.length < MIN_TRANSCRIPT) return
+    await callTool(
+      'memory_learn',
+      { repo: repo(eventCtx.cwd), transcript: compacted, hint: LEARN_HINT },
+      { ...config, timeoutMs: 4000 },
+    ).catch(() => null)
+  })
 
   pi.on<ContextEvent>('context', async (event, ctx): Promise<ContextResult> => {
     const out = [...event.messages]
@@ -65,6 +115,9 @@ export default function mimir(pi: ExtensionAPI): void {
     }
 
     const messages = event.messages.length
+    // Keep the newest snapshot so a compaction that arrives without warning
+    // still has something to hand over.
+    if (messages >= state.messages) pending = transcript(event.messages)
     const due = messages < state.messages || messages - state.nudgedAt >= NUDGE_EVERY
     state = { messages, nudgedAt: due ? messages : state.nudgedAt }
     if (due) {

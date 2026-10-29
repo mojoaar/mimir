@@ -8,17 +8,23 @@ const LABEL = 'text-xs uppercase tracking-wide text-[var(--text-muted)]';
 const DAY = 24 * 60 * 60 * 1000;
 
 export function ClientStrip({ title }: { title: string }) {
-  // No top border: the hero above already ends with one, and two rules with
-  // nothing between them read as a mistake.
+  // It sits inside the hero, not after it: as its own section it inherited the
+  // page's sixty-four pixel gap and then added its own padding, which left a
+  // hole under the terminal. No rule either, the hero already ends with one.
   return (
-    <section className="flex flex-col gap-3 border-b border-[var(--border)] py-6">
-      <p className={LABEL}>{title}</p>
-      <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--text-muted)]">
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+      <p className={`${LABEL} mr-1`}>{title}</p>
+      <ul className="flex flex-wrap gap-2">
         {AGENTS.map((agent) => (
-          <li key={agent.id}>{agent.name}</li>
+          <li
+            key={agent.id}
+            className="rounded-full border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--text-muted)]"
+          >
+            {agent.name}
+          </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }
 
@@ -35,9 +41,13 @@ export function StatStrip({ labels }: { labels: StatLabels }) {
     [labels.clients, AGENTS.length],
   ];
   return (
-    <dl className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {figures.map(([label, value]) => (
-        <div key={label} className="flex flex-col-reverse gap-1">
+        // A box each, so four unrelated figures do not read as one run-on line.
+        <div
+          key={label}
+          className="flex flex-col-reverse gap-1 rounded-md border border-[var(--border)] bg-[var(--bg-raised)] p-4"
+        >
           <dt className={LABEL}>{label}</dt>
           <dd className={`${FIGURE} text-[var(--fg)]`}>{value}</dd>
         </div>

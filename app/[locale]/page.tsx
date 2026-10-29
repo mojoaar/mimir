@@ -134,7 +134,7 @@ export default async function MarketingPage({
       </header>
 
       <main className="flex flex-1 flex-col gap-16 py-10 sm:py-16">
-        <section className="relative isolate flex flex-col gap-6 border-b border-[var(--border)] pb-12">
+        <section className="relative isolate flex flex-col gap-6 border-b border-[var(--border)] pb-8">
           {/* The accent, very low, well behind the headline. It reads as depth
               rather than decoration, and the light themes need less of it. The
               mask is what keeps the wash off the section edges: a radial that
@@ -177,9 +177,9 @@ export default async function MarketingPage({
             </a>
           </div>
           <MimirTerminal />
+          <ClientStrip title={t(locale, 'clients.title')} />
         </section>
 
-        <ClientStrip title={t(locale, 'clients.title')} />
         <StatStrip
           labels={{
             container: t(locale, 'stats.container'),

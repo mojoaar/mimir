@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`/mimir-learn` hands the session over on demand.** Both plugins take the command, send the conversation so far to
+  `memory_learn`, and let the project model write at most three memories from it. Nothing is sent twice, and a
+  session too short to be worth a model call says so instead.
+
 ## [0.24.0] - 2026-10-29
 
 A session writes itself when it is compacted.

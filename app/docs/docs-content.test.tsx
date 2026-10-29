@@ -252,6 +252,13 @@ describe('plugins', () => {
     expect(html).toContain('href="/docs/plugins"')
   })
 
+  it('documents the command that hands a session over now', async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('/mimir-learn')
+    expect(text).toContain('sends the conversation so far')
+  })
+
   it('says what happens when the context is compacted', async () => {
     const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
 

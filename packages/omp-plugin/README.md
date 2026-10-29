@@ -31,7 +31,8 @@ The digest and the reminder arrive on their own. Everything fails soft: if Mimir
 is down or unconfigured, the plugin is silent and the session carries on.
 
 When the context is compacted it also hands that part of the session to Mimir,
-which distils at most three memories from it.
+which distils at most three memories from it. `/mimir-learn` does the same on
+demand, for a session that ends before it compacts.
 
 MCP is not required. If you already use the Mimir MCP server in oh-my-pi, the
 plugin's tools are still worth having, because MCP cannot inject the digest.

@@ -102,6 +102,14 @@ export MIMIR_TOKEN=mimir_...`}</Code>
         that project.
       </P>
 
+      <H2>When you want it now</H2>
+      <P>
+        Both plugins take <code>/mimir-learn</code>. It sends the conversation so far to <code>memory_learn</code> at
+        that moment, so a session that ends before it ever compacts can still leave something behind. It writes at
+        most three memories, uses the project owner&apos;s provider, says so when there is nothing worth sending, and
+        never sends the same session twice.
+      </P>
+
       <H2>Did it work</H2>
       <P>
         Start a session and ask what the project already knows. A working plugin puts a{' '}

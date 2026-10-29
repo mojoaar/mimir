@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `memory_learn`, and let the project model write at most three memories from it. Nothing is sent twice, and a
   session too short to be worth a model call says so instead.
 
+### Changed
+
+- **The landing hero has a wash behind it, and the digest types itself.** The glow is the theme's own accent at low
+  opacity, much lower on the light themes because a dark accent smudges. The digest types one line at a time on a
+  visit, while the finished text is still what the server sends, so a reader without JavaScript or with reduced
+  motion turned on sees the card complete.
+
 ## [0.24.0] - 2026-10-29
 
 A session writes itself when it is compacted.

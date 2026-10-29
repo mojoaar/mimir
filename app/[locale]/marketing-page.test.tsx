@@ -207,4 +207,21 @@ describe('the marketing page', () => {
     expect(html).toContain('Teams and grants');
     expect(html).toContain('no per-seat licence');
   });
+
+  test('keeps the hero wash behind the text and out of the accessibility tree', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    expect(html).toContain('radial-gradient(60% 55% at 30% 30%');
+    expect(html).toContain('--hero-glow');
+    expect(html).toMatch(/aria-hidden="true"[^>]*style="[^"]*radial-gradient/);
+  });
+
+  test('still sends the whole digest, even though it types', async () => {
+    const html = renderToStaticMarkup(await page('en'));
+
+    // The card types itself in the browser, so the server has to carry the
+    // finished text for a reader without JavaScript and for a crawler.
+    expect(html).toContain('## What this project already knows (Mimir)');
+    expect(html).toContain('The Unreleased heading does not survive a release rename');
+  });
 });

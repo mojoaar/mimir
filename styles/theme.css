@@ -10,6 +10,8 @@
   --accent-fg: var(--nordlys-background-base);
   --danger: var(--nordlys-text-feedback-error-base);
   --logo-ink: var(--nordlys-text-action-primary-base);
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.24;
 }
 
 [data-theme="nordlys-light"] {
@@ -23,6 +25,8 @@
   --accent-fg: var(--nordlys-background-base);
   --danger: var(--nordlys-text-feedback-error-base);
   --logo-ink: #0b1020;
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.1;
 }
 
 [data-theme="fjord-dark"] {
@@ -36,6 +40,8 @@
   --accent-fg: var(--fjord-background-base);
   --danger: var(--fjord-text-feedback-error-base);
   --logo-ink: var(--fjord-text-action-primary-base);
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.24;
 }
 
 [data-theme="fjord-light"] {
@@ -49,6 +55,8 @@
   --accent-fg: var(--fjord-background-base);
   --danger: var(--fjord-text-feedback-error-base);
   --logo-ink: #0e1620;
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.1;
 }
 
 [data-theme="ravn-dark"] {
@@ -62,6 +70,8 @@
   --accent-fg: var(--ravn-background-base);
   --danger: var(--ravn-text-feedback-error-base);
   --logo-ink: var(--ravn-text-action-primary-base);
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.24;
 }
 
 [data-theme="ravn-light"] {
@@ -75,6 +85,8 @@
   --accent-fg: var(--ravn-background-base);
   --danger: var(--ravn-text-feedback-error-base);
   --logo-ink: #0a0b12;
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.1;
 }
 
 [data-theme="skumring-dark"] {
@@ -88,6 +100,8 @@
   --accent-fg: var(--skumring-background-base);
   --danger: var(--skumring-text-feedback-error-base);
   --logo-ink: var(--skumring-text-action-primary-base);
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.24;
 }
 
 [data-theme="skumring-light"] {
@@ -101,4 +115,6 @@
   --accent-fg: var(--skumring-background-base);
   --danger: var(--skumring-text-feedback-error-base);
   --logo-ink: #111218;
+  /* The hero wash. The light accent is dark, so it needs less of it. */
+  --hero-glow: 0.1;
 }

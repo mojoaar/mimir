@@ -1,6 +1,7 @@
 import { AGENTS } from '@/lib/docs/agents';
 import { TOOL_NAMES } from '@/lib/mcp/tools';
-import { stamp } from '@/lib/format/time';
+import { stamp } from '@/lib/format/time'
+import { TypingDigest } from './typing-digest';
 
 const FIGURE = 'text-2xl font-semibold tabular-nums';
 const LABEL = 'text-xs uppercase tracking-wide text-[var(--text-muted)]';
@@ -68,9 +69,7 @@ The Unreleased heading does not survive a release rename; restore the section fr
 
   return (
     <figure className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-sunken)]">
-      <pre className="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-xs leading-relaxed text-[var(--text-muted)]">
-        {text}
-      </pre>
+      <TypingDigest text={text} />
     </figure>
   );
 }

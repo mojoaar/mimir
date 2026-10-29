@@ -267,3 +267,12 @@ describe('plugins', () => {
     expect(text).toContain('three memories')
   })
 })
+
+describe('folders as a repo', () => {
+  it('explains that a folder can stand in for a repository', () => {
+    const html = renderToStaticMarkup(McpPage())
+
+    expect(html).toContain('Claim a folder under a project')
+    expect(html).toContain('A git remote wins')
+  })
+})

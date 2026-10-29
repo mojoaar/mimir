@@ -35,6 +35,12 @@ MIMIR_TOKEN=mimir_...        # mint one on your Profile page`}</Code>
         created yesterday. Without it, pass <code>repo</code> or <code>project</code> as a tool argument. A server
         never sees a working directory, so the client is the only thing that can compute this.
       </P>
+      <P>
+        The <code>repo</code> argument also takes an absolute working directory. Claim a folder under a project's
+        settings, and every session that starts in it or below it writes to that project, which is how a directory
+        that is not a git repository still gets its own memory. A git remote wins over a folder, and when claims
+        nest the longest match wins.
+      </P>
 
       <H2>Raw HTTP</H2>
       <P>

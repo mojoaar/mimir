@@ -1,6 +1,11 @@
 import { describe, expect, test, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  connection: async () => {},
+}));
+
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => undefined }),
 }));
@@ -11,6 +16,7 @@ vi.mock('@/lib/settings/site', () => ({
     siteName: 'Mimir',
     metaDescription: 'Long-term memory for your agents.',
   }),
+  getPublicUrl: async () => 'https://mimir.example.test',
 }));
 
 vi.mock('@/lib/settings/time', () => ({
@@ -26,7 +32,7 @@ const session = vi.hoisted(() => ({ user: null as null | { id: string } }));
 import { t } from '@/lib/i18n';
 import { AGENTS } from '@/lib/docs/agents';
 import { TOOL_NAMES } from '@/lib/mcp/tools';
-import MarketingPage from './page';
+import MarketingPage, { generateMetadata } from './page';
 
 const page = (locale: string) => MarketingPage({ params: Promise.resolve({ locale }) });
 
@@ -247,5 +253,12 @@ describe('the marketing page', () => {
     expect(html).toContain('DeepSeek');
     expect(html).toContain('Octen');
     expect(html).toContain('Mistral');
+  });
+
+  test('takes its title from the site settings, not the catalogue', async () => {
+    const meta = await generateMetadata({ params: Promise.resolve({ locale: 'en' }) });
+
+    // Both halves are Admin -> Settings -> Site: the name, then the description.
+    expect(meta.title).toBe('Mimir | Long-term memory for your agents.');
   });
 });

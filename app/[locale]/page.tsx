@@ -44,7 +44,11 @@ export async function generateMetadata({
   const [site, origin] = await Promise.all([getSiteSettings(), getPublicUrl()]);
   const base = origin.replace(/\/+$/, '');
   const path = withLocale('/', locale);
-  const title = t(locale, 'hero.title');
+  // Both halves come from Admin -> Settings -> Site, so an install names itself.
+  // The catalogue still supplies a translated fallback for a description that
+  // was never filled in.
+  const tagline = site.metaDescription || t(locale, 'hero.title');
+  const title = `${site.siteName} | ${tagline}`;
   const description = t(locale, 'hero.subtitle');
   return {
     metadataBase: new URL(base),
@@ -62,7 +66,7 @@ export async function generateMetadata({
     openGraph: {
       type: 'website',
       siteName: site.siteName,
-      title: `${site.siteName} - ${title}`,
+      title,
       description,
       url: `${base}${path === '/' ? '' : path}`,
       images: [{ url: `${base}/opengraph-image`, width: 1200, height: 630 }],

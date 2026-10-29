@@ -16,7 +16,13 @@ const BODY_MAX = 4000
 // competes with the transcript for the context window, so keep it small.
 const DIGEST_BUDGET = 600
 
-export type LearnData = { projectId: string; transcript: string; hint?: string | null }
+export type LearnData = {
+  projectId: string
+  transcript: string
+  hint?: string | null
+  client?: string | null
+  session?: string | null
+}
 export type LearnResult = { written: number }
 
 export type LearnedMemory = { path: string; title: string; body: string; kind: string }
@@ -115,6 +121,10 @@ export async function runLearn(data: LearnData): Promise<LearnResult> {
       body: memory.body,
       kind: memory.kind,
       source: 'learn',
+      // Provenance is the caller's: the model wrote nothing, it only decided
+      // what was worth keeping.
+      client: data.client ?? undefined,
+      session: data.session ?? undefined,
     })
     written += 1
   }

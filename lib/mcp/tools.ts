@@ -159,6 +159,16 @@ const TOOLS: ToolDef[] = [
         body: { type: 'string', maxLength: 262144 },
         title: { type: 'string', description: 'One line. Defaults to the first line of the body.' },
         kind: { type: 'string', enum: MEMORY_KINDS },
+        client: {
+          type: 'string',
+          maxLength: 64,
+          description: 'Which client wrote it, e.g. opencode',
+        },
+        session: {
+          type: 'string',
+          maxLength: 128,
+          description: "The client's session id, if it has one",
+        },
       },
       required: ['path', 'body'],
     },
@@ -175,6 +185,8 @@ const TOOLS: ToolDef[] = [
         title: str(args, 'title'),
         kind: str(args, 'kind'),
         source: 'agent',
+        client: str(args, 'client'),
+        session: str(args, 'session'),
       })
     },
   },
@@ -236,6 +248,16 @@ const TOOLS: ToolDef[] = [
           maxLength: 500,
           description: 'What to look for, e.g. "the deploy rollback".',
         },
+        client: {
+          type: 'string',
+          maxLength: 64,
+          description: 'Which client wrote it, e.g. opencode',
+        },
+        session: {
+          type: 'string',
+          maxLength: 128,
+          description: "The client's session id, if it has one",
+        },
       },
       required: ['transcript'],
     },
@@ -248,6 +270,8 @@ const TOOLS: ToolDef[] = [
         projectId: p.id,
         transcript: transcript.slice(0, 32768),
         hint: str(args, 'hint')?.slice(0, 500) ?? null,
+        client: str(args, 'client')?.slice(0, 64) ?? null,
+        session: str(args, 'session')?.slice(0, 128) ?? null,
       })
       return { queued: id !== null }
     },

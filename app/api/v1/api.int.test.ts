@@ -78,8 +78,25 @@ describe('rest api', () => {
     expect((await kind.json()).code).toBe('invalid_params')
   })
 
-  it('writes exactly one audit row per rest call', async () => {
+  it('records who wrote the memory, so history is not anonymous', async () => {
     await writeMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/who/x`, {
+        method: 'PUT',
+        body: { body: 'traced', client: 'curl', session: 'ses_rest' },
+      }),
+      params({ path: ['who', 'x'] }),
+    )
+
+    const res = await readMemoryRoute(
+      req(`/api/v1/projects/${slug}/memory/who/x`),
+      params({ path: ['who', 'x'] }),
+    )
+    const memory = await res.json()
+    expect(memory.client).toBe('curl')
+    expect(memory.session).toBe('ses_rest')
+  })
+
+  it('writes exactly one audit row per rest call', async () => {    await writeMemoryRoute(
       req(`/api/v1/projects/${slug}/memory/notes/audited`, { method: 'PUT', body: { body: 'traced' } }),
       params({ path: ['notes', 'audited'] }),
     )

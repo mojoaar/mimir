@@ -21,7 +21,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const { slug, path } = await params
     const project = await resolveProject(user.id, { project: slug })
 
-    const input = (await request.json()) as { body?: unknown; title?: unknown; kind?: unknown }
+    const input = (await request.json()) as {
+      body?: unknown
+      title?: unknown
+      kind?: unknown
+      client?: unknown
+      session?: unknown
+    }
     if (typeof input.body !== 'string') {
       return Response.json({ error: 'body must be a string', code: 'invalid_params' }, { status: 400 })
     }
@@ -34,6 +40,8 @@ export async function PUT(request: NextRequest, { params }: Params) {
         body: input.body,
         title: typeof input.title === 'string' ? input.title : undefined,
         kind: typeof input.kind === 'string' ? input.kind : undefined,
+        client: typeof input.client === 'string' ? input.client : undefined,
+        session: typeof input.session === 'string' ? input.session : undefined,
         source: 'agent',
       }),
     )

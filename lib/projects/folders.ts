@@ -106,12 +106,14 @@ export async function releaseFolder(userId: string, folderId: string): Promise<{
   })
 }
 
-export async function listFolders(userId: string, projectId: string): Promise<string[]> {
+export type FolderClaim = { id: string; path: string }
+
+export async function listFolders(userId: string, projectId: string): Promise<FolderClaim[]> {
   return withUser(userId, async (client) => {
-    const { rows } = await client.query<{ path: string }>(
-      `select path from project_folders where project_id = $1 order by path`,
+    const { rows } = await client.query<FolderClaim>(
+      `select id, path from project_folders where project_id = $1 order by path`,
       [projectId],
     )
-    return rows.map((row) => row.path)
+    return rows.map((row) => ({ id: row.id, path: row.path }))
   })
 }

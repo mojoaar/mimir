@@ -2,13 +2,20 @@ import Link from 'next/link'
 
 import { requireUser } from '@/lib/auth/context'
 import { listGrants } from '@/lib/projects/access'
+import { listFolders } from '@/lib/projects/folders'
 import { listProviders } from '@/lib/providers/service'
 import { getProject, getProjectHealth } from '@/lib/projects/service'
 import { getEmbeddingConfig } from '@/lib/settings/embedding'
 import { listTeams } from '@/lib/teams/service'
 
 import { archiveProjectAction } from '../../actions'
-import { embedProjectAction, revokeProjectGrantAction, summariseProjectAction } from './actions'
+import {
+  claimFolderAction,
+  embedProjectAction,
+  releaseFolderAction,
+  revokeProjectGrantAction,
+  summariseProjectAction,
+} from './actions'
 import { GrantForm } from './grant-form'
 import { ProjectForm } from './project-form'
 import { Missing } from '../../missing'
@@ -46,6 +53,10 @@ export default async function ProjectSettingsPage({
     project.role ? getProjectHealth(user.id, project.id) : null,
     getEmbeddingConfig().then((config) => config !== null),
   ])
+
+  // Visible to anyone with access, because it explains where their session
+  // wrote; only the owner may change it.
+  const folders = project.role ? await listFolders(user.id, project.id) : []
 
   // Sharing is the owner's to change; a grantee only ever sees what it was given.
   const [grants, teams] =
@@ -143,10 +154,58 @@ export default async function ProjectSettingsPage({
         providers={providers}
       />
 
+      <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-4">
+        <h2 className="text-sm font-semibold">{t('app.projectSettings.folders')}</h2>
+        <p className="text-sm text-[var(--text-muted)]">
+          {t('app.projectSettings.foldersBody')}
+        </p>
+        {folders.length > 0 ? (
+          <ul className="flex flex-col gap-2">
+            {folders.map((folder) => (
+              <li
+                key={folder.id}
+                className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2"
+              >
+                <span className="font-mono text-xs">{folder.path}</span>
+                {project.role === 'owner' ? (
+                  <form action={releaseFolderAction} className="ml-auto">
+                    <input type="hidden" name="folderId" value={folder.id} />
+                    <input type="hidden" name="slug" value={project.slug} />
+                    <button
+                      type="submit"
+                      className="rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--bg)]"
+                    >
+                      {t('app.projectSettings.folderRemove')}
+                    </button>
+                  </form>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {project.role === 'owner' ? (
+          <form action={claimFolderAction} className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="projectId" value={project.id} />
+            <input type="hidden" name="slug" value={project.slug} />
+            <input
+              name="folder"
+              placeholder="/Users/you/AI"
+              className="min-w-0 flex-1 rounded-md border border-[var(--border)] bg-[var(--bg)] px-2 py-1 font-mono text-xs"
+            />
+            <button
+              type="submit"
+              className="rounded-md border border-[var(--border)] px-3 py-1 text-sm hover:bg-[var(--bg-raised)]"
+            >
+              {t('app.projectSettings.folderAdd')}
+            </button>
+          </form>
+        ) : null}
+        <p className="text-xs text-[var(--text-muted)]">{t('app.projectSettings.folderHint')}</p>
+      </section>
+
       {project.role === 'owner' ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold">{t('app.projectSettings.sharing')}</h2>
-          {grants.length === 0 ? (
+          <h2 className="text-sm font-semibold">{t('app.projectSettings.sharing')}</h2>          {grants.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">{t('app.projectSettings.noShares')}</p>
           ) : (
             <ul className="flex flex-col gap-2">

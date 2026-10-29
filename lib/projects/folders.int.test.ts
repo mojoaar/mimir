@@ -83,7 +83,7 @@ describe('a claimed folder', () => {
     await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
     await claimFolder(alice, aliceProjectId, '/users/alice/ai/')
 
-    expect(await listFolders(alice, aliceProjectId)).toEqual(['/Users/alice/AI'])
+    expect((await listFolders(alice, aliceProjectId)).map((f) => f.path)).toEqual(['/Users/alice/AI'])
   })
 
   it('lets bob claim the same path for his own project', async () => {
@@ -100,7 +100,7 @@ describe('a claimed folder', () => {
     await claimFolder(alice, aliceProjectId, '/Users/alice/AI')
 
     expect(await lookup(bob, '/Users/alice/AI')).toBeNull()
-    expect(await listFolders(bob, bobs)).toEqual([])
+    expect((await listFolders(bob, bobs)).map((f) => f.path)).toEqual([])
   })
 
   it('refuses a path that is not absolute and a project the caller does not own', async () => {
@@ -114,7 +114,7 @@ describe('a claimed folder', () => {
     const released = await releaseFolder(alice, id!)
 
     expect(released.path).toBe(path)
-    expect(await listFolders(alice, aliceProjectId)).toEqual([])
+    expect((await listFolders(alice, aliceProjectId)).map((f) => f.path)).toEqual([])
 
     const { rows } = await adminPool().query<{ action: string; detail: { action?: string } }>(
       `select action, detail from audit_log where action = 'project.folders' order by created_at`,

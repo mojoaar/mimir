@@ -455,6 +455,15 @@ export const da: Messages = {
   "app.projectSettings.embedOff":
     "Indlejringer er ikke konfigureret på denne installation.",
   "app.projectSettings.queued": "Sat i kø. Det kører i baggrunden.",
+  "app.projectSettings.folders": "Mapper",
+  "app.projectSettings.foldersBody":
+    "En session, der starter i en af disse mapper, skriver til dette projekt. Et git-repository vinder stadig over en mappe.",
+  "app.projectSettings.folderAdd": "Tilføj mappe",
+  "app.projectSettings.folderRemove": "Fjern",
+  "app.projectSettings.folderHint":
+    "En absolut sti. En mappe, der allerede er knyttet til et andet af dine projekter, skal frigives der først.",
+  "app.projectSettings.folderClaimed": "Mappe knyttet til projektet.",
+  "app.projectSettings.folderReleased": "Mappe frigivet.",
   "app.projectSettings.saving": "Gemmer…",
   "app.projectSettings.sharedTeam": "Delt med holdet.",
   "app.projectSettings.shared": "Delt.",

@@ -471,6 +471,15 @@ export const de: Messages = {
     "Einbettungen sind auf dieser Installation nicht konfiguriert.",
   "app.projectSettings.queued":
     "In die Warteschlange gestellt. Es läuft im Hintergrund.",
+  "app.projectSettings.folders": "Ordner",
+  "app.projectSettings.foldersBody":
+    "Eine Sitzung, die in einem dieser Ordner startet, schreibt in dieses Projekt. Ein Git-Repository gewinnt weiterhin gegen einen Ordner.",
+  "app.projectSettings.folderAdd": "Ordner hinzufügen",
+  "app.projectSettings.folderRemove": "Entfernen",
+  "app.projectSettings.folderHint":
+    "Ein absoluter Pfad. Ein Ordner, der bereits zu einem anderen deiner Projekte gehört, muss dort zuerst freigegeben werden.",
+  "app.projectSettings.folderClaimed": "Ordner zugeordnet.",
+  "app.projectSettings.folderReleased": "Ordner freigegeben.",
   "app.projectSettings.saving": "Wird gespeichert…",
   "app.projectSettings.sharedTeam": "Mit dem Team geteilt.",
   "app.projectSettings.shared": "Geteilt.",

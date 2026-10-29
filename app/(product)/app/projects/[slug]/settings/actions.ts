@@ -7,6 +7,7 @@ import { audit } from '@/lib/audit'
 import { requireUser } from '@/lib/auth/context'
 import { enqueueExtraction } from '@/lib/jobs/enqueue'
 import { grantProject, requireProjectRole, revokeGrant, type PrincipalType } from '@/lib/projects/access'
+import { claimFolder, releaseFolder } from '@/lib/projects/folders'
 import { updateProjectSettings } from '@/lib/projects/service'
 import { findActiveUserIdByEmail } from '@/lib/users/lookup'
 import { translator } from '@/lib/i18n/request'
@@ -163,8 +164,7 @@ export async function summariseProjectAction(formData: FormData): Promise<void> 
 }
 
 /** Backfill is gap-only, so a second press costs nothing for memories that already have a vector. */
-export async function embedProjectAction(formData: FormData): Promise<void> {
-  const user = await requireUser()
+export async function embedProjectAction(formData: FormData): Promise<void> {  const user = await requireUser()
   const t = await translator()
   const projectId = String(formData.get('projectId') ?? '')
   const slug = String(formData.get('slug') ?? '')
@@ -188,4 +188,44 @@ export async function embedProjectAction(formData: FormData): Promise<void> {
   revalidatePath(back)
 
   redirect(`${back}?notice=${encodeURIComponent(t('app.projectSettings.queued'))}`)
+}
+
+/**
+ * A claimed folder is how a session started outside any repository finds its
+ * project, so the one error that matters here is a folder another project
+ * already owns, and the service's message says so.
+ */
+export async function claimFolderAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const t = await translator()
+  const projectId = String(formData.get('projectId') ?? '')
+  const slug = String(formData.get('slug') ?? '')
+  const folder = String(formData.get('folder') ?? '').trim()
+  const back = `/app/projects/${slug}/settings`
+
+  try {
+    await claimFolder(user.id, projectId, folder)
+  } catch (error) {
+    redirect(`${back}?error=${encodeURIComponent(actionMessage(error, t))}`)
+  }
+
+  revalidatePath(back)
+  redirect(`${back}?notice=${encodeURIComponent(t('app.projectSettings.folderClaimed'))}`)
+}
+
+export async function releaseFolderAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const t = await translator()
+  const folderId = String(formData.get('folderId') ?? '')
+  const slug = String(formData.get('slug') ?? '')
+  const back = `/app/projects/${slug}/settings`
+
+  try {
+    await releaseFolder(user.id, folderId)
+  } catch (error) {
+    redirect(`${back}?error=${encodeURIComponent(actionMessage(error, t))}`)
+  }
+
+  revalidatePath(back)
+  redirect(`${back}?notice=${encodeURIComponent(t('app.projectSettings.folderReleased'))}`)
 }

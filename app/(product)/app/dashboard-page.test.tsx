@@ -6,6 +6,8 @@ const state = vi.hoisted(() => ({
   hits: [] as Array<Record<string, unknown>>,
 }))
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {} }) }))
+
 vi.mock('@/lib/auth/context', () => ({
   requireUser: async () => ({
     id: 'u1',
@@ -21,6 +23,7 @@ vi.mock('@/lib/projects/service', () => ({ listProjects: async () => state.proje
 vi.mock('@/lib/memory/search', () => ({ searchMemories: async () => state.hits }))
 vi.mock('@/lib/i18n/request', () => ({ translator: async () => (key: string) => key }))
 vi.mock('./projects/actions', () => ({ restoreProjectAction: async () => {} }))
+vi.mock('@/lib/settings/time', () => ({ getTimeFormat: async () => ({ timeZone: 'UTC', clock: '24h' }) }))
 
 import DashboardPage from './page'
 
@@ -95,5 +98,12 @@ describe('searching across projects', () => {
     const html = renderToStaticMarkup(await DashboardPage(searching('nothing at all')))
 
     expect(html).toContain('app.browse.noMatches')
+  })
+
+  it('offers a refresh and says when the page was read', async () => {
+    const html = renderToStaticMarkup(await DashboardPage(nothing))
+
+    expect(html).toContain('app.refresh.label')
+    expect(html).toContain('app.refresh.asOf')
   })
 })

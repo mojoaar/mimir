@@ -149,6 +149,9 @@ export const en = {
     "This link is no longer valid. Ask an administrator for a new one.",
   "app.dashboard.searchPlaceholder": "Search every memory, in every project",
   "app.dashboard.search": "Search",
+  "app.refresh.label": "Refresh",
+  "app.refresh.busy": "Refreshing…",
+  "app.refresh.asOf": "as of {time}",
   "app.dashboard.noProjects":
     "No projects yet. Agents create one the first time they write a memory.",
   "app.dashboard.oneMemory": "{count} memory",

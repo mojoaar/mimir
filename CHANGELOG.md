@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A refresh that is not a reload.** The dashboard and a project page take a **Refresh** button beside the date the
+  page was read, which re-runs the page's queries in place. Scroll position, the open memory and text you have typed
+  but not saved all survive, which a browser reload does not guarantee.
+
 ### Changed
 
 - **Docs pages carry the install's name.** Every page under `/docs` now reads `Tools | Mimir` rather than `Tools`, with

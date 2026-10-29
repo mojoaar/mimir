@@ -154,6 +154,9 @@ export const de: Messages = {
   "app.dashboard.searchPlaceholder":
     "Alle Erinnerungen durchsuchen, in allen Projekten",
   "app.dashboard.search": "Suchen",
+  "app.refresh.label": "Aktualisieren",
+  "app.refresh.busy": "Aktualisiere…",
+  "app.refresh.asOf": "Stand {time}",
   "app.dashboard.noProjects":
     "Noch keine Projekte. Ein Agent legt eines an, sobald er eine Erinnerung schreibt.",
   "app.dashboard.oneMemory": "{count} Erinnerung",

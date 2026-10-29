@@ -19,6 +19,7 @@ import {
 import { MemoryEditor } from "./editor";
 import { diffLines, MemoryHistory } from "./history";
 import { MemoryTree } from "./tree";
+import { RefreshButton } from "../../refresh";
 import { Missing } from "../missing";
 import { translator, type Translate } from "@/lib/i18n/request";
 import { getTimeFormat } from "@/lib/settings/time";
@@ -146,11 +147,14 @@ export default async function ProjectBrowser({
         <p className="text-sm text-[var(--danger)]">{failure}</p>
       ) : null}
 
-      <header className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">{project.name}</h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          {project.slug} · {project.role}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-semibold tracking-tight">{project.name}</h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            {project.slug} · {project.role}
+          </p>
+        </div>
+        <RefreshButton label={t("app.refresh.label")} busy={t("app.refresh.busy")} />
       </header>
 
       <form action={base} className="flex flex-wrap gap-2">

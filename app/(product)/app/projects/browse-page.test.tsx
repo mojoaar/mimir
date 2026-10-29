@@ -7,7 +7,7 @@ const notFound = vi.hoisted(() =>
   }),
 );
 
-vi.mock("next/navigation", () => ({ notFound }));
+vi.mock("next/navigation", () => ({ notFound, useRouter: () => ({ refresh: () => {} }) }));
 vi.mock("@/lib/auth/context", () => ({
   requireUser: async () => ({
     id: "u1",

@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { requireUser } from '@/lib/auth/context'
 import { translator, type Translate } from '@/lib/i18n/request'
 import { searchMemories, type SearchHit } from '@/lib/memory/search'
+import { getTimeFormat } from '@/lib/settings/time'
+import { stamp } from '@/lib/format/time'
+import { RefreshButton } from './refresh'
 import { listProjects } from '@/lib/projects/service'
 import { restoreProjectAction } from './projects/actions'
 
@@ -43,9 +46,10 @@ export default async function DashboardPage({
   const { notice, error, query: typed } = await searchParams
   const query = (typed ?? '').trim()
 
-  const [all, hits] = await Promise.all([
+  const [all, hits, { timeZone }] = await Promise.all([
     listProjects(user.id, true),
     query ? searchMemories({ userId: user.id, query, limit: 50 }) : Promise.resolve([]),
+    getTimeFormat(),
   ])
   const projects = all.filter((project) => !project.archived)
   const archived = all.filter((project) => project.archived)
@@ -56,6 +60,12 @@ export default async function DashboardPage({
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Mimir</h1>
           <p className="text-sm text-[var(--text-muted)]">{user.email}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-[var(--text-muted)]">
+            {t('app.refresh.asOf', { time: stamp(new Date(), timeZone) })}
+          </p>
+          <RefreshButton label={t('app.refresh.label')} busy={t('app.refresh.busy')} />
         </div>
       </header>
 

@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ agent: st
   if (!doc) return {};
   await connection();
   return publicMetadata({
-    title: `${doc.name} - Mimir`,
+    title: doc.name,
     description: `Connect ${doc.name} to Mimir over MCP.`,
     path: `/docs/agents/${doc.id}`,
   });

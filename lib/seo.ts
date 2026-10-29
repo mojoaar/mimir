@@ -21,6 +21,11 @@ export async function publicMetadata(input: {
 }): Promise<Metadata> {
   const [origin, settings] = await Promise.all([canonicalFor('/'), getSiteSettings()])
   const canonical = await canonicalFor(input.path)
+  // The install names itself, the way the landing page does: the page says what
+  // it is, the site setting says whose it is. The description falls back to the
+  // site one so a short page still has something to say in a search result.
+  const title = `${input.title} | ${settings.siteName}`
+  const description = input.description.trim() || settings.metaDescription
   const languages = Object.fromEntries(
     Object.entries(localeAlternates(input.path)).map(([locale, path]) => [
       locale,
@@ -30,17 +35,17 @@ export async function publicMetadata(input: {
 
   return {
     metadataBase: new URL(origin),
-    title: input.title,
-    description: input.description,
+    title,
+    description,
     alternates: input.locales ? { canonical, languages } : { canonical },
     openGraph: {
       type: 'website',
       siteName: settings.siteName,
-      title: input.title,
-      description: input.description,
+      title,
+      description,
       url: canonical,
       images: [{ url: `${origin}/opengraph-image`, width: 1200, height: 630 }],
     },
-    twitter: { card: 'summary_large_image', title: input.title, description: input.description },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }

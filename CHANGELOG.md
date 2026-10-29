@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Docs pages carry the install's name.** Every page under `/docs` now reads `Tools | Mimir` rather than `Tools`, with
+  the name taken from **Admin → Settings → Site**, the same way the landing page does it. A page that passes no
+  description falls back to the site description instead of shipping an empty one.
+
 ## [0.25.0] - 2026-10-29
 
 A landing page that shows its work, and memories you can sort.

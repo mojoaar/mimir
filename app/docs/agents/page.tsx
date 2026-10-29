@@ -10,7 +10,7 @@ export const instant = false;
 export async function generateMetadata(): Promise<Metadata> {
   await connection();
   return publicMetadata({
-    title: 'Agents - Mimir',
+    title: 'Agents',
     description: 'Connect OpenCode, Claude Code, Codex, Cursor, Gemini CLI and others to Mimir over MCP.',
     path: '/docs/agents',
   });

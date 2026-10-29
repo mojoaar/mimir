@@ -32,7 +32,7 @@ describe('canonicalFor', () => {
 describe('publicMetadata', () => {
   it('sets the canonical and every locale alternate when asked', async () => {
     const meta = await publicMetadata({
-      title: 'Mimir',
+      title: 'Overview',
       description: 'Long-term memory for your agents.',
       path: '/da',
       locales: true,
@@ -41,7 +41,7 @@ describe('publicMetadata', () => {
     expect(Object.keys(meta.alternates?.languages ?? {})).toEqual(
       expect.arrayContaining(['en', 'da', 'de', 'x-default']),
     )
-    expect(meta.openGraph?.title).toBe('Mimir')
+    expect(meta.openGraph?.title).toBe('Overview | Mimir')
     expect(meta.twitter).toMatchObject({ card: 'summary_large_image' })
   })
 
@@ -53,5 +53,12 @@ describe('publicMetadata', () => {
     })
     expect(meta.alternates?.canonical).toBe('https://mimir.example.test/docs/tools')
     expect(meta.alternates?.languages).toBeUndefined()
+    expect(meta.title).toBe('Tools | Mimir')
+  })
+
+  it('falls back to the site description when a page has none of its own', async () => {
+    const meta = await publicMetadata({ title: 'Changelog', description: '', path: '/docs/changelog' })
+    expect(meta.description).toBe('Long-term memory for your agents.')
+    expect(meta.openGraph?.description).toBe('Long-term memory for your agents.')
   })
 })

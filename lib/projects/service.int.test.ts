@@ -99,6 +99,14 @@ describe('resolveProject', () => {
     )
   })
 
+  it('routes a windows session below a claim written with backslashes', async () => {
+    await claimFolder(alice, aliceProjectId, 'C:\\Users\\alice\\AI')
+
+    expect((await resolveProject(alice, { repo: 'C:/Users/alice/AI/work', create: true })).id).toBe(
+      aliceProjectId,
+    )
+  })
+
   it('routes to the deepest claim', async () => {
     const work = await resolveProject(alice, { project: 'work', create: true })
     await claimFolder(alice, aliceProjectId, '/Users/alice/AI')

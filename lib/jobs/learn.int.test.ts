@@ -124,4 +124,24 @@ describe('runLearn', () => {
     replyWith('Sure! Here is what I found.')
     expect(await runLearn({ projectId, transcript: 'anything' })).toEqual({ written: 0 })
   })
+
+  it('marks what it learned with the session that sent it', async () => {
+    await setLearning(projectId, true)
+    replyWith(
+      JSON.stringify({
+        memories: [{ path: 'deploy/rollback', title: 'Roll back', body: 'Down then up.', kind: 'procedure' }],
+      }),
+    )
+
+    await runLearn({
+      projectId,
+      transcript: 'we rolled back by hand',
+      client: 'opencode',
+      session: 'ses_abc',
+    })
+
+    const memory = await readMemory(f.alice, projectId, 'deploy/rollback')
+    expect(memory?.client).toBe('opencode')
+    expect(memory?.session).toBe('ses_abc')
+  })
 })

@@ -34,7 +34,9 @@ export default function HowItWorksPage() {
         <code>repo</code> argument on a tool call. The first call creates the project; later calls from any client land
         in the same one. A directory that is not a repository can name its project too: claim the folder in that
         project's settings, and every session you start in it or below it writes there, with the deepest claim
-        winning. A git remote always beats a folder. A project holds memories, members and grants, and nothing is
+        winning. A git remote always beats a folder. A claim is personal, though, so on a team project each person
+        works in a checkout of the same repository or names the project explicitly; otherwise their session creates
+        a project of their own. A project holds memories, members and grants, and nothing is
         shared between projects unless you grant it.
       </P>
 

@@ -300,4 +300,12 @@ describe('folders as a repo', () => {
     // A claim is per account, so it cannot promise anything for a teammate.
     expect(html).toContain('every session you start')
   })
+
+  it('warns that a claim does not carry to a teammate', () => {
+    // Two people on one project, each in their own non-git folder, is the case
+    // where the map silently splits the knowledge, so both pages name the way
+    // out instead of leaving the reader to discover it.
+    expect(renderToStaticMarkup(McpPage())).toContain('the project explicitly')
+    expect(renderToStaticMarkup(HowItWorksPage())).toContain('the project explicitly')
+  })
 })

@@ -473,7 +473,7 @@ export const de: Messages = {
     "In die Warteschlange gestellt. Es läuft im Hintergrund.",
   "app.projectSettings.folders": "Ordner",
   "app.projectSettings.foldersBody":
-    "Eine Sitzung, die du in einem dieser Ordner startest, schreibt in dieses Projekt. Die Zuordnung gehört dir, eine Sitzung von Kollegen bleibt unberührt. Ein Git-Repository gewinnt weiterhin gegen einen Ordner.",
+    "Eine Sitzung, die du in einem dieser Ordner startest, schreibt in dieses Projekt. Die Zuordnung gehört dir, eine Sitzung von Kollegen im selben Ordner legt stattdessen ein eigenes Projekt an: Teile das Repository, oder lasse sie das Projekt nennen. Ein Git-Repository gewinnt weiterhin gegen einen Ordner.",
   "app.projectSettings.folderAdd": "Ordner hinzufügen",
   "app.projectSettings.folderRemove": "Entfernen",
   "app.projectSettings.folderHint":

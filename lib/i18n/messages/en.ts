@@ -455,7 +455,7 @@ export const en = {
   "app.projectSettings.queued": "Queued. It runs in the background.",
   "app.projectSettings.folders": "Folders",
   "app.projectSettings.foldersBody":
-    "A session you start in one of these folders writes to this project. The claim is yours, so a teammate's session is unaffected. A git repository still wins over a folder.",
+    "A session you start in one of these folders writes to this project. The claim is yours, so a teammate's session in the same folder creates their own project instead: share the repository, or have them name the project. A git repository still wins over a folder.",
   "app.projectSettings.folderAdd": "Add folder",
   "app.projectSettings.folderRemove": "Remove",
   "app.projectSettings.folderHint":

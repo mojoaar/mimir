@@ -457,7 +457,7 @@ export const da: Messages = {
   "app.projectSettings.queued": "Sat i kø. Det kører i baggrunden.",
   "app.projectSettings.folders": "Mapper",
   "app.projectSettings.foldersBody":
-    "En session, du starter i en af disse mapper, skriver til dette projekt. Knytningen er din, så en kollegas session er upåvirket. Et git-repository vinder stadig over en mappe.",
+    "En session, du starter i en af disse mapper, skriver til dette projekt. Knytningen er din, så en kollegas session i samme mappe opretter deres eget projekt i stedet: del repositoryet, eller lad dem angive projektet. Et git-repository vinder stadig over en mappe.",
   "app.projectSettings.folderAdd": "Tilføj mappe",
   "app.projectSettings.folderRemove": "Fjern",
   "app.projectSettings.folderHint":

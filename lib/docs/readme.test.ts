@@ -9,6 +9,10 @@ describe('the readme', () => {
     expect(readme).toContain('claim a folder')
   })
 
+  it('says a folder claim is personal, so a team needs the repository', () => {
+    expect(readme).toContain('the project explicitly')
+  })
+
   it('documents every tool the server exposes', () => {
     for (const tool of [
       'memory_digest',

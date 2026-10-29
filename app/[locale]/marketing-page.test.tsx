@@ -213,6 +213,9 @@ describe('the marketing page', () => {
 
     expect(html).toContain('radial-gradient(60% 55% at 30% 30%');
     expect(html).toContain('--hero-glow');
+    // Without the mask the gradient is still lit where the box ends, which
+    // draws a faint rectangle at the hero's left, top and bottom edges.
+    expect(html).toContain('closest-side');
     expect(html).toMatch(/aria-hidden="true"[^>]*style="[^"]*radial-gradient/);
   });
 

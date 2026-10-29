@@ -136,13 +136,17 @@ export default async function MarketingPage({
       <main className="flex flex-1 flex-col gap-16 py-10 sm:py-16">
         <section className="relative isolate flex flex-col gap-6 border-b border-[var(--border)] pb-12">
           {/* The accent, very low, well behind the headline. It reads as depth
-              rather than decoration, and the light themes need less of it. */}
+              rather than decoration, and the light themes need less of it. The
+              mask is what keeps the wash off the section edges: a radial that
+              is still faintly lit when the box ends draws its own rectangle. */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 -z-10"
             style={{
               backgroundImage: 'radial-gradient(60% 55% at 30% 30%, var(--accent) 0%, transparent 70%)',
               opacity: 'var(--hero-glow)',
+              maskImage: 'radial-gradient(closest-side, #000 45%, transparent 100%)',
+              WebkitMaskImage: 'radial-gradient(closest-side, #000 45%, transparent 100%)',
             }}
           />
           <p className="max-w-3xl text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">

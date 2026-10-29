@@ -482,7 +482,8 @@ export const de: Messages = {
   "app.projectSettings.folderReleased": "Ordner freigegeben.",
   "app.projectSettings.folderTaken":
     "Dieser Ordner gehört bereits zu einem anderen deiner Projekte. Gib ihn dort zuerst frei.",
-  "app.projectSettings.folderAbsolute": "Das ist kein absoluter Pfad. Er muss mit / beginnen.",
+  "app.projectSettings.folderAbsolute":
+    "Das ist kein absoluter Pfad. Nutze /Users/you/AI oder C:\\Users\\you\\AI.",
   "app.projectSettings.saving": "Wird gespeichert…",
   "app.projectSettings.sharedTeam": "Mit dem Team geteilt.",
   "app.projectSettings.shared": "Geteilt.",

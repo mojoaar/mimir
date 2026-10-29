@@ -47,8 +47,13 @@ export async function claimFolder(
   projectId: string,
   raw: string,
 ): Promise<{ path: string }> {
+  // The server would expand this to its own home, and no session would ever
+  // report that path, so the claim would be accepted and never fire.
+  if (raw.trim().startsWith('~')) {
+    throw new InvalidInput('a folder must be an absolute path, for example /Users/you/AI or C:\\Users\\you\\AI')
+  }
   const path = localPath(raw)
-  if (!path) throw new InvalidInput('a folder must be an absolute path, for example /Users/you/AI')
+  if (!path) throw new InvalidInput('a folder must be an absolute path, for example /Users/you/AI or C:\\Users\\you\\AI')
 
   return withUser(userId, async (client) => {
     const owned = await client.query('select 1 from projects where id = $1 and owner_user_id = $2', [

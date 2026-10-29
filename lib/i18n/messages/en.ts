@@ -464,7 +464,8 @@ export const en = {
   "app.projectSettings.folderReleased": "Folder released.",
   "app.projectSettings.folderTaken":
     "That folder is already claimed by another of your projects. Release it there first.",
-  "app.projectSettings.folderAbsolute": "That is not an absolute path. It has to start with /.",
+  "app.projectSettings.folderAbsolute":
+    "That is not an absolute path. Use /Users/you/AI, or C:\\Users\\you\\AI.",
   "app.projectSettings.saving": "Saving…",
   "app.projectSettings.sharedTeam": "Shared with the team.",
   "app.projectSettings.shared": "Shared.",

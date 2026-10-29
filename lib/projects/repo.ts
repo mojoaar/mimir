@@ -12,15 +12,34 @@ const SCP_STYLE = /^(?:[^@/\s]+@)?([^:/\s]+):(.+)$/
 
 /**
  * The absolute directory a path-like input names, or null when the input is a
- * repository key. `~` is the only shorthand expanded, because a remote client
- * sends what its shell would have expanded.
+ * repository key. Both slash styles are accepted because a Windows client sends
+ * its own, and the folder lookup compares with `/`. `~` still expands, because
+ * a client that sends one expects a stable identity; the claim form refuses it
+ * instead, where a person is the one typing.
  */
 export function localPath(raw: string): string | null {
   const input = raw.trim()
   if (!input) return null
-  if (input.startsWith('/') || input.startsWith('~') || /^[a-zA-Z]:[\\/]/.test(input)) {
-    return path.resolve(input.startsWith('~') ? input.replace(/^~/, homedir()) : input)
+
+  // Refused before normalising: `\\server\share` would otherwise look like a
+  // posix path and collide with one.
+  if (input.startsWith('\\\\')) return null
+
+  const slashed = input.replace(/\\/g, '/')
+  const drive = /^([a-zA-Z]):\/(.*)$/.exec(slashed)
+  if (drive) {
+    // path.resolve would put the server's cwd in front of a drive path, so this
+    // is normalised by hand: lower-case drive, forward slashes, no trailing one.
+    const rest = path.posix
+      .normalize(drive[2]!)
+      .replace(/^\.$/, '')
+      .replace(/\/+$/, '')
+    return `${drive[1]!.toLowerCase()}:/${rest}`
   }
+
+  if (input.startsWith('~')) return path.posix.normalize(slashed.replace(/^~/, homedir()))
+
+  if (slashed.startsWith('/')) return path.posix.normalize(slashed).replace(/\/+$/, '') || '/'
   return null
 }
 

@@ -55,6 +55,24 @@ describe('a claimed folder', () => {
     expect(await lookup(alice, '/Users/alice/AI2')).toBeNull()
   })
 
+  it('routes a windows session below the claim, in either slash style', async () => {
+    await claimFolder(alice, aliceProjectId, 'C:\\Users\\alice\\AI')
+
+    expect((await lookup(alice, 'c:/Users/alice/AI'))?.projectId).toBe(aliceProjectId)
+    expect((await lookup(alice, 'C:/Users/alice/AI/work/deep'))?.projectId).toBe(aliceProjectId)
+    expect(await lookup(alice, 'C:/Users/alice/AI2')).toBeNull()
+  })
+
+  it('refuses a UNC path, which has no single owner to claim it for', async () => {
+    await expect(claimFolder(alice, aliceProjectId, '\\\\server\\share\\AI')).rejects.toThrow(
+      'must be an absolute path',
+    )
+  })
+
+  it('refuses a home shorthand, which the server would expand to its own home', async () => {
+    await expect(claimFolder(alice, aliceProjectId, '~/AI')).rejects.toThrow('must be an absolute path')
+  })
+
   it('treats a wildcard character in the path as a character', async () => {
     await claimFolder(alice, aliceProjectId, '/Users/alice/AI_v2')
 

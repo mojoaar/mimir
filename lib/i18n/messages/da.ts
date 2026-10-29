@@ -466,7 +466,8 @@ export const da: Messages = {
   "app.projectSettings.folderReleased": "Mappe frigivet.",
   "app.projectSettings.folderTaken":
     "Mappen er allerede knyttet til et andet af dine projekter. Frigiv den der først.",
-  "app.projectSettings.folderAbsolute": "Det er ikke en absolut sti. Den skal starte med /.",
+  "app.projectSettings.folderAbsolute":
+    "Det er ikke en absolut sti. Brug /Users/you/AI eller C:\\Users\\you\\AI.",
   "app.projectSettings.saving": "Gemmer…",
   "app.projectSettings.sharedTeam": "Delt med holdet.",
   "app.projectSettings.shared": "Delt.",

@@ -1,6 +1,34 @@
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { normaliseRepoKey } from './repo'
+import { localPath, normaliseRepoKey } from './repo'
+
+describe('localPath', () => {
+  it('leaves a posix path alone', () => {
+    expect(localPath('/Users/alice/AI')).toBe('/Users/alice/AI')
+    expect(localPath('/Users/alice/AI/')).toBe('/Users/alice/AI')
+    expect(localPath('/Users/alice/AI/../AI')).toBe('/Users/alice/AI')
+  })
+
+  it('reads a windows path without the server cwd in front of it', () => {
+    expect(localPath('C:\\Users\\alice\\AI')).toBe('c:/Users/alice/AI')
+    expect(localPath('C:/Users/alice/AI')).toBe('c:/Users/alice/AI')
+    expect(localPath('c:\\Users\\alice\\AI\\')).toBe('c:/Users/alice/AI')
+  })
+
+  it('keeps the rest of a drive path as it was written', () => {
+    expect(localPath('D:/work/AI')).toBe('d:/work/AI')
+    expect(localPath('C:/')).toBe('c:/')
+  })
+
+  it('still expands a home shorthand, so identity does not change for a caller that sends one', () => {
+    expect(localPath('~')).toBe(path.dirname(localPath('~/AI')!))
+  })
+
+  it('refuses a UNC path rather than collide with a posix one', () => {
+    expect(localPath('\\\\server\\share\\AI')).toBeNull()
+  })
+})
 
 describe('normaliseRepoKey', () => {
   it.each([

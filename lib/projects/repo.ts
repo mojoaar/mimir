@@ -10,14 +10,26 @@ import path from 'node:path'
 
 const SCP_STYLE = /^(?:[^@/\s]+@)?([^:/\s]+):(.+)$/
 
-export function normaliseRepoKey(raw: string): string | null {
+/**
+ * The absolute directory a path-like input names, or null when the input is a
+ * repository key. `~` is the only shorthand expanded, because a remote client
+ * sends what its shell would have expanded.
+ */
+export function localPath(raw: string): string | null {
   const input = raw.trim()
   if (!input) return null
-
   if (input.startsWith('/') || input.startsWith('~') || /^[a-zA-Z]:[\\/]/.test(input)) {
-    const absolute = path.resolve(input.startsWith('~') ? input.replace(/^~/, homedir()) : input)
-    return `local:${createHash('sha256').update(absolute).digest('hex')}`
+    return path.resolve(input.startsWith('~') ? input.replace(/^~/, homedir()) : input)
   }
+  return null
+}
+
+export function normaliseRepoKey(raw: string): string | null {
+  const local = localPath(raw)
+  if (local) return `local:${createHash('sha256').update(local).digest('hex')}`
+
+  const input = raw.trim()
+  if (!input) return null
 
   let host: string
   let repoPath: string

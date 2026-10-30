@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3] - 2026-10-30
+
+The command reads the session it was typed in.
+
 ### Fixed
 
 - `/mimir-learn` reads the session history when it runs instead of relying on what the plugin has seen since

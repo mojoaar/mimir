@@ -612,3 +612,32 @@ describe('the command to hand it over now', () => {
     expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(1)
   })
 })
+
+describe('an install with no url', () => {
+  it('says so once, instead of loading and doing nothing', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const before = { url: process.env.MIMIR_URL, token: process.env.MIMIR_TOKEN }
+    delete process.env.MIMIR_URL
+    delete process.env.MIMIR_TOKEN
+
+    try {
+      const built = context({ url: undefined, token: undefined })
+      await plugin.setup(built.fake as never)
+
+      // A configured install would have registered these; an inert one must
+      // leave nothing behind and must say why, in a log with no other clue.
+      expect(built.hooks.context).toBeUndefined()
+      expect(built.commands).toHaveLength(0)
+      expect(warn).toHaveBeenCalledTimes(1)
+      const line = String(warn.mock.calls[0]?.[0])
+      expect(line).toContain('MIMIR_URL')
+      expect(line).toContain('options.url')
+    } finally {
+      warn.mockRestore()
+      if (before.url === undefined) delete process.env.MIMIR_URL
+      else process.env.MIMIR_URL = before.url
+      if (before.token === undefined) delete process.env.MIMIR_TOKEN
+      else process.env.MIMIR_TOKEN = before.token
+    }
+  })
+})

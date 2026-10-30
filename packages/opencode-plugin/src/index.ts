@@ -66,7 +66,14 @@ export default Plugin.define({
   id: 'mimir',
   async setup(ctx) {
     const config = resolveConfig(ctx.options)
-    if (!config) return
+    if (!config) {
+      // This API has no logger, and an inert plugin is otherwise invisible:
+      // the digest, the tools and /mimir-learn simply never appear.
+      console.warn(
+        'mimir: no url, so no digest, tools or /mimir-learn. Set MIMIR_URL and MIMIR_TOKEN, or add options.url and options.tokenFile to the plugin entry.',
+      )
+      return
+    }
 
     // A folder without a git remote still needs a stable key, or every write
     // lands in a fresh project. The server maps absolute paths to `local:<hash>`.

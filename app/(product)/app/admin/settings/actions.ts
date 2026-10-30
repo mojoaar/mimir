@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { audit } from '@/lib/audit'
 import { requireAdmin } from '@/lib/auth/admin'
 import { sendJob } from '@/lib/jobs/boss'
+import { enqueueEmbeddingRebuild } from '@/lib/jobs/enqueue'
 import { getProviderSecret, recordVerification } from '@/lib/providers/service'
 import { verifyProvider } from '@/lib/providers/verify'
 import { EMBEDDING_DIM, setEmbeddingConfig } from '@/lib/settings/embedding'
@@ -52,16 +53,10 @@ export async function saveEmbeddingAction(
 
     const { changed } = await setEmbeddingConfig({ providerId, model, dim }, user.id)
     await recordVerification(user.id, providerId, null)
-    if (changed) {
-      // The new model writes a different space, so the old vectors are not
-      // comparable and must go before anything is rebuilt. Imported lazily
-      // because the job module registers a worker when it loads.
-      const { clearEmbeddings } = await import('@/lib/jobs/reembed')
-      await clearEmbeddings()
-      await sendJob('reembed', { confirm: true })
-    } else {
-      // Same space: only rows written while no vector could be made are missing.
-      await sendJob('backfill', {})
+    // The rebuild job clears the vectors itself, once it is running. Doing it
+    // here would empty search on an install whose queue is down.
+    if (!(await enqueueEmbeddingRebuild(changed))) {
+      return { error: t('app.admin.backups.queueDown') }
     }
     revalidatePath('/app/admin/settings')
     return { ok: t('app.admin.embeddings.saved', { model, count: dim }) }

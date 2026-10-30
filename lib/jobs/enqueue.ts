@@ -17,3 +17,15 @@ export async function enqueueExtraction(projectId: string): Promise<void> {
     console.error(`could not queue extraction (${(error as Error).message})`)
   }
 }
+
+/**
+ * A changed embedding model makes every stored vector incomparable, so the job
+ * that rebuilds them is a different job from the one that fills gaps. Answers
+ * false when the queue is down, because clearing vectors without a rebuild
+ * would leave search with nothing to rank.
+ */
+export async function enqueueEmbeddingRebuild(changed: boolean): Promise<boolean> {
+  const { sendJob } = await import('./boss')
+  const id = changed ? await sendJob('reembed', { confirm: true }) : await sendJob('backfill', {})
+  return id !== null
+}

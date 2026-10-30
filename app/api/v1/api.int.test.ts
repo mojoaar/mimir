@@ -8,6 +8,7 @@ import { GET as readMemoryGet } from '@/app/api/v1/projects/[slug]/memory/[...pa
 import { GET as listVersionsRoute } from '@/app/api/v1/projects/[slug]/versions/route'
 import { POST as restoreVersionRoute } from '@/app/api/v1/projects/[slug]/versions/[id]/restore/route'
 import { GET as treeRoute } from '@/app/api/v1/projects/[slug]/tree/route'
+import { POST as learnRoute } from '@/app/api/v1/projects/[slug]/learn/route'
 import { sha256 } from '@/lib/crypto'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
@@ -151,6 +152,23 @@ describe('rest api', () => {
       params({ path: ['import', 'docs', 'a.md'] }),
     )
     expect((await read.json()).body).toBe('imported')
+  })
+})
+
+describe('learning over the rest api', () => {
+  // The MCP tool is covered; this path is what a script uses, and it must not
+  // answer queued when the project will silently write nothing.
+  it('refuses instead of queueing when learning is off', async () => {
+    const response = await learnRoute(
+      req(`/api/v1/projects/${slug}/learn`, {
+        method: 'POST',
+        body: { transcript: 'we chose the rollback path today '.repeat(20) },
+      }),
+      { params: Promise.resolve({ slug }) },
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ queued: false, reason: 'learning is off for this project' })
   })
 })
 

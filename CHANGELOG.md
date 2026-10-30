@@ -5,28 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.27.0] - 2026-10-30
 
-Hardening before the next feature: a loop that could not finish, vectors that
-could be compared across two models, and a digest that could be buried.
+The release that fixes what the audit found, before anything new is added.
 
 ### Added
-
-- **A plugin can read a memory body.** `mimir_read` joins both plugins, so a search hit is something the agent can
-  open without an MCP server beside it.
-
-- **Search across every project, from an agent.** Leave out `project` and `repo` and `memory_search` asks everything
-  the caller can read, which is how a session answers "did I solve this somewhere else?". The same call is
-  `POST /api/v1/search`, and `mimir search` on the command line.
-
-- **Export a project as one file.** The project header, `GET /api/v1/projects/{slug}/export` and `mimir export` give
-  a Markdown file, or JSON with `?format=json`, carrying every path, title, summary, body, kind and who wrote it. A
-  project over 5,000 memories or 16 MB refuses with a clear message instead of building a file nobody can open. It is
-  a readable copy, not a backup: no versions, no grants, no vectors.
-
-- **Ask an owner for access to a repository.** A second person on the same repository no longer has to start a
-  project of their own. `/app/requests` takes a repository and a note, the owner sees it on the project's settings
-  page and grants write in one press, and the request is one row per person per project until it is answered.
 
 - **Security headers on every response.** `frame-ancestors 'none'` and `X-Frame-Options: DENY` stop the app being
   framed, `Referrer-Policy: strict-origin-when-cross-origin` keeps a token out of the next site's logs,
@@ -52,7 +35,7 @@ could be compared across two models, and a digest that could be buried.
 
 - **Changing the embedding model no longer compares two vector spaces.** Saving a new model only queued a backfill of
   rows without a vector, so the old model's vectors stayed and search ranked them against the new ones. A change now
-  clears the live vectors first, then rebuilds.
+  clears the live vectors first, then rebuilds, and a queue that is down says so instead of clearing them anyway.
 
 - **A bulk import can no longer bury the digest.** The digest took the two hundred newest rows of every kind, so
   `memory_ingest` writing a hundred `import` rows pushed the decisions and runbooks out of the window, and a procedure
@@ -66,6 +49,81 @@ could be compared across two models, and a digest that could be buried.
 - **`memory_learn` no longer promises work it cannot do.** With learning off, or no language provider resolving for
   the project owner, it answered `queued: true` and the plugin said the memories were being written. It now answers
   `queued: false` with the reason, and both plugins print that reason instead of the success sentence.
+
+## [0.28.0] - 2026-10-30
+
+Faster reads, an import that does not wait, and the last of the audit's small debts.
+
+### Added
+
+- **A missing summary or vector repairs itself.** A write whose embedding call failed now queues a backfill for its
+  project, and a nightly sweep asks only for gaps in the last seven days, so a body the model already refused is not
+  retried for ever on the owner's key. Admin → Jobs reports the sweep like any other job.
+
+- **Changing your address now needs the new inbox.** The profile form asks for the password, mails a link to the new
+  address, and only that link moves the account, after which every session is signed out. The link carries its token
+  in the fragment, so it never reaches a server log.
+
+- **A session ends after ninety days.** Sessions still slide while you use them, but not for ever: a stolen cookie
+  that keeps being used stops resolving.
+
+- **Versions from an agent.** `memory_versions` lists a path's history and `memory_restore` puts one back, so an
+  MCP-only client can inspect what it overwrote instead of losing it.
+
+- **A public vulnerability channel.** `SECURITY.md` says how to report one privately, and Dependabot watches npm and
+  the workflow actions weekly.
+
+### Changed
+
+- **A project page is one transaction, not a dozen.** Reading a project used to resolve the caller's role again in
+  every helper, so one page view checked out a connection about ten times. It now resolves the role once and reads
+  the memory, tree, deleted list, versions and the selected version together, which leaves the pool to other tabs.
+
+- **An import embeds in batches of sixteen.** A hundred files used to mean a hundred provider calls, one after
+  another. The chunk is embedded in one call per sixteen files, and the writes reuse those vectors.
+
+- **The tree stops at five hundred paths** and says so, with a hint to narrow by folder or search, instead of
+  shipping a page nobody can scroll.
+
+- **Both plugins behave the same.** Oh My Pi now refuses an invented `kind` by writing `note`, sends its client with
+  a compaction, and OpenCode's `mimir_remember` takes a `title`. A write that starts a new project says so and points
+  at the way to ask a teammate for access.
+
+### Fixed
+
+- **A reset link no longer travels in the request line.** The token moved into the fragment, and the old path
+  redirects to it, so a link already in someone's inbox still works.
+
+- **The audit log's retention sentence names failed sign-ins** with the number it actually uses, and failed sign-ins
+  are pruned after thirty days instead of a year.
+
+- **The rate-limit map is swept** instead of growing with every invented address, and the sweep never clears a
+  lockout that is still live.
+
+- **The sitemap lists the agents index** and no longer claims every page changed on every request.
+
+## [0.29.0] - 2026-10-30
+
+Memory that travels: read it, search every project, take it with you.
+
+### Added
+
+- **A plugin can read a memory body.** `mimir_read` joins both plugins, so a search hit is something the agent can
+  open without an MCP server beside it.
+
+- **Search across every project, from an agent.** Leave out `project` and `repo` and `memory_search` asks everything
+  the caller can read, which is how a session answers "did I solve this somewhere else?". The repository header a
+  client sends does not narrow it, or the cross-project search would be unreachable for every configured agent. The
+  same call is `POST /api/v1/search`, and `mimir search` on the command line.
+
+- **Export a project as one file.** The project header, `GET /api/v1/projects/{slug}/export` and `mimir export` give
+  a Markdown file, or JSON with `?format=json`, carrying every path, title, summary, body, kind and who wrote it. A
+  project over 5,000 memories or 16 MB refuses with a clear message instead of building a file nobody can open. It is
+  a readable copy, not a backup: no versions, no grants, no vectors.
+
+- **Ask an owner for access to a repository.** A second person on the same repository no longer has to start a
+  project of their own. `/app/requests` takes a repository and a note, the owner sees it on the project's settings
+  page and grants write in one press, and the request is one row per person per project until it is answered.
 
 ## [0.26.0] - 2026-10-29
 

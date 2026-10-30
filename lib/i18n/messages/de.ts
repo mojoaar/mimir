@@ -231,6 +231,7 @@ export const de: Messages = {
   "app.project.archiveFailed": "Das Projekt konnte nicht archiviert werden.",
   "app.project.restoreFailed":
     "Das Projekt konnte nicht wiederhergestellt werden.",
+  "app.project.export": "Exportieren",
   "app.project.restoreConflict": "Der Pfad wurde nach dem Löschen erneut geschrieben, daher bleibt diese Kopie gelöscht.",
   "app.project.restoreGone": "Diese Erinnerung ist nicht mehr im Papierkorb.",
   "app.project.delete": "Löschen",

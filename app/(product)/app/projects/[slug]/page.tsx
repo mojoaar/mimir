@@ -139,12 +139,20 @@ export default async function ProjectBrowser({
         >
           {t("app.browse.back")}
         </Link>
-        <Link
-          href={`${base}/settings`}
-          className="text-sm text-[var(--text-muted)] underline"
-        >
-          {t("app.browse.settings")}
-        </Link>
+        <div className="flex items-baseline gap-4">
+          <a
+            href={`${base}/export`}
+            className="text-sm text-[var(--text-muted)] underline"
+          >
+            {t("app.project.export")}
+          </a>
+          <Link
+            href={`${base}/settings`}
+            className="text-sm text-[var(--text-muted)] underline"
+          >
+            {t("app.browse.settings")}
+          </Link>
+        </div>
       </div>
 
       {notice ? <p className="text-sm text-[var(--accent)]">{notice}</p> : null}

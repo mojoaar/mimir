@@ -222,6 +222,7 @@ export const en = {
   "app.project.gone": "That project no longer exists.",
   "app.project.archiveFailed": "Could not archive the project.",
   "app.project.restoreFailed": "Could not restore the project.",
+  "app.project.export": "Export",
   "app.project.restoreConflict": "That path was written again after it was deleted, so this copy stayed deleted.",
   "app.project.restoreGone": "That memory is no longer in the bin.",
   "app.project.delete": "Delete",

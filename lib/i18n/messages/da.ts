@@ -222,6 +222,7 @@ export const da: Messages = {
   "app.project.gone": "Projektet findes ikke længere.",
   "app.project.archiveFailed": "Projektet kunne ikke arkiveres.",
   "app.project.restoreFailed": "Projektet kunne ikke gendannes.",
+  "app.project.export": "Eksportér",
   "app.project.restoreConflict": "Stien blev skrevet igen, efter den blev slettet, så denne kopi forbliver slettet.",
   "app.project.restoreGone": "Den erindring er ikke længere i papirkurven.",
   "app.project.delete": "Slet",

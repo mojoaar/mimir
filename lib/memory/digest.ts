@@ -7,6 +7,14 @@ export type Digest = {
   truncated: boolean
 }
 
+type DigestRow = {
+  path: string
+  title: string
+  summary: string | null
+  kind: string
+  updated_at: Date
+}
+
 export type DigestInput = {
   userId: string
   projectId: string
@@ -30,31 +38,40 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
   const budget = Math.max(input.budgetTokens ?? DEFAULT_BUDGET, 1)
   await requireProjectRole(input.userId, input.projectId, 'read')
 
-  const rows = await withUser(input.userId, async (client) => {
-    const { rows } = await client.query<{
-      path: string
-      title: string
-      summary: string | null
-      kind: string
-      updated_at: Date
-    }>(
-      `select path, title, summary, kind, updated_at
-       from memories
-       where project_id = $1 and deleted_at is null
-       order by updated_at desc, path
-       limit ${MAX_ROWS}`,
-      [input.projectId],
-    )
-    return rows
+  const { rows, procedures } = await withUser(input.userId, async (client) => {
+    const read = (filter: string, limit: number) =>
+      client.query<DigestRow>(
+        `select path, title, summary, kind, updated_at
+         from memories
+         where project_id = $1 and deleted_at is null ${filter}
+         order by updated_at desc, path
+         limit ${limit}`,
+        [input.projectId],
+      )
+
+    // Imported files are a repository dump, not knowledge: a hundred of them
+    // would fill the budget and push the decisions out of it.
+    const ordinary = await read("and kind <> 'import'", MAX_ROWS)
+    // Procedures are fetched by kind so age cannot hide a runbook.
+    const books = await read("and kind = 'procedure'", PROCEDURE_LIMIT)
+
+    if (ordinary.rows.length === 0 && books.rows.length === 0) {
+      // A project holding nothing but an import still deserves an answer.
+      const fallback = await read('', MAX_ROWS)
+      return { rows: fallback.rows, procedures: [] }
+    }
+
+    return { rows: ordinary.rows, procedures: books.rows }
   })
 
-  if (rows.length === 0) return { text: '', memoryCount: 0, truncated: false }
+  if (rows.length === 0 && procedures.length === 0) {
+    return { text: '', memoryCount: 0, truncated: false }
+  }
 
   const recent = new Set(rows.slice(0, RECENT_SUMMARIES).map((row) => row.path))
 
   // A runbook stays valid until it is replaced, while a gotcha is only as good
   // as its last verification. So procedures lead, whatever their age.
-  const procedures = rows.filter((row) => row.kind === 'procedure').slice(0, PROCEDURE_LIMIT)
   const promoted = new Set(procedures.map((row) => row.path))
 
   const groups = new Map<string, typeof rows>()

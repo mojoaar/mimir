@@ -136,3 +136,51 @@ describe('buildDigest', () => {
     })
   })
 })
+
+describe('what the digest leaves out', () => {
+  it('does not let an import bury a decision', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'decisions/deploy', body: 'deploy by image swap' })
+    for (let i = 0; i < 120; i++) {
+      await writeMemory({
+        userId: f.alice,
+        projectId,
+        path: `import/doc-${i}`,
+        body: 'readme',
+        kind: 'import',
+      })
+    }
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+    expect(digest.text).toContain('deploy by image swap')
+    expect(digest.text).not.toContain('import/doc-0')
+  })
+
+  it('promotes a procedure older than the recent window', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'runbooks/keys',
+      body: 'rotate',
+      kind: 'procedure',
+    })
+    for (let i = 0; i < 240; i++) {
+      await writeMemory({ userId: f.alice, projectId, path: `recent/${i}`, body: 'x' })
+    }
+
+    expect((await buildDigest({ userId: f.alice, projectId })).text.startsWith('### Procedures')).toBe(
+      true,
+    )
+  })
+
+  it('still lists the imports when a project holds nothing else', async () => {
+    await writeMemory({
+      userId: f.alice,
+      projectId,
+      path: 'import/only',
+      body: 'readme',
+      kind: 'import',
+    })
+
+    expect((await buildDigest({ userId: f.alice, projectId })).text).toContain('import/only')
+  })
+})

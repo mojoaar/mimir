@@ -109,6 +109,7 @@ function rememberTool(repo: string | null): ToolDefinition {
       properties: {
         path: { type: 'string', description: 'Slash-separated memory path, e.g. deploy/rollback' },
         body: { type: 'string', description: 'What to remember, written so it reads without the conversation' },
+        title: { type: 'string', description: 'One line. Defaults to the first line of the body.' },
         kind: {
           type: 'string',
           enum: ['note', 'fact', 'decision', 'gotcha', 'procedure', 'snippet', 'import'],
@@ -125,6 +126,7 @@ function rememberTool(repo: string | null): ToolDefinition {
         {
           path: String(args.path ?? ''),
           body: String(args.body ?? ''),
+          title: typeof args.title === 'string' ? args.title : undefined,
           kind: typeof args.kind === 'string' ? args.kind : undefined,
           repo: repo ?? undefined,
           client: 'opencode',

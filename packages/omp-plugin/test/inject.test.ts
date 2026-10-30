@@ -207,6 +207,17 @@ describe('the tools', () => {
     expect(mocks.calls[0]?.args.client).toBe('oh-my-pi')
   })
 
+  it('turns an invented kind into a note, instead of letting the server refuse it', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { path: 'a/b', created: true } }
+    const { tools } = await setup()
+    const remember = tools.find((tool) => tool.name === 'mimir_remember')
+
+    await remember?.execute('1', { path: 'a/b', body: 'x', kind: 'insight' }, undefined, undefined, ctx)
+
+    expect(mocks.calls[0]?.args.kind).toBe('note')
+  })
+
   it('renders search hits as path and summary', async () => {
     mocks.result = {
       ok: true,
@@ -276,6 +287,7 @@ describe('the transcript it hands over', () => {
     expect(learn).toHaveLength(1)
     expect(String(learn[0]?.args.transcript)).toContain('five')
     expect(learn[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+    expect(learn[0]?.args.client).toBe('oh-my-pi')
   })
 
   it('sends nothing when there is nothing to send', async () => {

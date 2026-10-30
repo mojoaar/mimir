@@ -95,7 +95,8 @@ export default function mimir(pi: ExtensionAPI): void {
     if (compacted.length < MIN_TRANSCRIPT) return
     await callTool(
       'memory_learn',
-      { repo: repo(eventCtx.cwd), transcript: compacted, hint: LEARN_HINT },
+      // No session id: this API does not hand one to the event.
+      { repo: repo(eventCtx.cwd), transcript: compacted, hint: LEARN_HINT, client: 'oh-my-pi' },
       { ...config, timeoutMs: 4000 },
     ).catch(() => null)
   })

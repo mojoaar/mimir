@@ -308,6 +308,18 @@ describe('the tools it adds', () => {
     ])
   })
 
+  it('takes a title, so the memory does not inherit one from its first line', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { path: 'deploy/rollback', created: true } }
+    const { added } = await setup()
+    const remember = added.find((tool) => tool.name === 'mimir_remember')
+
+    expect(remember?.input.properties.title).toBeDefined()
+    await remember?.execute?.({ path: 'deploy/rollback', body: 'Redeploy.', title: 'Roll back by redeploying' })
+
+    expect(mocks.calls[0]?.args.title).toBe('Roll back by redeploying')
+  })
+
   it('searches with the prefix and the repo', async () => {
     mocks.calls.length = 0
     mocks.repo = 'git@github.com:alice/notes.git'

@@ -3,6 +3,11 @@ import type { ExtensionAPI, ExtensionContext, ToolResult } from './omp.js'
 
 const KINDS = ['note', 'fact', 'decision', 'gotcha', 'procedure', 'snippet', 'import'] as const
 
+/** The server refuses an unknown kind, so an invented one falls back to the default. */
+function kindOf(value: unknown): string {
+  return typeof value === 'string' && (KINDS as readonly string[]).includes(value) ? value : 'note'
+}
+
 function result(text: string): ToolResult {
   return { content: [{ type: 'text', text }], details: {} }
 }
@@ -52,7 +57,7 @@ export function registerTools(
         'memory_write',
         // This API hands the tool no session id, so the client is all we can
         // honestly say about who wrote it.
-        { path, body, title: params.title, kind: params.kind, repo: repo(ctx), client: 'oh-my-pi' },
+        { path, body, title: params.title, kind: kindOf(params.kind), repo: repo(ctx), client: 'oh-my-pi' },
         { ...config, timeoutMs: 8000 },
       )
       if (!written.ok) return result(`Could not store that (${written.error}).`)

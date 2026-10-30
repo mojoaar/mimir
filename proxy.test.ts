@@ -33,6 +33,11 @@ describe('proxy', () => {
     },
   )
 
+  it('lets the mailed confirmation page through', () => {
+    // The link arrives with no session and no cookie.
+    expect(rewrittenTo(proxy(get('/confirm-email')))).toBeNull()
+  })
+
   it('keeps the locale routes working', () => {
     expect(rewrittenTo(proxy(get('/')))).toBe('/en')
     expect(proxy(get('/en/docs')).headers.get('location')).toMatch(/\/docs$/)

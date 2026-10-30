@@ -87,7 +87,9 @@ export default async function ToolsPage() {
       <P>
         Arguments: <code>files</code> (up to 100, 2 MB total), optional <code>path_prefix</code> (default{' '}
         <code>import</code>). Each file becomes a memory at <code>{'<prefix>/<path>'}</code>. A file whose name cannot
-        be a path is listed in <code>skipped</code> instead of failing the batch.
+        be a path is listed in <code>skipped</code> instead of failing the batch. If one file fails while it is being
+        written, the call stops there: the files before it are stored, and running the same import again is safe
+        because a path is replaced rather than duplicated.
       </P>
 
       <H2>memory_learn</H2>

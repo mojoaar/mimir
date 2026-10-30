@@ -328,7 +328,8 @@ describe('the profile action', () => {
     )
 
     expect(state.ok).toContain('Check the new address')
-    expect(mocks.profileCalls).toHaveLength(0)
+    // The name still saves; only the address waits for the mail.
+    expect(mocks.profileCalls[0]).toEqual({ name: 'Alice' })
     expect(mocks.emailCalls[0]).toMatchObject({
       email: 'new@example.test',
       password: 'correct-password',
@@ -342,6 +343,20 @@ describe('the profile action', () => {
 
     expect(state.ok).toBe('Saved.')
     expect(mocks.profileCalls[0]).toEqual({ name: 'Alice B' })
+  })
+
+  it('keeps the name when the address changes in the same submit', async () => {
+    mocks.profileCalls = []
+    mocks.emailCalls = []
+
+    const state = await updateProfileAction(
+      {},
+      form({ name: 'Alice B', email: 'alice.new@example.test', currentPassword: 'dev-password-123' }),
+    )
+
+    expect(state.ok).toContain('Check the new address')
+    expect(mocks.profileCalls[0]).toEqual({ name: 'Alice B' })
+    expect(mocks.emailCalls).toHaveLength(1)
   })
 
   it('refuses a password change whose confirmation differs', async () => {

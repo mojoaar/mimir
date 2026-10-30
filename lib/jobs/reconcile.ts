@@ -8,11 +8,16 @@ export type ReconcileResult = { projects: number }
 // A row can miss its summary after three failed extraction attempts, or its
 // vector when the provider was down. Nothing else looks for either, so the
 // install would carry that gap for ever.
+//
+// Only a week of it, though: extraction keeps no attempt counter of its own, so
+// an old gap is one the model has already refused, and retrying it every night
+// is a paid call that will fail again. A longer outage is repaired by hand.
 const MISSING_SUMMARY = `
   select distinct p.id
     from projects p
     join memories m on m.project_id = p.id
    where p.archived_at is null and m.deleted_at is null and m.summary is null
+     and m.updated_at > now() - interval '7 days'
 `
 
 const MISSING_VECTOR = `
@@ -20,6 +25,7 @@ const MISSING_VECTOR = `
     from projects p
     join memories m on m.project_id = p.id
    where p.archived_at is null and m.deleted_at is null and m.embedding is null
+     and m.updated_at > now() - interval '7 days'
 `
 
 type IdRow = { id: string }

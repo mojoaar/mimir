@@ -12,11 +12,12 @@ export type JobName =
   | 'purge'
 
 // `short` keeps one queued job per singletonKey, which is what makes the
-// extract debounce work: the tenth write in a minute reuses the first job.
+// extract debounce work: the tenth write in a minute reuses the first job, and
+// a hundred writes during an embedding outage queue one backfill, not a hundred.
 const POLICIES: Record<JobName, 'short' | 'standard'> = {
   extract: 'short',
   learn: 'standard',
-  backfill: 'standard',
+  backfill: 'short',
   reembed: 'standard',
   reconcile: 'standard',
   backup: 'standard',

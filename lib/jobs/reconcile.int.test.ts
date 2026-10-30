@@ -67,3 +67,28 @@ describe('the nightly sweep', () => {
     expect(queue.backfill).not.toHaveBeenCalled()
   })
 })
+
+describe('a gap that is old', () => {
+  it('is left alone, because the model has already refused it', async () => {
+    await writeMemory({ userId: f.alice, projectId: f.aliceProjectId, path: 'a/old', body: 'old' })
+    // The table stamps updated_at on every update, so an old row can only be
+    // made by turning that trigger off for the duration of this test.
+    await adminPool().query('alter table memories disable trigger memories_updated_at')
+    try {
+      await adminPool().query(
+        `update memories
+            set summary = null,
+                embedding = array_fill(0.1, array[768])::vector,
+                updated_at = now() - interval '10 days'
+          where project_id = $1`,
+        [f.aliceProjectId],
+      )
+    } finally {
+      await adminPool().query('alter table memories enable trigger memories_updated_at')
+    }
+    queue.extract.mockClear()
+    queue.backfill.mockClear()
+
+    expect(await runReconcile()).toEqual({ projects: 0 })
+  })
+})

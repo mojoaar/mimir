@@ -315,7 +315,7 @@ export const de: Messages = {
   "app.admin.audit.title": "Protokoll",
   "app.admin.audit.export": "CSV exportieren",
   "app.admin.audit.retention":
-    "Einträge werden {kept} Tage aufbewahrt, Lesezugriffe auf Erinnerungen und fehlgeschlagene Anmeldungen {reads} Tage, weil sie den Großteil des Protokolls ausmachen. Nichts hier lässt sich bearbeiten oder löschen; nutze CSV exportieren, wenn du eine Kopie brauchst.",
+    "Einträge werden {kept} Tage aufbewahrt, Lesezugriffe auf Erinnerungen {reads} Tage und fehlgeschlagene Anmeldungen {failed} Tage, weil sie den Großteil des Protokolls ausmachen. Nichts hier lässt sich bearbeiten oder löschen; nutze CSV exportieren, wenn du eine Kopie brauchst.",
   "app.admin.audit.allActions": "Alle Aktionen",
   "app.admin.audit.action": "Aktion",
   "app.admin.audit.from": "Von",

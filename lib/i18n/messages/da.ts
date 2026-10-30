@@ -304,7 +304,7 @@ export const da: Messages = {
   "app.admin.audit.title": "Revisionslog",
   "app.admin.audit.export": "Eksportér CSV",
   "app.admin.audit.retention":
-    "Poster gemmes i {kept} dage, og læsninger af erindringer og mislykkede logins i {reads} dage, fordi de udgør størstedelen af loggen. Intet her kan redigeres eller slettes; brug Eksportér CSV, hvis du skal have en kopi.",
+    "Poster gemmes i {kept} dage, og læsninger af erindringer i {reads} dage og mislykkede logins i {failed} dage, fordi de udgør størstedelen af loggen. Intet her kan redigeres eller slettes; brug Eksportér CSV, hvis du skal have en kopi.",
   "app.admin.audit.allActions": "Alle handlinger",
   "app.admin.audit.action": "Handling",
   "app.admin.audit.from": "Fra",

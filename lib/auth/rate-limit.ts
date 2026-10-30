@@ -37,15 +37,37 @@ export function recordLoginFailure(account: string): void {
 
 /**
  * An attacker picks the address, so one key per guess is memory they get for
- * free. Stale keys are dropped, and the map is emptied outright if a burst
- * inside one window ever pushes it past the cap.
+ * free. Stale keys go first; if a burst inside one window still pushes the map
+ * past the cap, the least recently seen keys go instead. Never clear it: that
+ * would hand an attacker a way to unlock every account at once.
  */
 function sweep(now: number): void {
   for (const [k, times] of attempts) {
     const newest = times[times.length - 1] ?? 0
     if (now - newest >= WINDOW_MS) attempts.delete(k)
   }
-  if (attempts.size > SWEEP_ABOVE) attempts.clear()
+  // An entry that is already over the limit is a live lockout, and an attacker
+  // must not be able to evict it by filling the map with invented addresses.
+  while (attempts.size > SWEEP_ABOVE) {
+    let victim: string | null = null
+    let victimAt = Infinity
+    let fallback: string | null = null
+    let fallbackAt = Infinity
+    for (const [k, times] of attempts) {
+      const newest = times[times.length - 1] ?? 0
+      if (newest < fallbackAt) {
+        fallbackAt = newest
+        fallback = k
+      }
+      if (times.length < MAX_ATTEMPTS && newest < victimAt) {
+        victimAt = newest
+        victim = k
+      }
+    }
+    const drop = victim ?? fallback
+    if (drop === null) break
+    attempts.delete(drop)
+  }
 }
 
 /** Test hook: the sweep is otherwise only visible in the process heap. */

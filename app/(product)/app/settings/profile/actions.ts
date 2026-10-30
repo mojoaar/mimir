@@ -40,6 +40,12 @@ export async function updateProfileAction(
     return { error: t('app.profile.needCurrentPassword') }
   }
 
+  try {
+    await updateProfile(user.id, { name })
+  } catch (error) {
+    return { error: actionMessage(error, await translator()) }
+  }
+
   if (changingEmail) {
     try {
       await requestEmailChange(user.id, email, currentPassword)
@@ -48,12 +54,6 @@ export async function updateProfileAction(
     }
     revalidatePath(PROFILE)
     return { ok: t('app.profile.emailPending') }
-  }
-
-  try {
-    await updateProfile(user.id, { name })
-  } catch (error) {
-    return { error: actionMessage(error, await translator()) }
   }
 
   revalidatePath(PROFILE)

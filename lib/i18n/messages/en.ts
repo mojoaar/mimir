@@ -305,7 +305,7 @@ export const en = {
   "app.admin.audit.title": "Audit log",
   "app.admin.audit.export": "Export CSV",
   "app.admin.audit.retention":
-    "Entries are kept for {kept} days, and memory reads and failed sign-ins for {reads}, because they are most of the log. Nothing here can be edited or deleted; use Export CSV if you need a copy.",
+    "Entries are kept for {kept} days, and memory reads for {reads} and failed sign-ins for {failed}, because they are most of the log. Nothing here can be edited or deleted; use Export CSV if you need a copy.",
   "app.admin.audit.allActions": "All actions",
   "app.admin.audit.action": "Action",
   "app.admin.audit.from": "From",

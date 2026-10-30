@@ -105,3 +105,12 @@ describe('the memory the throttle keeps', () => {
     expect(loginRateLimitSize()).toBeLessThan(10)
   })
 })
+
+describe('a flood of invented addresses', () => {
+  it('does not unlock an account that is already throttled', () => {
+    for (let i = 0; i < 5; i++) recordLoginFailure(alice)
+    for (let i = 0; i < 1500; i++) recordLoginFailure(`noise${i}@example.test`)
+
+    expect(checkLoginRateLimit(alice).allowed).toBe(false)
+  })
+})

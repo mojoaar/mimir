@@ -50,11 +50,15 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   const session = input.session?.trim().slice(0, 128) || null
 
   // Before the transaction: a provider round trip inside it would hold a
-  // pooled connection for the duration of someone else's network call.
-  const embedded = await embedText([path, title, input.body].join('\n'), {
-    inputType: 'document',
-    purpose: 'embed.ingest',
-  })
+  // pooled connection for the duration of someone else's network call. A bulk
+  // import passes its own vector, or null when that chunk already failed.
+  const embedded =
+    input.embedding === undefined
+      ? await embedText([path, title, input.body].join('\n'), {
+          inputType: 'document',
+          purpose: 'embed.ingest',
+        })
+      : input.embedding
   const embedding = embedded?.literal ?? null
 
   const result = await withUser(input.userId, async (tx) => {

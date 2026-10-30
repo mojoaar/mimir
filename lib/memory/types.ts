@@ -42,6 +42,12 @@ export type WriteInput = {
   source?: string
   client?: string
   session?: string
+  /**
+   * A vector made by the caller, for a bulk import that embeds a chunk at a
+   * time. `null` means the call was already tried and failed, so the write
+   * must not try again for every file.
+   */
+  embedding?: { literal: string; model: string } | null
 }
 
 export type WriteResult = { path: string; created: boolean }

@@ -1,5 +1,24 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Fixtures, resetFixtures, seedTwoUsersWithProjects } from '../db/seed'
+// The provider only exists for the batching test; everything else runs without
+// one, exactly as the old tests did.
+const provider = { preset: 'deepseek', model: 'test-embed', baseUrl: 'http://localhost', apiKey: null }
+const state = vi.hoisted(() => ({ batch: false, calls: [] as number[] }))
+vi.mock('@/lib/providers/resolve', () => ({
+  resolveEmbeddingProvider: async () => (state.batch ? provider : null),
+  resolveExtractionProvider: async () => null,
+}))
+vi.mock('@/lib/providers/client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/providers/client')>()
+  return {
+    ...actual,
+    embed: async (_target: unknown, texts: string[]) => {
+      state.calls.push(texts.length)
+      return texts.map(() => Array.from({ length: 768 }, () => 0.1))
+    },
+  }
+})
+
 import { ingestFiles, MAX_INGEST_BYTES, MAX_INGEST_FILES, type IngestFile } from './ingest'
 import { readMemory } from './service'
 import { searchMemories } from './search'
@@ -14,6 +33,21 @@ beforeEach(async () => {
 const file = (path: string, body = 'body') => ({ path, body })
 
 describe('ingestFiles', () => {
+  it('embeds a batch in chunks, not a call per file', async () => {
+    state.batch = true
+    state.calls = []
+    try {
+      const files = Array.from({ length: 40 }, (_, i) => ({ path: `doc-${i}.md`, body: `body ${i}` }))
+      const result = await ingestFiles({ userId: f.alice, projectId: f.aliceProjectId, files })
+
+      expect(result.written).toBe(40)
+      expect(state.calls).toEqual([16, 16, 8])
+      expect((await readMemory(f.alice, f.aliceProjectId, 'import/doc-0.md'))?.body).toBe('body 0')
+    } finally {
+      state.batch = false
+    }
+  })
+
   it('writes files under the import prefix', async () => {
     const result = await ingestFiles({
       userId: f.alice,

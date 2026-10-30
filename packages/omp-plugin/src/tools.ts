@@ -96,6 +96,27 @@ export function registerTools(
   })
 
   pi.registerTool({
+    name: 'mimir_read',
+    label: 'Read from Mimir',
+    description:
+      'Read one memory in full by its path. Search returns paths and summaries; this is the body behind one.',
+    parameters: z.object({ path: z.string().describe('e.g. deploy/rollback') }),
+    approval: 'read',
+    async execute(_id, params, _signal, _update, ctx) {
+      const found = await callTool(
+        'memory_read',
+        { path: String(params.path ?? ''), repo: repo(ctx) },
+        { ...config, timeoutMs: 8000 },
+      )
+      if (!found.ok) return result('Nothing is stored at that path.')
+      const memory = found.result as { path?: string; title?: string; body?: string; updatedAt?: string }
+      const day = typeof memory.updatedAt === 'string' ? memory.updatedAt.slice(0, 10) : ''
+      const head = day ? `${memory.path ?? ''} · updated ${day}` : (memory.path ?? '')
+      return result(`${head}\n# ${memory.title ?? ''}\n\n${memory.body ?? ''}`)
+    },
+  })
+
+  pi.registerTool({
     name: 'mimir_learn',
     label: 'Hand a session to Mimir',
     description:

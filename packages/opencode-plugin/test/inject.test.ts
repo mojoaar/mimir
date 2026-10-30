@@ -282,15 +282,41 @@ describe('the nudge to write', () => {
 })
 
 describe('the tools it adds', () => {
-  it('offers digest, write, search and learn', async () => {
+  it('offers digest, write, search, read and learn', async () => {
     const { added } = await setup()
 
     expect(added.map((tool) => tool.name)).toEqual([
       'mimir_digest',
       'mimir_remember',
       'mimir_search',
+      'mimir_read',
       'mimir_learn',
     ])
+  })
+
+  it('reads a body so a path from search can be opened', async () => {
+    mocks.calls.length = 0
+    mocks.reject = false
+    mocks.repo = 'git@github.com:alice/notes.git'
+    mocks.result = {
+      ok: true,
+      result: {
+        path: 'deploy/rollback',
+        title: 'Rollback',
+        body: 'Redeploy the previous image.',
+        updatedAt: '2026-10-30T07:12:00.000Z',
+      },
+    }
+    const { added } = await setup()
+
+    const read = added.find((tool) => tool.name === 'mimir_read')
+    const out = await read?.execute?.({ path: 'deploy/rollback' })
+
+    expect(mocks.calls[0]?.name).toBe('memory_read')
+    expect(mocks.calls[0]?.args.path).toBe('deploy/rollback')
+    expect(mocks.calls[0]?.args.repo).toBe('git@github.com:alice/notes.git')
+    expect(out?.content).toContain('deploy/rollback · updated 2026-10-30')
+    expect(out?.content).toContain('Redeploy the previous image.')
   })
 
   it('accepts every kind the server accepts', async () => {

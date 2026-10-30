@@ -165,16 +165,18 @@ describe('the nudge to write', () => {
 })
 
 describe('the tools', () => {
-  it('adds the four tools the OpenCode plugin has, with read tools marked read', async () => {
+  it('adds the five tools the OpenCode plugin has, with read tools marked read', async () => {
     const { tools } = await setup()
 
     expect(tools.map((tool) => tool.name)).toEqual([
       'mimir_digest',
       'mimir_remember',
       'mimir_search',
+      'mimir_read',
       'mimir_learn',
     ])
     expect(tools.find((tool) => tool.name === 'mimir_search')?.approval).toBe('read')
+    expect(tools.find((tool) => tool.name === 'mimir_read')?.approval).toBe('read')
     expect(tools.find((tool) => tool.name === 'mimir_remember')?.approval).toBe('write')
   })
 
@@ -240,6 +242,26 @@ describe('the tools', () => {
     const result = await search?.execute('1', { query: 'tokens' }, undefined, undefined, ctx)
 
     expect(result?.content[0]?.text).toBe('auth/tokens\nThey last 30 days.')
+  })
+
+  it('reads a body so a path from search can be opened', async () => {
+    mocks.result = {
+      ok: true,
+      result: {
+        path: 'deploy/rollback',
+        title: 'Rollback',
+        body: 'Redeploy the previous image.',
+        updatedAt: '2026-10-30T07:12:00.000Z',
+      },
+    }
+    const { tools } = await setup()
+    const read = tools.find((tool) => tool.name === 'mimir_read')
+
+    const out = await read?.execute('1', { path: 'deploy/rollback' }, undefined, undefined, ctx)
+
+    expect(out?.content[0]?.text).toBe(
+      'deploy/rollback · updated 2026-10-30\n# Rollback\n\nRedeploy the previous image.',
+    )
   })
 
   it('reports whether the learn job was queued', async () => {

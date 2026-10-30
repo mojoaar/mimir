@@ -54,6 +54,7 @@ describe('the plugin tools', () => {
       'mimir_digest',
       'mimir_remember',
       'mimir_search',
+      'mimir_read',
       'mimir_learn',
     ])
     for (const tool of added) expect(tool.input.type).toBe('object')
@@ -84,20 +85,20 @@ describe('the plugin tools', () => {
       },
     }
     await registerTools({ tool: fake.tool, mcp: disabled } as never, config, mocks.repo)
-    expect(added).toHaveLength(4)
+    expect(added).toHaveLength(5)
   })
 
   it('still adds them when the mcp probe throws', async () => {
     const { fake, added } = context([])
     const broken = { transform: async () => { throw new Error('mcp exploded') } }
     await registerTools({ tool: fake.tool, mcp: broken } as never, config, mocks.repo)
-    expect(added).toHaveLength(4)
+    expect(added).toHaveLength(5)
   })
 
   it('adds them anyway when the policy is always', async () => {
     const { fake, added } = context([{ type: 'remote', url: 'http://127.0.0.1:3000/mcp' }])
     await registerTools(fake as never, { ...config, tools: 'always' }, mocks.repo)
-    expect(added).toHaveLength(4)
+    expect(added).toHaveLength(5)
   })
 
   it('adds nothing when the policy is never', async () => {

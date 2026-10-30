@@ -39,6 +39,7 @@ export async function registerTools(
     editor.add(digestTool(repo))
     editor.add(rememberTool(repo))
     editor.add(searchTool(repo))
+    editor.add(readTool(repo))
     editor.add(learnTool(repo))
   })
 }
@@ -177,6 +178,37 @@ function searchTool(repo: string | null): ToolDefinition {
           .map((hit) => `${hit.path}\n${hit.summary ?? hit.title}`)
           .join('\n\n'),
       }
+    },
+  }
+}
+
+/** The date is what tells a reader whether the body still holds. */
+function renderMemory(memory: { path?: string; title?: string; body?: string; updatedAt?: string }): string {
+  const day = typeof memory.updatedAt === 'string' ? memory.updatedAt.slice(0, 10) : ''
+  const head = day ? `${memory.path ?? ''} · updated ${day}` : (memory.path ?? '')
+  return `${head}\n# ${memory.title ?? ''}\n\n${memory.body ?? ''}`
+}
+
+function readTool(repo: string | null): ToolDefinition {
+  return {
+    name: 'mimir_read',
+    description:
+      'Read one memory in full by its path. Search returns paths and summaries; this is the body behind one.',
+    input: {
+      type: 'object',
+      properties: { path: { type: 'string', description: 'e.g. deploy/rollback' } },
+      required: ['path'],
+      additionalProperties: false,
+    },
+    async execute(input) {
+      const args = input as ToolInput
+      const result = await callTool(
+        'memory_read',
+        { path: String(args.path ?? ''), repo: repo ?? undefined },
+        { timeoutMs: 8000 },
+      )
+      if (!result.ok) return { content: 'Nothing is stored at that path.' }
+      return { content: renderMemory(result.result as { path?: string; title?: string; body?: string; updatedAt?: string }) }
     },
   }
 }

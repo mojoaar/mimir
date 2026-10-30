@@ -70,6 +70,21 @@ describe('the re-embed job', () => {
     expect(await liveRows(true)).toBe(0)
   })
 
+  it('finishes a project larger than one backfill pass', async () => {
+    // A pass stops once MAX_ROWS is reached, in whole batches, so 2,500 rows
+    // leaves the tail unembedded. The old code threw here and the retry
+    // re-nulled everything it had just built.
+    await adminPool().query(
+      `insert into memories (project_id, path, body)
+       select $1, 'big/' || g, 'body ' || g from generate_series(1, 2500) g`,
+      [projectId],
+    )
+
+    const result = await runReembed({ confirm: true })
+    expect(result.missing).toBe(0)
+    expect(await liveRows(true)).toBe(0)
+  })
+
   it('refuses without an explicit confirmation', async () => {
     await writeThreeEmbeddedMemoriesAndOneDeleted()
 

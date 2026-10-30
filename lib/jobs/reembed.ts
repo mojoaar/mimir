@@ -16,7 +16,10 @@ function invalidParams(message: string): Error & { code: 'invalid_params' } {
  * the caller wants to know it finished, not that it was queued.
  * withAdmin, not withService: a sessionless app_user_id() hides every memory row.
  */
-export async function runReembed(data: ReembedData): Promise<ReembedResult> {
+export async function runReembed(
+  data: ReembedData,
+  opts: { maxRows?: number } = {},
+): Promise<ReembedResult> {
   if (data.confirm !== true) throw invalidParams('re-embedding needs an explicit confirm')
 
   // Resolve before dropping anything: without a working provider every vector
@@ -27,19 +30,30 @@ export async function runReembed(data: ReembedData): Promise<ReembedResult> {
   const { rowCount } = await adminPool().query(
     `update memories set embedding = null, embedded_at = null, embedding_model = null where deleted_at is null`,
   )
-  await runBackfill({})
+  // One pass is capped; loop until the tail is done. A provider that fails
+  // mid-run embeds nothing on the next pass, so stop instead of spinning and
+  // let the throw below report what is missing.
+  let passes = 0
+  let missing = 0
+  do {
+    const pass = await runBackfill({ maxRows: opts.maxRows })
+    passes += 1
+    missing = await countMissing()
+    if (pass.embedded === 0) break
+  } while (missing > 0 && passes < 100)
 
-  // A provider that failed mid-run leaves rows empty; say so instead of
-  // reporting a clean rebuild.
-  const { rows } = await adminPool().query<{ missing: string }>(
-    `select count(*)::text as missing from memories where embedding is null and deleted_at is null`,
-  )
-  const missing = Number(rows[0]?.missing ?? 0)
   if (missing > 0) {
     throw new Error(`${missing} memories are still without a vector; run re-embed again`)
   }
 
   return { total: rowCount ?? 0, missing }
+}
+
+async function countMissing(): Promise<number> {
+  const { rows } = await adminPool().query<{ missing: string }>(
+    `select count(*)::text as missing from memories where embedding is null and deleted_at is null`,
+  )
+  return Number(rows[0]?.missing ?? 0)
 }
 
 registerWorker('reembed', async (data) => {

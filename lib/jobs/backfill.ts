@@ -8,7 +8,7 @@ import { registerWorker } from './boss'
 const BATCH = 32
 const MAX_ROWS = 2000
 
-export type BackfillData = { projectId?: string }
+export type BackfillData = { projectId?: string; maxRows?: number }
 
 export type BackfillResult = { embedded: number; model: string | null }
 
@@ -18,8 +18,11 @@ export async function runBackfill(data: BackfillData): Promise<BackfillResult> {
   const provider = await resolveEmbeddingProvider()
   if (!provider) return { embedded: 0, model: null }
 
+  // A caller rebuilding a large install can shrink a pass; never grow it.
+  const cap = Math.min(data.maxRows ?? MAX_ROWS, MAX_ROWS)
+
   let embedded = 0
-  while (embedded < MAX_ROWS) {
+  while (embedded < cap) {
     const rows = await nextBatch(data.projectId)
     if (rows.length === 0) break
 

@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   repo: 'git@github.com:alice/notes.git' as string | null,
   history: [] as unknown[],
   historyFails: false,
+  historyUndefined: false,
 }))
 
 vi.mock('../src/client.js', () => ({
@@ -64,6 +65,7 @@ function context(overrides: Record<string, unknown> = {}) {
       synthetic: async ({ text }: { text: string }) => void notices.push(text),
       context: async () => {
         if (mocks.historyFails) throw new Error('no history')
+        if (mocks.historyUndefined) return undefined
         return mocks.history
       },
     },
@@ -646,6 +648,33 @@ describe('the command to hand it over now', () => {
 
     expect(mocks.calls[0]?.args.client).toBe('opencode')
     expect(mocks.calls[0]?.args.session).toBe('c5')
+  })
+
+  it('sends a short session that still settled something', async () => {
+    const { command, notices } = await setup()
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: true } }
+    mocks.history = [
+      { type: 'user', text: 'the deploy rolls back on the health check, use the tag not latest' },
+      { type: 'assistant', content: [{ type: 'text', text: 'noted' }] },
+    ]
+
+    await command.execute({ sessionID: 'c7' })
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(1)
+    expect(notices[0]).toContain('Mimir is writing')
+  })
+
+  it('treats a non-list history as unreadable', async () => {
+    const { command, notices } = await setup()
+    mocks.calls.length = 0
+    mocks.historyUndefined = true
+
+    await expect(command.execute({ sessionID: 'c8' })).resolves.toBeUndefined()
+    mocks.historyUndefined = false
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+    expect(notices[0]).toContain('could not read this session')
   })
 
   it('does not send the same session twice', async () => {

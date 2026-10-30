@@ -196,11 +196,13 @@ export default Plugin.define({
               history = null
             }
 
-            if (history === null) {
+            // The manual command is explicit, so any real text is worth a
+            // model call. The 500 character floor is for automatic compaction.
+            if (!Array.isArray(history)) {
               notice = UNREADABLE
             } else {
               const text = sessionTranscript(history)
-              if (text.length >= MIN_TRANSCRIPT) {
+              if (text.trim() !== '') {
                 const result = await callTool(
                   'memory_learn',
                   {

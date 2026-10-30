@@ -377,6 +377,17 @@ describe('the tools it adds', () => {
     expect(out?.content).toContain('queue is not running')
   })
 
+  it('says why nothing will be written, instead of queueing', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { queued: false, reason: 'learning is off for this project' } }
+    const { added } = await setup()
+
+    const learn = added.find((tool) => tool.name === 'mimir_learn')
+    const out = await learn?.execute?.({ transcript: 'anything' })
+
+    expect(out?.content).toContain('learning is off for this project')
+  })
+
   it('fails soft when Mimir cannot answer', async () => {
     mocks.calls.length = 0
     mocks.result = { ok: false, error: 'mimir responded 500' }

@@ -200,11 +200,12 @@ function learnTool(repo: string | null): ToolDefinition {
         { timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Could not hand that over (${result.error}).` }
-      const queued = result.result as { queued?: boolean }
+      const queued = result.result as { queued?: boolean; reason?: string }
+      if (queued.queued) return { content: 'Queued. The model writes the memories in the background.' }
+      // A refusal is a fact the agent should act on, not a failure to retry.
       return {
-        content: queued.queued
-          ? 'Queued. The model writes the memories in the background.'
-          : 'Mimir took no job: its queue is not running.',
+        content:
+          typeof queued.reason === 'string' ? queued.reason : 'Mimir took no job: its queue is not running.',
       }
     },
   }

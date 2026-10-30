@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { withAudit } from '@/lib/http/audited'
 import { readJson } from '@/lib/http/limit'
 import { resolveProject } from '@/lib/projects/service'
+import { learningReadiness } from '@/lib/projects/learning'
 import { sendJob } from '@/lib/jobs/boss'
 
 type Params = { params: Promise<{ slug: string }> }
@@ -23,6 +24,14 @@ export async function POST(request: NextRequest, { params }: Params) {
           { error: 'transcript must be a non-empty string', code: 'invalid_params' },
           { status: 400 },
         )
+      }
+
+      const ready = await learningReadiness(project.id)
+      if (!ready.learning) {
+        return Response.json({ queued: false, reason: 'learning is off for this project' })
+      }
+      if (!ready.provider) {
+        return Response.json({ queued: false, reason: 'no language provider is configured' })
       }
 
       const id = await sendJob('learn', {

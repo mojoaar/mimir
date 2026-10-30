@@ -235,6 +235,16 @@ describe('the tools', () => {
     )
   })
 
+  it('says why nothing will be written, instead of queueing', async () => {
+    const { tools } = await setup()
+    const learn = tools.find((tool) => tool.name === 'mimir_learn')
+
+    mocks.result = { ok: true, result: { queued: false, reason: 'learning is off for this project' } }
+    expect((await learn?.execute('1', { transcript: 'we chose x' }, undefined, undefined, ctx))?.content[0]?.text).toContain(
+      'learning is off for this project',
+    )
+  })
+
   it('tells the agent to carry on when Mimir is unreachable', async () => {
     mocks.result = { ok: false, error: 'connect ECONNREFUSED' }
     const { tools } = await setup()

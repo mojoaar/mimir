@@ -106,11 +106,11 @@ export function registerTools(
         { ...config, timeoutMs: 8000 },
       )
       if (!queued.ok) return result(`Could not hand that over (${queued.error}).`)
-      const job = queued.result as { queued?: boolean }
+      const job = queued.result as { queued?: boolean; reason?: string }
+      if (job.queued) return result('Queued. The model writes the memories in the background.')
+      // A refusal is a fact the agent should act on, not a failure to retry.
       return result(
-        job.queued
-          ? 'Queued. The model writes the memories in the background.'
-          : 'Mimir took no job: its queue is not running.',
+        typeof job.reason === 'string' ? job.reason : 'Mimir took no job: its queue is not running.',
       )
     },
   })

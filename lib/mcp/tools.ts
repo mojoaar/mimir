@@ -11,6 +11,7 @@ import {
 import { searchMemories } from '@/lib/memory/search'
 import { buildDigest } from '@/lib/memory/digest'
 import { ingestFiles, type IngestFile } from '@/lib/memory/ingest'
+import { learningReadiness } from '@/lib/projects/learning'
 import { invalidParams } from './errors'
 
 export type McpMeta = RequestMeta & { repo?: string | null }
@@ -265,6 +266,11 @@ const TOOLS: ToolDef[] = [
       const transcript = str(args, 'transcript')
       if (!transcript) throw invalidParams('transcript is required')
       const p = await projectFor(args, ctx, true)
+      // A job queued on a project that cannot learn does nothing, so say which
+      // of the two it is instead of answering with a promise that reads as done.
+      const ready = await learningReadiness(p.id)
+      if (!ready.learning) return { queued: false, reason: 'learning is off for this project' }
+      if (!ready.provider) return { queued: false, reason: 'no language provider is configured' }
       const { sendJob } = await import('@/lib/jobs/boss')
       const id = await sendJob('learn', {
         projectId: p.id,

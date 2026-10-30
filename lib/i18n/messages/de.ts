@@ -156,6 +156,7 @@ export const de: Messages = {
   "app.setPassword.weak": "Verwende mindestens 12 Zeichen.",
   "app.setPassword.invalid":
     "Der Link ist nicht mehr gültig. Bitte eine Administration um einen neuen.",
+  "app.dashboard.requests": "Zugriff anfragen",
   "app.dashboard.searchPlaceholder":
     "Alle Erinnerungen durchsuchen, in allen Projekten",
   "app.dashboard.search": "Suchen",
@@ -232,6 +233,18 @@ export const de: Messages = {
   "app.project.restoreFailed":
     "Das Projekt konnte nicht wiederhergestellt werden.",
   "app.project.export": "Exportieren",
+  "app.requests.title": "Zugriff anfragen",
+  "app.requests.body": "Ein Repository, das ein Kollege bereits hinzugefügt hat, hat sein eigenes Projekt. Frage den Eigentümer nach Zugriff, statt in eine zweite Kopie zu schreiben; die Anfrage erscheint auf der Einstellungsseite des Projekts.",
+  "app.requests.repo": "Repository",
+  "app.requests.note": "Warum (optional)",
+  "app.requests.notePlaceholder": "Woran du arbeitest",
+  "app.requests.request": "Anfrage senden",
+  "app.requests.empty": "Du hast noch keinen Zugriff angefragt.",
+  "app.requests.pending": "Wartet auf einen Eigentümer",
+  "app.requests.granted": "Zugriff gewährt",
+  "app.requests.declined": "Abgelehnt",
+  "app.requests.requested": "Anfrage gesendet. Der Eigentümer sieht sie auf der Einstellungsseite des Projekts.",
+  "app.requests.already": "Du hast bereits Zugriff, oder es ist schon eine Anfrage offen.",
   "app.project.restoreConflict": "Der Pfad wurde nach dem Löschen erneut geschrieben, daher bleibt diese Kopie gelöscht.",
   "app.project.restoreGone": "Diese Erinnerung ist nicht mehr im Papierkorb.",
   "app.project.delete": "Löschen",
@@ -496,6 +509,13 @@ export const de: Messages = {
   "app.projectSettings.folderRemove": "Entfernen",
   "app.projectSettings.folderHint":
     "Ein absoluter Pfad im Stil deines Rechners: /Users/you/AI oder C:\\Users\\you\\AI. Ein Ordner, der bereits zu einem anderen deiner Projekte gehört, muss dort zuerst freigegeben werden.",
+  "app.projectSettings.requests": "Zugriffsanfragen",
+  "app.projectSettings.requestsBody": "Personen, die dieses Repository bereits anderswo haben, bitten darum, hier zu schreiben.",
+  "app.projectSettings.requestsEmpty": "Keine offenen Anfragen.",
+  "app.projectSettings.grant": "Schreibzugriff geben",
+  "app.projectSettings.decline": "Ablehnen",
+  "app.projectSettings.requestGranted": "Zugriff gewährt.",
+  "app.projectSettings.requestDeclined": "Anfrage abgelehnt.",
   "app.projectSettings.folderClaimed": "Ordner zugeordnet.",
   "app.projectSettings.folderReleased": "Ordner freigegeben.",
   "app.projectSettings.folderTaken":

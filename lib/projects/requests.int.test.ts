@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { resetFixtures, seedTwoUsersWithProjects } from '@/lib/db/seed'
 
 import { projectRole } from './access'
-import { listAccessRequests, requestAccess, resolveAccessRequest } from './requests'
+import { listAccessRequests, myAccessRequests, requestAccess, resolveAccessRequest } from './requests'
 import { resolveProject } from './service'
 
 let alice: string
@@ -86,5 +86,16 @@ describe('answering a request', () => {
       code: 'invalid_params',
     })
     expect(await projectRole(bob, projectId)).toBeNull()
+  })
+})
+
+describe('my requests', () => {
+  it('lists what the caller asked for, with the repository and the answer', async () => {
+    await requestAccess(bob, REPO, 'need the deploy notes')
+    const mine = await myAccessRequests(bob)
+    expect(mine).toHaveLength(1)
+    expect(mine[0]?.repoKey).toBe('github.com/alice/shared')
+    expect(mine[0]?.decision).toBeNull()
+    expect(await myAccessRequests(alice)).toEqual([])
   })
 })

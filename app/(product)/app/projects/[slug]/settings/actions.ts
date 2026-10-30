@@ -8,6 +8,7 @@ import { requireUser } from '@/lib/auth/context'
 import { enqueueExtraction } from '@/lib/jobs/enqueue'
 import { grantProject, requireProjectRole, revokeGrant, type PrincipalType } from '@/lib/projects/access'
 import { claimFolder, releaseFolder } from '@/lib/projects/folders'
+import { resolveAccessRequest } from '@/lib/projects/requests'
 import { updateProjectSettings } from '@/lib/projects/service'
 import { findActiveUserIdByEmail } from '@/lib/users/lookup'
 import { translator } from '@/lib/i18n/request'
@@ -228,4 +229,28 @@ export async function releaseFolderAction(formData: FormData): Promise<void> {
 
   revalidatePath(back)
   redirect(`${back}?notice=${encodeURIComponent(t('app.projectSettings.folderReleased'))}`)
+}
+
+/**
+ * One action for both answers: the form carries the decision, so a single
+ * code path revalidates and reports instead of two near-identical copies.
+ */
+export async function resolveAccessRequestAction(formData: FormData): Promise<void> {
+  const user = await requireUser()
+  const t = await translator()
+  const requestId = String(formData.get('requestId') ?? '')
+  const decision = String(formData.get('decision') ?? '')
+  const slug = String(formData.get('slug') ?? '')
+  const back = `/app/projects/${slug}/settings`
+  const grant = decision === 'grant'
+
+  try {
+    await resolveAccessRequest(user.id, requestId, grant ? 'grant' : 'decline')
+  } catch (error) {
+    redirect(`${back}?error=${encodeURIComponent(actionMessage(error, t))}`)
+  }
+
+  revalidatePath(back)
+  const notice = grant ? 'app.projectSettings.requestGranted' : 'app.projectSettings.requestDeclined'
+  redirect(`${back}?notice=${encodeURIComponent(t(notice))}`)
 }

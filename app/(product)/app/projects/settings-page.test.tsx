@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   grantProject: vi.fn(async () => {}),
   revokeGrant: vi.fn(async () => {}),
   findUserId: vi.fn(async () => 'u2' as string | null),
+  listAccessRequests: vi.fn(async () => [] as { id: string; email: string; note: string | null; createdAt: Date }[]),
+  resolveAccessRequest: vi.fn(async () => {}),
   locale: 'en',
 }))
 
@@ -37,6 +39,10 @@ vi.mock('@/lib/projects/folders', () => ({
   listFolders: mocks.listFolders,
   claimFolder: mocks.claimFolder,
   releaseFolder: mocks.releaseFolder,
+}))
+vi.mock('@/lib/projects/requests', () => ({
+  listAccessRequests: mocks.listAccessRequests,
+  resolveAccessRequest: mocks.resolveAccessRequest,
 }))
 vi.mock('@/lib/users/lookup', () => ({ findActiveUserIdByEmail: mocks.findUserId }))
 vi.mock('next/cache', () => ({ revalidatePath: () => {} }))
@@ -297,5 +303,33 @@ describe('grant actions', () => {
     await revokeProjectGrantAction(form)
 
     expect(mocks.revokeGrant).toHaveBeenCalledWith('u1', 'p1', 'team', 't1')
+  })
+})
+
+describe('access requests', () => {
+  it('shows the owner who is asking, with both answers', async () => {
+    mocks.getProject.mockResolvedValueOnce(project)
+    mocks.listAccessRequests.mockResolvedValueOnce([
+      { id: 'r1', email: 'bob@example.test', note: 'same repo', createdAt: new Date() },
+    ])
+
+    const html = await render()
+
+    expect(html).toContain('Access requests')
+    expect(html).toContain('bob@example.test')
+    expect(html).toContain('name="decision"')
+    expect(html).toContain('Grant write')
+    expect(html).toContain('Decline')
+  })
+
+  it('is absent for a grantee, who cannot answer it', async () => {
+    mocks.getProject.mockResolvedValueOnce({ ...project, role: 'write' })
+    mocks.listAccessRequests.mockResolvedValueOnce([
+      { id: 'r1', email: 'bob@example.test', note: null, createdAt: new Date() },
+    ])
+
+    const html = await render()
+
+    expect(html).not.toContain('bob@example.test')
   })
 })

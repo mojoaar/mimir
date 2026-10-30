@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { requireUser } from '@/lib/auth/context'
 import { listGrants } from '@/lib/projects/access'
 import { listFolders } from '@/lib/projects/folders'
+import { listAccessRequests } from '@/lib/projects/requests'
 import { listProviders } from '@/lib/providers/service'
 import { getProject, getProjectHealth } from '@/lib/projects/service'
 import { getEmbeddingConfig } from '@/lib/settings/embedding'
@@ -13,6 +14,7 @@ import {
   claimFolderAction,
   embedProjectAction,
   releaseFolderAction,
+  resolveAccessRequestAction,
   revokeProjectGrantAction,
   summariseProjectAction,
 } from './actions'
@@ -57,6 +59,7 @@ export default async function ProjectSettingsPage({
   // A claim is private to the account that made it (RLS), so only the owner can
   // ever see or use this section; showing a grantee an empty box would lie.
   const folders = project.role === 'owner' ? await listFolders(user.id, project.id) : []
+  const requests = project.role === 'owner' ? await listAccessRequests(user.id, project.id) : []
 
   // Sharing is the owner's to change; a grantee only ever sees what it was given.
   const [grants, teams] =
@@ -198,6 +201,58 @@ export default async function ProjectSettingsPage({
             </button>
           </form>
           <p className="text-xs text-[var(--text-muted)]">{t('app.projectSettings.folderHint')}</p>
+        </section>
+      ) : null}
+
+      {project.role === 'owner' ? (
+        <section className="flex flex-col gap-3 rounded-lg border border-[var(--border)] p-4">
+          <h2 className="text-sm font-semibold">{t('app.projectSettings.requests')}</h2>
+          <p className="text-sm text-[var(--text-muted)]">
+            {t('app.projectSettings.requestsBody')}
+          </p>
+          {requests.length === 0 ? (
+            <p className="text-sm text-[var(--text-muted)]">
+              {t('app.projectSettings.requestsEmpty')}
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {requests.map((request) => (
+                <li
+                  key={request.id}
+                  className="flex flex-wrap items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-raised)] px-3 py-2 text-sm"
+                >
+                  <span>{request.email}</span>
+                  {request.note ? (
+                    <span className="text-[var(--text-muted)]">{request.note}</span>
+                  ) : null}
+                  <span className="ml-auto flex items-center gap-2">
+                    <form action={resolveAccessRequestAction}>
+                      <input type="hidden" name="requestId" value={request.id} />
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input type="hidden" name="decision" value="grant" />
+                      <button
+                        type="submit"
+                        className="rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--bg)]"
+                      >
+                        {t('app.projectSettings.grant')}
+                      </button>
+                    </form>
+                    <form action={resolveAccessRequestAction}>
+                      <input type="hidden" name="requestId" value={request.id} />
+                      <input type="hidden" name="slug" value={project.slug} />
+                      <input type="hidden" name="decision" value="decline" />
+                      <button
+                        type="submit"
+                        className="rounded-md border border-[var(--border)] px-2 py-1 text-xs hover:bg-[var(--bg)]"
+                      >
+                        {t('app.projectSettings.decline')}
+                      </button>
+                    </form>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ) : null}
 

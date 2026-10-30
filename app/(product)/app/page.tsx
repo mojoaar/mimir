@@ -100,6 +100,14 @@ export default async function DashboardPage({
 
       {query ? <Results groups={groupByProject(hits)} query={query} t={t} /> : null}
 
+      {!query ? (
+        <p className="text-sm">
+          <Link href="/app/requests" className="text-[var(--accent)] underline">
+            {t('app.dashboard.requests')}
+          </Link>
+        </p>
+      ) : null}
+
       {!query && projects.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">
           {t('app.dashboard.noProjects')}

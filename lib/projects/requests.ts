@@ -15,6 +15,15 @@ export type AccessRequest = {
 
 export type AccessDecision = 'grant' | 'decline'
 
+export type MyAccessRequest = {
+  id: string
+  repoKey: string
+  note: string | null
+  createdAt: Date
+  decision: 'granted' | 'declined' | null
+  resolvedAt: Date | null
+}
+
 /**
  * Asks the owner of the project that answers for a repository. The lookup and
  * the insert happen inside one SECURITY DEFINER function, so the requester
@@ -133,5 +142,20 @@ export async function resolveAccessRequest(
       },
       tx,
     )
+  })
+}
+
+/**
+ * The caller's own requests. The project row is invisible to them, so the
+ * definer function reads the repository name without exposing the project.
+ */
+export async function myAccessRequests(userId: string): Promise<MyAccessRequest[]> {
+  return withUser(userId, async (client) => {
+    const { rows } = await client.query<MyAccessRequest>(
+      `select id, repo_key as "repoKey", note, created_at as "createdAt",
+              decision, resolved_at as "resolvedAt"
+         from my_access_requests()`,
+    )
+    return rows
   })
 }

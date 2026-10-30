@@ -139,3 +139,11 @@ describe('an archived project', () => {
     expect(html).not.toContain('confirmSlug')
   })
 })
+
+describe('the way in for a second person', () => {
+  it('links to the page where access is asked for', async () => {
+    const html = renderToStaticMarkup(await DashboardPage(nothing))
+
+    expect(html).toContain('href="/app/requests"')
+  })
+})

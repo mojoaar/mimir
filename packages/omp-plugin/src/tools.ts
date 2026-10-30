@@ -5,7 +5,7 @@ const KINDS = ['note', 'fact', 'decision', 'gotcha', 'procedure', 'snippet', 'im
 
 // A project created from a repo a teammate already knows about splits the
 // knowledge in two until someone asks the owner for a grant.
-const NEW_PROJECT = ' Started a new project. If a teammate already uses this repository, ask the owner for access.'
+const NEW_PROJECT = ' Started a new project. If a teammate already uses this repository, request access at /app/requests on your Mimir install.'
 
 /** The server refuses an unknown kind, so an invented one falls back to the default. */
 function kindOf(value: unknown): string {

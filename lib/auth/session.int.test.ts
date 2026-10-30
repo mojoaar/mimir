@@ -40,6 +40,18 @@ describe('sessions', () => {
     expect(await resolveSession(cookieValue)).toBeNull()
   })
 
+  it('stops resolving once the session is older than ninety days', async () => {
+    const { cookieValue } = await createSession(userId, {})
+    await adminPool().query("update sessions set created_at = now() - interval '91 days'")
+    expect(await resolveSession(cookieValue)).toBeNull()
+  })
+
+  it('still resolves a session that is old but under the cap', async () => {
+    const { cookieValue } = await createSession(userId, {})
+    await adminPool().query("update sessions set created_at = now() - interval '89 days'")
+    expect((await resolveSession(cookieValue))?.id).toBe(userId)
+  })
+
   it('does not resolve a revoked session', async () => {
     const { cookieValue } = await createSession(userId, {})
     await revokeSession(cookieValue)

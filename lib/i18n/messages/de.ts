@@ -142,6 +142,11 @@ export const de: Messages = {
     "Zu viele Versuche. Versuch es in ein paar Minuten erneut.",
   "app.forgot.blocked": "Diese Adresse darf diesen Server nicht nutzen.",
   "app.forgot.empty": "Gib die Adresse an, mit der du dich anmeldest.",
+  "app.emailConfirm.title": "Bestätige deine neue Adresse",
+  "app.emailConfirm.body": "Klicke unten, um diese Adresse für dein Konto zu verwenden. Alle anderen Sitzungen werden dabei abgemeldet.",
+  "app.emailConfirm.button": "Diese Adresse bestätigen",
+  "app.emailConfirm.invalid": "Der Link ist unvollständig. Öffne den neuesten aus deinem Postfach.",
+  "app.emailConfirm.done": "{email} ist jetzt deine Adresse.",
   "app.setPassword.title": "Passwort festlegen",
   "app.setPassword.body":
     "Wähle mindestens 12 Zeichen. Der Link gilt nur einmal.",
@@ -615,6 +620,7 @@ export const de: Messages = {
   "app.profile.needCurrentPassword":
     "Gib dein aktuelles Passwort ein, um die E-Mail-Adresse zu ändern.",
   "app.profile.saved": "Gespeichert.",
+  "app.profile.emailPending": "Prüfe die neue Adresse und klicke auf den Link, um die Änderung abzuschließen.",
   "app.profile.passwordsDiffer": "Die neuen Passwörter stimmen nicht überein.",
   "app.profile.passwordChanged":
     "Passwort geändert. Alle anderen Geräte sind abgemeldet.",

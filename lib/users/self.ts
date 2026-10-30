@@ -13,6 +13,32 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export type Profile = { id: string; email: string; name: string }
 
+export function isEmailAddress(value: string): boolean {
+  return value.length <= 320 && EMAIL.test(value)
+}
+
+/**
+ * The password check every sensitive change shares: a new address, a new
+ * password. It costs the same when the account has no password yet, so the
+ * answer does not say which case it was.
+ */
+export async function verifyCurrentPassword(
+  email: string,
+  passwordHash: string | null,
+  password: string | undefined,
+): Promise<void> {
+  if (!passwordHash) {
+    throw fail('invalid_params', 'you have not set a password yet; use a reset link first')
+  }
+  await assertPasswordThrottle(email)
+  const ok = password ? await verifyPassword(passwordHash, password) : false
+  if (!ok) {
+    recordLoginFailure(email)
+    throw fail('invalid_params', 'your current password is wrong')
+  }
+  clearLoginRateLimit(email)
+}
+
 export type ProfilePatch = { name?: string; email?: string; currentPassword?: string }
 
 export type SessionSummary = {
@@ -47,7 +73,7 @@ export async function updateProfile(userId: string, patch: ProfilePatch): Promis
   if (name !== undefined && (name === '' || name.length > 200)) {
     throw fail('invalid_params', 'a name is required and must be at most 200 characters')
   }
-  if (email !== undefined && (!EMAIL.test(email) || email.length > 320)) {
+  if (email !== undefined && !isEmailAddress(email)) {
     throw fail('invalid_params', 'that does not look like an email address')
   }
 
@@ -66,18 +92,7 @@ export async function updateProfile(userId: string, patch: ProfilePatch): Promis
     const changesEmail = email !== undefined && email !== row.email
 
     if (movesAddress) {
-      if (!row.password_hash) {
-        throw fail('invalid_params', 'you have not set a password yet; use a reset link first')
-      }
-      await assertPasswordThrottle(row.email)
-      const ok = patch.currentPassword
-        ? await verifyPassword(row.password_hash, patch.currentPassword)
-        : false
-      if (!ok) {
-        recordLoginFailure(row.email)
-        throw fail('invalid_params', 'your current password is wrong')
-      }
-      clearLoginRateLimit(row.email)
+      await verifyCurrentPassword(row.email, row.password_hash, patch.currentPassword)
     }
 
     const changed: string[] = []

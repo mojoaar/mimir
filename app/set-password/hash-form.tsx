@@ -13,6 +13,8 @@ export function HashPasswordForm({ labels, invalid }: { labels: PasswordLabels; 
   const [token, setToken] = useState('');
 
   useEffect(() => {
+    // The token is only known in the browser, so the read must happen after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setToken(window.location.hash.slice(1));
   }, []);
 

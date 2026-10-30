@@ -139,6 +139,11 @@ export const da: Messages = {
   "app.forgot.throttled": "For mange forsøg. Prøv igen om et par minutter.",
   "app.forgot.blocked": "Denne adresse har ikke adgang til serveren.",
   "app.forgot.empty": "Skriv den adresse, du logger ind med.",
+  "app.emailConfirm.title": "Bekræft din nye adresse",
+  "app.emailConfirm.body": "Klik nedenfor for at bruge denne adresse på din konto. Alle andre sessioner logges ud, når du gør det.",
+  "app.emailConfirm.button": "Bekræft denne adresse",
+  "app.emailConfirm.invalid": "Linket er ufuldstændigt. Åbn det nyeste fra din indbakke.",
+  "app.emailConfirm.done": "{email} er nu din adresse.",
   "app.setPassword.title": "Vælg en adgangskode",
   "app.setPassword.body": "Vælg mindst 12 tegn. Linket virker kun én gang.",
   "app.setPassword.label": "Ny adgangskode",
@@ -597,6 +602,7 @@ export const da: Messages = {
   "app.profile.needCurrentPassword":
     "Skriv din nuværende adgangskode for at skifte e-mailadresse.",
   "app.profile.saved": "Gemt.",
+  "app.profile.emailPending": "Tjek den nye adresse, og klik på linket for at fuldføre ændringen.",
   "app.profile.passwordsDiffer": "De nye adgangskoder er ikke ens.",
   "app.profile.passwordChanged":
     "Adgangskoden er skiftet. Alle andre enheder er logget ud.",

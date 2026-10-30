@@ -11,6 +11,7 @@ import { translator } from '@/lib/i18n/request'
 import { actionMessage } from '@/lib/i18n/errors'
 import { setAvatar, clearAvatar } from '@/lib/users/avatar'
 import { changePassword, revokeOwnSession, updateProfile } from '@/lib/users/self'
+import { requestEmailChange } from '@/lib/users/email-change'
 
 export type ActionState = { ok?: string; error?: string }
 
@@ -44,11 +45,18 @@ export async function updateProfileAction(
     return { error: t('app.profile.needCurrentPassword') }
   }
 
+  if (changingEmail) {
+    try {
+      await requestEmailChange(user.id, email, currentPassword)
+    } catch (error) {
+      return { error: await messageOf(error) }
+    }
+    revalidatePath(PROFILE)
+    return { ok: t('app.profile.emailPending') }
+  }
+
   try {
-    await updateProfile(
-      user.id,
-      changingEmail ? { name, email, currentPassword } : { name },
-    )
+    await updateProfile(user.id, { name })
   } catch (error) {
     return { error: await messageOf(error) }
   }

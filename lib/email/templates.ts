@@ -26,6 +26,21 @@ export function resetEmail(input: { siteName: string; link: string }): EmailTemp
   };
 }
 
+export function emailChangeEmail(input: {
+  siteName: string;
+  email: string;
+  link: string;
+}): EmailTemplate {
+  const { siteName, email, link } = input;
+  return {
+    subject: `Confirm your new ${siteName} address`,
+    text: sign(
+      `You asked to use ${email} for your ${siteName} account.\n\nConfirm it here:\n${link}\n\nThe link works once and expires in an hour. If this was not you, ignore this message: your address has not changed.`,
+      siteName,
+    ),
+  };
+}
+
 export function mfaResetEmail(input: { siteName: string; link: string }): EmailTemplate {
   const { siteName, link } = input;
   return {

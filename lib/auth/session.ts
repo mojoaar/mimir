@@ -7,6 +7,9 @@ import type { AuthUser } from './types'
 
 export { SESSION_COOKIE } from './cookie-name'
 const TTL_DAYS = 30
+// Sliding expiry is convenient and also endless: a stolen cookie that keeps
+// being used would never age out. This is the wall it cannot pass.
+const MAX_AGE_DAYS = 90
 const TOUCH_INTERVAL_SECONDS = 60
 
 type SessionRow = {
@@ -63,8 +66,9 @@ export async function resolveSession(cookieValue: string): Promise<AuthUser | nu
         where s.token_hash = $1
           and s.revoked_at is null
           and s.expires_at > now()
+          and s.created_at > now() - ($3 || ' days')::interval
           and u.status = 'active'`,
-      [sha256(cookieValue), String(TOUCH_INTERVAL_SECONDS)],
+      [sha256(cookieValue), String(TOUCH_INTERVAL_SECONDS), String(MAX_AGE_DAYS)],
     )
 
     const row = rows[0]

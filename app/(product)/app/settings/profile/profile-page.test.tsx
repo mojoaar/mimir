@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   },
   sessions: [] as unknown[],
   profileCalls: [] as Record<string, unknown>[],
+  emailCalls: [] as Record<string, unknown>[],
   passwordCalls: 0,
   locale: 'en',
   mfaOn: false,
@@ -56,6 +57,12 @@ vi.mock('@/lib/users/self', () => ({
     mocks.passwordCalls += 1
   },
   revokeOwnSession: async () => {},
+}))
+vi.mock('@/lib/users/email-change', () => ({
+  requestEmailChange: async (id: string, email: string, password: string) => {
+    mocks.emailCalls.push({ id, email, password })
+    return { pending: true }
+  },
 }))
 
 import ProfilePage from './page'
@@ -311,20 +318,30 @@ describe('the profile action', () => {
     expect(mocks.profileCalls).toHaveLength(0)
   })
 
-  it('passes the new address and the password that allows it', async () => {
+  it('asks for confirmation instead of moving the address at once', async () => {
     mocks.profileCalls = []
+    mocks.emailCalls = []
 
     const state = await updateProfileAction(
       {},
       form({ name: 'Alice', email: 'new@example.test', currentPassword: 'correct-password' }),
     )
 
-    expect(state.ok).toBe('Saved.')
-    expect(mocks.profileCalls[0]).toMatchObject({
-      name: 'Alice',
+    expect(state.ok).toContain('Check the new address')
+    expect(mocks.profileCalls).toHaveLength(0)
+    expect(mocks.emailCalls[0]).toMatchObject({
       email: 'new@example.test',
-      currentPassword: 'correct-password',
+      password: 'correct-password',
     })
+  })
+
+  it('still saves a name on its own', async () => {
+    mocks.profileCalls = []
+
+    const state = await updateProfileAction({}, form({ name: 'Alice B', email: 'alice@example.test' }))
+
+    expect(state.ok).toBe('Saved.')
+    expect(mocks.profileCalls[0]).toEqual({ name: 'Alice B' })
   })
 
   it('refuses a password change whose confirmation differs', async () => {

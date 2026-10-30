@@ -138,6 +138,11 @@ export const en = {
   "app.forgot.throttled": "Too many attempts. Try again in a few minutes.",
   "app.forgot.blocked": "This address is not allowed to use this server.",
   "app.forgot.empty": "Enter the address you sign in with.",
+  "app.emailConfirm.title": "Confirm your new address",
+  "app.emailConfirm.body": "Click below to use this address for your account. Every other session is signed out when you do.",
+  "app.emailConfirm.button": "Confirm this address",
+  "app.emailConfirm.invalid": "This link is incomplete. Open the newest one from your inbox.",
+  "app.emailConfirm.done": "{email} is now your address.",
   "app.setPassword.title": "Set a password",
   "app.setPassword.body":
     "Pick something at least 12 characters long. This link works once.",
@@ -596,6 +601,7 @@ export const en = {
   "app.profile.needCurrentPassword":
     "Enter your current password to change your email address.",
   "app.profile.saved": "Saved.",
+  "app.profile.emailPending": "Check the new address and click the link to finish the change.",
   "app.profile.passwordsDiffer": "The new passwords do not match.",
   "app.profile.passwordChanged":
     "Password changed. Every other device is signed out.",

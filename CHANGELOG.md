@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Hardening before the next feature: a loop that could not finish, vectors that
+could be compared across two models, and a digest that could be buried.
+
+### Added
+
+- **Security headers on every response.** `frame-ancestors 'none'` and `X-Frame-Options: DENY` stop the app being
+  framed, `Referrer-Policy: strict-origin-when-cross-origin` keeps a token out of the next site's logs,
+  `X-Content-Type-Options: nosniff` stops a browser guessing a type, and `Permissions-Policy` turns off the device
+  APIs a memory server never needs. HSTS is sent without `includeSubDomains`, because a self-hosted install shares
+  its domain with other things.
+
+- **A test gate before anything is released.** Every push to `main` and every pull request now runs lint, typecheck,
+  the unit suite, the integration suite against a real pgvector, and a production build. The release workflow also
+  refuses a tag whose version disagrees with `package.json`, both plugin packages or the compose image, moves
+  `latest` only for a plain version tag, and no longer fails a rerun because npm already has the package.
+
+### Changed
+
+- The README table now names all **9 MCP tools**, including `memory_learn`, and a test compares it with the server's
+  own list so the next tool cannot be added without the page saying so.
+
+### Fixed
+
+- **Re-embedding an install larger than one backfill pass now finishes.** It cleared every vector, embedded one batch
+  of at most two thousand rows, and threw; the retry cleared the vectors it had just built, so a large install looped
+  for ever. It now repeats the pass until nothing is missing.
+
+- **Changing the embedding model no longer compares two vector spaces.** Saving a new model only queued a backfill of
+  rows without a vector, so the old model's vectors stayed and search ranked them against the new ones. A change now
+  clears the live vectors first, then rebuilds.
+
+- **A bulk import can no longer bury the digest.** The digest took the two hundred newest rows of every kind, so
+  `memory_ingest` writing a hundred `import` rows pushed the decisions and runbooks out of the window, and a procedure
+  older than those rows never led. It now skips imports, reads procedures in their own query, and a new index on
+  `(project_id, updated_at desc)` keeps both fast. A project that holds nothing but imports still gets a digest.
+
+- **A chunked request body can no longer bypass the size cap.** The check trusted `Content-Length` and returned early
+  when a client left it out, then parsed an unbounded stream. The body is now counted while it is read, on MCP and on
+  every REST route, and a body over the limit is a 413.
+
+- **`memory_learn` no longer promises work it cannot do.** With learning off, or no language provider resolving for
+  the project owner, it answered `queued: true` and the plugin said the memories were being written. It now answers
+  `queued: false` with the reason, and both plugins print that reason instead of the success sentence.
+
 ## [0.26.0] - 2026-10-29
 
 A folder can name its project, and every memory says who wrote it.

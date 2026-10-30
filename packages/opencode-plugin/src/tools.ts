@@ -99,6 +99,10 @@ function digestTool(repo: string | null): ToolDefinition {
   }
 }
 
+// A project created from a repo a teammate already knows about splits the
+// knowledge in two until someone asks the owner for a grant.
+const NEW_PROJECT = ' Started a new project. If a teammate already uses this repository, ask the owner for access.'
+
 function rememberTool(repo: string | null): ToolDefinition {
   return {
     name: 'mimir_remember',
@@ -135,8 +139,11 @@ function rememberTool(repo: string | null): ToolDefinition {
         { timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Could not store that (${result.error}).` }
-      const written = result.result as { path?: string; created?: boolean }
-      return { content: `${written.created ? 'Stored' : 'Updated'} ${written.path ?? String(args.path ?? '')}.` }
+      const written = result.result as { path?: string; created?: boolean; projectCreated?: boolean }
+      const note = written.projectCreated ? NEW_PROJECT : ''
+      return {
+        content: `${written.created ? 'Stored' : 'Updated'} ${written.path ?? String(args.path ?? '')}.${note}`,
+      }
     },
   }
 }
@@ -202,8 +209,12 @@ function learnTool(repo: string | null): ToolDefinition {
         { timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Could not hand that over (${result.error}).` }
-      const queued = result.result as { queued?: boolean; reason?: string }
-      if (queued.queued) return { content: 'Queued. The model writes the memories in the background.' }
+      const queued = result.result as { queued?: boolean; reason?: string; projectCreated?: boolean }
+      if (queued.queued) {
+        return {
+          content: `Queued. The model writes the memories in the background.${queued.projectCreated ? NEW_PROJECT : ''}`,
+        }
+      }
       // A refusal is a fact the agent should act on, not a failure to retry.
       return {
         content:

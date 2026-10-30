@@ -308,6 +308,17 @@ describe('the tools it adds', () => {
     ])
   })
 
+  it('says when the write started a project of its own', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { path: 'a/b', created: true, projectCreated: true } }
+    const { added } = await setup()
+    const remember = added.find((tool) => tool.name === 'mimir_remember')
+
+    const out = await remember?.execute?.({ path: 'a/b', body: 'x' })
+
+    expect(out?.content).toContain('If a teammate already uses this repository')
+  })
+
   it('takes a title, so the memory does not inherit one from its first line', async () => {
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { path: 'deploy/rollback', created: true } }

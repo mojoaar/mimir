@@ -432,6 +432,14 @@ describe('a new project', () => {
     expect((await getProject(alice, p.slug))?.learningEnabled).toBe(false)
   })
 
+  it('says whether it created the project', async () => {
+    const first = await resolveProject(alice, { repo: 'github.com/alice/brand-new', create: true })
+    const again = await resolveProject(alice, { repo: 'github.com/alice/brand-new', create: true })
+
+    expect(first.created).toBe(true)
+    expect(again.created).toBe(false)
+  })
+
   it('starts with learning on when that is the default', async () => {
     await setLearningDefault(true, alice)
     const p = await resolveProject(alice, { repo: 'github.com/alice/learning-repo', create: true })

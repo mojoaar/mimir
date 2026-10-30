@@ -18,6 +18,8 @@ export type ResolvedProject = {
   id: string
   slug: string
   role: ProjectRole | null
+  /** True only when this call made the project, so a caller can say so. */
+  created: boolean
 }
 
 type AccessRow = {
@@ -71,7 +73,7 @@ export async function resolveProject(
         if (opts.create !== true) throw new ProjectNotFoundError(opts.project)
         return createProject(userId, repoKey, client, opts.project)
       }
-      return { id: row.id, slug: row.slug, role: toRole(row) }
+      return { id: row.id, slug: row.slug, role: toRole(row), created: false }
     }
 
     if (local) {
@@ -79,7 +81,7 @@ export async function resolveProject(
       // project. This is what makes a session inherit the project of the
       // directory it started in.
       const claimed = await folderForPath(client, userId, local)
-      if (claimed) return { id: claimed.projectId, slug: claimed.slug, role: 'owner' }
+      if (claimed) return { id: claimed.projectId, slug: claimed.slug, role: 'owner', created: false }
     }
 
     if (repoKey) {
@@ -93,7 +95,7 @@ export async function resolveProject(
         [userId, repoKey],
       )
       const row = found.rows[0]
-      if (row) return { id: row.id, slug: row.slug, role: toRole(row) }
+      if (row) return { id: row.id, slug: row.slug, role: toRole(row), created: false }
     }
 
     // Only a caller that says `create: true` may create: a typo'd slug on a
@@ -152,7 +154,7 @@ async function createProject(
       const row = inserted.rows[0]
       if (row) {
         await client.query('RELEASE SAVEPOINT create_project')
-        return { id: row.id, slug, role: 'owner' }
+        return { id: row.id, slug, role: 'owner', created: true }
       }
       await client.query('RELEASE SAVEPOINT create_project')
     } catch (error) {
@@ -167,7 +169,7 @@ async function createProject(
         [userId, repoKey, slug],
       )
       const row = existing.rows[0]
-      if (row) return { id: row.id, slug: row.slug, role: 'owner' }
+      if (row) return { id: row.id, slug: row.slug, role: 'owner', created: false }
     }
   }
 

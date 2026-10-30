@@ -3,6 +3,10 @@ import type { ExtensionAPI, ExtensionContext, ToolResult } from './omp.js'
 
 const KINDS = ['note', 'fact', 'decision', 'gotcha', 'procedure', 'snippet', 'import'] as const
 
+// A project created from a repo a teammate already knows about splits the
+// knowledge in two until someone asks the owner for a grant.
+const NEW_PROJECT = ' Started a new project. If a teammate already uses this repository, ask the owner for access.'
+
 /** The server refuses an unknown kind, so an invented one falls back to the default. */
 function kindOf(value: unknown): string {
   return typeof value === 'string' && (KINDS as readonly string[]).includes(value) ? value : 'note'
@@ -61,8 +65,10 @@ export function registerTools(
         { ...config, timeoutMs: 8000 },
       )
       if (!written.ok) return result(`Could not store that (${written.error}).`)
-      const stored = written.result as { path?: string; created?: boolean }
-      return result(`${stored.created ? 'Stored' : 'Updated'} ${stored.path ?? path}.`)
+      const stored = written.result as { path?: string; created?: boolean; projectCreated?: boolean }
+      return result(
+        `${stored.created ? 'Stored' : 'Updated'} ${stored.path ?? path}.${stored.projectCreated ? NEW_PROJECT : ''}`,
+      )
     },
   })
 
@@ -111,8 +117,12 @@ export function registerTools(
         { ...config, timeoutMs: 8000 },
       )
       if (!queued.ok) return result(`Could not hand that over (${queued.error}).`)
-      const job = queued.result as { queued?: boolean; reason?: string }
-      if (job.queued) return result('Queued. The model writes the memories in the background.')
+      const job = queued.result as { queued?: boolean; reason?: string; projectCreated?: boolean }
+      if (job.queued) {
+        return result(
+          `Queued. The model writes the memories in the background.${job.projectCreated ? NEW_PROJECT : ''}`,
+        )
+      }
       // A refusal is a fact the agent should act on, not a failure to retry.
       return result(
         typeof job.reason === 'string' ? job.reason : 'Mimir took no job: its queue is not running.',

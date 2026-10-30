@@ -207,6 +207,17 @@ describe('the tools', () => {
     expect(mocks.calls[0]?.args.client).toBe('oh-my-pi')
   })
 
+  it('says when the write started a project of its own', async () => {
+    mocks.calls.length = 0
+    mocks.result = { ok: true, result: { path: 'a/b', created: true, projectCreated: true } }
+    const { tools } = await setup()
+    const remember = tools.find((tool) => tool.name === 'mimir_remember')
+
+    const result = await remember?.execute('1', { path: 'a/b', body: 'x' }, undefined, undefined, ctx)
+
+    expect(result?.content[0]?.text).toContain('If a teammate already uses this repository')
+  })
+
   it('turns an invented kind into a note, instead of letting the server refuse it', async () => {
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { path: 'a/b', created: true } }

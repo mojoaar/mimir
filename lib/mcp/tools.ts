@@ -178,7 +178,7 @@ const TOOLS: ToolDef[] = [
       const body = str(args, 'body')
       if (!path || body === undefined) throw invalidParams('path and body are required')
       const p = await projectFor(args, ctx, true)
-      return writeMemory({
+      const written = await writeMemory({
         userId: ctx.user.id,
         projectId: p.id,
         path,
@@ -189,6 +189,7 @@ const TOOLS: ToolDef[] = [
         client: str(args, 'client'),
         session: str(args, 'session'),
       })
+      return { ...written, projectCreated: p.created }
     },
   },
   {
@@ -221,12 +222,13 @@ const TOOLS: ToolDef[] = [
     handler: async (args, ctx) => {
       if (!Array.isArray(args.files)) throw invalidParams('files must be an array')
       const p = await projectFor(args, ctx, true)
-      return ingestFiles({
+      const ingested = await ingestFiles({
         userId: ctx.user.id,
         projectId: p.id,
         files: args.files as IngestFile[],
         prefix: str(args, 'path_prefix'),
       })
+      return { ...ingested, projectCreated: p.created }
     },
   },
   {
@@ -279,7 +281,7 @@ const TOOLS: ToolDef[] = [
         client: str(args, 'client')?.slice(0, 64) ?? null,
         session: str(args, 'session')?.slice(0, 128) ?? null,
       })
-      return { queued: id !== null }
+      return { queued: id !== null, projectCreated: p.created }
     },
   },
   {

@@ -258,4 +258,19 @@ describe('search over the rest api', () => {
     const payload = (await response.json()) as { results: { projectSlug: string }[] }
     expect(new Set(payload.results.map((hit) => hit.projectSlug)).size).toBe(2)
   })
+
+  it('narrows to the project a slug names', async () => {
+    const second = await resolveProject(fixtures.alice, { repo: 'github.com/alice/second', create: true })
+    const body = 'roll back by redeploying the previous image'
+    await writeMemory({ userId: fixtures.alice, projectId: fixtures.aliceProjectId, path: 'deploy/rollback', body })
+    await writeMemory({ userId: fixtures.alice, projectId: second.id, path: 'auth/rotate', body })
+
+    const response = await searchRoute(
+      req('/api/v1/search', { method: 'POST', body: { query: 'redeploying', project: second.slug } }),
+    )
+    expect(response.status).toBe(200)
+    const payload = (await response.json()) as { results: { projectSlug: string }[] }
+    expect(payload.results.length).toBeGreaterThan(0)
+    expect(payload.results.every((hit) => hit.projectSlug === second.slug)).toBe(true)
+  })
 })

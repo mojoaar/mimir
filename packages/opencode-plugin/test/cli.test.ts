@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
     options?: { timeoutMs?: number; url?: string; token?: string }
   }[],
   reply: { ok: true, result: { written: 0 } } as unknown,
+  route: { ok: true, body: JSON.stringify({ results: [] }) } as unknown,
+  routes: [] as { path: string; options?: { method?: string; body?: unknown } }[],
   repo: null as string | null,
 }))
 
@@ -22,10 +24,15 @@ vi.mock('../src/client.js', () => ({
     mocks.calls.push({ name, args, options })
     return mocks.reply
   },
+  callRoute: async (path: string, options?: { method?: string; body?: unknown }) => {
+    mocks.routes.push({ path, options })
+    return mocks.route
+  },
   detectRepo: () => mocks.repo,
 }))
 
-const { runIngest } = await import('../src/cli.js')
+const { runExport, runIngest, runSearch } = await import('../src/cli.js')
+const { parseArgs } = await import('../src/args.js')
 
 let root: string
 const out: string[] = []
@@ -57,6 +64,7 @@ beforeEach(() => {
   out.length = 0
   err.length = 0
   mocks.calls.length = 0
+  mocks.routes.length = 0
   mocks.repo = null
   mocks.reply = { ok: true, result: { written: 3 } }
 })
@@ -218,5 +226,100 @@ describe('mimir ingest', () => {
     expect(code).toBe(0)
     expect(out.join('\n')).toContain('mimir ingest')
     expect(mocks.calls).toHaveLength(0)
+  })
+})
+
+describe('parseArgs', () => {
+  it('reads a search query and its flags', () => {
+    expect(parseArgs(['search', 'rollback', '--limit', '5'])).toMatchObject({
+      command: 'search',
+      query: 'rollback',
+      limit: 5,
+    })
+  })
+
+  it('reads an export target', () => {
+    expect(parseArgs(['export', '--out', 'mimir.md'])).toMatchObject({
+      command: 'export',
+      out: 'mimir.md',
+    })
+  })
+
+  it('still refuses a flag it does not know', () => {
+    expect(() => parseArgs(['search', 'x', '--nope'])).toThrow('unknown flag --nope')
+  })
+})
+
+describe('mimir search', () => {
+  it('prints one line per hit', async () => {
+    mocks.route = {
+      ok: true,
+      body: JSON.stringify({
+        results: [{ path: 'deploy/rollback', title: 'Roll back by redeploying', projectSlug: 'mimir' }],
+      }),
+    }
+
+    const code = await runSearch({ command: 'search', query: 'rollback', help: false }, io())
+
+    expect(code).toBe(0)
+    expect(mocks.routes[0]?.path).toBe('/api/v1/search')
+    expect(mocks.routes[0]?.options?.body).toMatchObject({ query: 'rollback' })
+    expect(out.join('\n')).toContain('deploy/rollback - Roll back by redeploying')
+  })
+
+  it('names the project when the search covers all of them', async () => {
+    mocks.route = {
+      ok: true,
+      body: JSON.stringify({
+        results: [{ path: 'deploy/rollback', title: 'Roll back', projectSlug: 'mimir' }],
+      }),
+    }
+
+    await runSearch({ command: 'search', query: 'rollback', help: false }, io())
+
+    expect(out.join('\n')).toContain('mimir: deploy/rollback - Roll back')
+  })
+
+  it('says when nothing matches', async () => {
+    mocks.route = { ok: true, body: JSON.stringify({ results: [] }) }
+
+    const code = await runSearch({ command: 'search', query: 'zzz', help: false }, io())
+
+    expect(code).toBe(0)
+    expect(out.join('\n')).toContain('Nothing matches')
+  })
+
+  it('prints one readable error when Mimir refuses', async () => {
+    mocks.route = { ok: false, error: 'unauthorized' }
+
+    const code = await runSearch({ command: 'search', query: 'x', help: false }, io())
+
+    expect(code).toBe(1)
+    expect(err.join('\n')).toContain('unauthorized')
+  })
+})
+
+describe('mimir export', () => {
+  it('writes the file it was given and says how big it is', async () => {
+    const target = join(root, 'mimir.md')
+    const body = '# Mimir\n\n## deploy/rollback\n'
+    mocks.route = { ok: true, body }
+
+    const code = await runExport({ command: 'export', project: 'mimir', out: target, help: false }, io())
+
+    expect(code).toBe(0)
+    expect(mocks.routes[0]?.path).toBe('/api/v1/projects/mimir/export')
+    expect(await readFile(target, 'utf8')).toContain('## deploy/rollback')
+    expect(out.join('\n')).toContain(`${Buffer.byteLength(body, 'utf8')} bytes`)
+  })
+
+  it('asks which project when none is named or obvious', async () => {
+    mocks.reply = { ok: true, result: [{ slug: 'mimir' }, { slug: 'sigrun' }] }
+
+    const code = await runExport({ command: 'export', help: false }, io())
+
+    expect(code).toBe(1)
+    expect(err.join('\n')).toContain('Pick one of:')
+    expect(err.join('\n')).toContain('sigrun')
   })
 })

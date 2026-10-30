@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { parseTheme, THEME_COOKIE, themeColor } from '@/lib/theme'
 import { Analytics } from '@/components/analytics'
+import type { ReactNode } from 'react'
 import './globals.css'
 
 const geistSans = Geist({
@@ -27,7 +28,7 @@ export async function generateViewport(): Promise<Viewport> {
   return { themeColor: themeColor(theme) }
 }
 
-export default async function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   // Resolved on the server so the first paint already carries the right theme:
   // a client-side swap would flash the default before settling.
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)

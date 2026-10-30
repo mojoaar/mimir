@@ -102,8 +102,12 @@ export function StatStrip({ labels }: { labels: StatLabels }) {
  * before its first turn. Dated from today, because a fixed date reads as stale
  * within a week.
  */
+// One timestamp per server process. The card only needs dates that look
+// recent, and reading the clock during render is what the purity rule forbids.
+const NOW = Date.now()
+
 export function DigestCard({ timeZone }: { timeZone: string }) {
-  const day = (daysAgo: number) => stamp(new Date(Date.now() - daysAgo * DAY), timeZone, { dateOnly: true });
+  const day = (daysAgo: number) => stamp(new Date(NOW - daysAgo * DAY), timeZone, { dateOnly: true });
   const text = `## What this project already knows (Mimir)
 
 ### Procedures

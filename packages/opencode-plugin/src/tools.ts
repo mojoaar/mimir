@@ -3,7 +3,9 @@ import type { MimirConfig } from './config.js'
 
 export type Registration = { dispose: () => Promise<void> }
 
-type ToolExecutor = (input: any, context: any) => Promise<{ content: string }>
+type ToolInput = Record<string, unknown>
+type ToolContext = { sessionID?: string } | undefined
+type ToolExecutor = (input: unknown, context: ToolContext) => Promise<{ content: string }>
 type ToolDefinition = {
   name: string
   description: string
@@ -84,9 +86,10 @@ function digestTool(repo: string | null): ToolDefinition {
       additionalProperties: false,
     },
     async execute(input) {
+      const args = input as ToolInput
       const result = await callTool(
         'memory_digest',
-        { budget_tokens: input?.budget_tokens ?? 800, repo: repo ?? undefined },
+        { budget_tokens: Number(args.budget_tokens ?? 800), repo: repo ?? undefined },
         { timeoutMs: 5000 },
       )
       if (!result.ok) return { content: `Mimir is unavailable (${result.error}). Carry on without it.` }
@@ -116,12 +119,13 @@ function rememberTool(repo: string | null): ToolDefinition {
     },
     // `client` and `session` are provenance, so history can say who wrote it.
     async execute(input, context) {
+      const args = input as ToolInput
       const result = await callTool(
         'memory_write',
         {
-          path: input.path,
-          body: input.body,
-          kind: input.kind,
+          path: String(args.path ?? ''),
+          body: String(args.body ?? ''),
+          kind: typeof args.kind === 'string' ? args.kind : undefined,
           repo: repo ?? undefined,
           client: 'opencode',
           session: context?.sessionID,
@@ -130,7 +134,7 @@ function rememberTool(repo: string | null): ToolDefinition {
       )
       if (!result.ok) return { content: `Could not store that (${result.error}).` }
       const written = result.result as { path?: string; created?: boolean }
-      return { content: `${written.created ? 'Stored' : 'Updated'} ${written.path ?? input.path}.` }
+      return { content: `${written.created ? 'Stored' : 'Updated'} ${written.path ?? String(args.path ?? '')}.` }
     },
   }
 }
@@ -150,9 +154,10 @@ function searchTool(repo: string | null): ToolDefinition {
       additionalProperties: false,
     },
     async execute(input) {
+      const args = input as ToolInput
       const result = await callTool(
         'memory_search',
-        { query: input?.query, path_prefix: input?.path_prefix, repo: repo ?? undefined },
+        { query: typeof args.query === 'string' ? args.query : '', path_prefix: typeof args.path_prefix === 'string' ? args.path_prefix : undefined, repo: repo ?? undefined },
         { timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Mimir is unavailable (${result.error}). Carry on without it.` }
@@ -182,11 +187,12 @@ function learnTool(repo: string | null): ToolDefinition {
       additionalProperties: false,
     },
     async execute(input, context) {
+      const args = input as ToolInput
       const result = await callTool(
         'memory_learn',
         {
-          transcript: input?.transcript,
-          hint: input?.hint,
+          transcript: String(args.transcript ?? ''),
+          hint: typeof args.hint === 'string' ? args.hint : undefined,
           repo: repo ?? undefined,
           client: 'opencode',
           session: context?.sessionID,

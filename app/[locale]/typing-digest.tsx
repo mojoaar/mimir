@@ -17,6 +17,8 @@ export function TypingDigest({ text }: { text: string }) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     let at = 0
+    // Clearing synchronously is the point: the first paint is an empty box.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShown('')
     const timer = window.setInterval(() => {
       at += 3

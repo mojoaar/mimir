@@ -1,4 +1,5 @@
 import { requireAdmin } from '@/lib/auth/admin'
+import Link from 'next/link'
 import { stamp } from '@/lib/format/time'
 import { translator } from '@/lib/i18n/request'
 import {
@@ -85,9 +86,9 @@ export default async function JobsPage() {
             {t('app.jobs.staleModel', {
               count: stale.reduce((sum, group) => sum + group.count, 0),
             })}{' '}
-            <a className="underline" href="/app/admin/settings">
+            <Link className="underline" href="/app/admin/settings">
               {t('app.jobs.reembed')}
-            </a>
+            </Link>
           </p>
         ) : null}
       </section>

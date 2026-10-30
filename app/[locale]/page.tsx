@@ -47,6 +47,9 @@ function emphasise(text: string, word: string) {
   );
 }
 
+// The language links must reload the document, not push a route: the locale is
+// resolved on the server. That makes the rule's advice wrong for this file.
+/* eslint-disable @next/next/no-html-link-for-pages */
 export const instant = false;
 
 export async function generateMetadata({

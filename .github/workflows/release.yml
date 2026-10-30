@@ -4,9 +4,9 @@ on:
   push:
     tags: ['v*']
 
-permissions:
-  contents: write
-  packages: write
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   # One native runner per architecture. The same build under qemu took an hour
@@ -25,19 +25,22 @@ jobs:
             arch: arm64
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: build
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
           platforms: ${{ matrix.platform }}
@@ -55,7 +58,7 @@ jobs:
           mkdir -p /tmp/digests
           touch "/tmp/digests/${DIGEST#sha256:}"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: digest-${{ matrix.arch }}
           path: /tmp/digests/*
@@ -65,31 +68,47 @@ jobs:
     runs-on: ubuntu-26.04
     needs: image
     timeout-minutes: 10
+    permissions:
+      contents: write
+      packages: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: docker/setup-buildx-action@v4
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: /tmp/digests
           pattern: digest-*
           merge-multiple: true
 
+      # A tag is a claim about what the code says it is. Refuse to publish one
+      # that disagrees with package.json, or with the image the compose file pins.
+      - name: Refuse a tag that does not match the code
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          node -e "const v=require('./package.json').version; if(v!=='$tag'){console.error('package.json',v,'tag $tag');process.exit(1)}"
+          node -e "const w=require('./packages/opencode-plugin/package.json').version,o=require('./packages/omp-plugin/package.json').version; if(w!=='$tag'||o!=='$tag'){console.error('plugin versions',w,o,'tag $tag');process.exit(1)}"
+          grep -q "ghcr.io/mojoaar/mimir:$tag" docker-compose.yml
+
       - name: Tag the index
         run: |
           version="${GITHUB_REF_NAME#v}"
           images=$(for d in /tmp/digests/*; do echo "ghcr.io/mojoaar/mimir@sha256:$(basename "$d")"; done)
-          docker buildx imagetools create \
-            -t "ghcr.io/mojoaar/mimir:$version" \
-            -t ghcr.io/mojoaar/mimir:latest \
-            $images
+          docker buildx imagetools create -t "ghcr.io/mojoaar/mimir:$version" $images
+
+      # A prerelease or a hotfix of an old line must not take :latest backwards.
+      - name: Move latest
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          docker buildx imagetools create -t ghcr.io/mojoaar/mimir:latest "ghcr.io/mojoaar/mimir:$version"
 
       - name: Extract changelog section
         run: |
@@ -101,7 +120,7 @@ jobs:
           ' CHANGELOG.md > release-notes.md
           test -s release-notes.md
 
-      - uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           body_path: release-notes.md
 
@@ -111,8 +130,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
@@ -127,10 +146,17 @@ jobs:
         working-directory: packages/opencode-plugin
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+          VERSION: ${{ github.ref_name }}
+        run: |
+          version="${VERSION#v}"
+          # A failed second publish used to make a re-run impossible.
+          npm view "@mojoaar/opencode-mimir@$version" version >/dev/null 2>&1 || npm publish --access public
       - name: Publish @mojoaar/omp-mimir
         if: ${{ env.NODE_AUTH_TOKEN != '' }}
         working-directory: packages/omp-plugin
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+          VERSION: ${{ github.ref_name }}
+        run: |
+          version="${VERSION#v}"
+          npm view "@mojoaar/omp-mimir@$version" version >/dev/null 2>&1 || npm publish --access public

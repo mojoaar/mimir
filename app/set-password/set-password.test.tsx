@@ -9,16 +9,28 @@ vi.mock('@/lib/auth/context', () => ({
   getCurrentUser: async () => ({ id: 'u1', email: 'a@b.test', locale: 'da' }),
 }));
 
-import SetPasswordPage from './[token]/page';
+import { setPasswordUrl } from '@/lib/auth/tokens';
 
-describe('the set-password page', () => {
-  it('renders the form for a token without consuming it', async () => {
-    const html = renderToStaticMarkup(
-      await SetPasswordPage({ params: Promise.resolve({ token: 'a-token-value' }) }),
+import SetPasswordPage from './page';
+import LegacyPage from './[token]/page';
+
+describe('a password link', () => {
+  it('carries the token in the fragment, never in the request line', () => {
+    expect(setPasswordUrl('https://mimir.test', 'a-token-value')).toBe(
+      'https://mimir.test/set-password#a-token-value',
     );
+  });
 
-    expect(html).toContain('Vælg en adgangskode');
+  it('sends the old path form on to the fragment', async () => {
+    await expect(
+      LegacyPage({ params: Promise.resolve({ token: 'a-token-value' }) }),
+    ).rejects.toMatchObject({ digest: expect.stringContaining('/set-password#a-token-value') });
+  });
+
+  it('renders the form without putting a token in the markup', async () => {
+    const html = renderToStaticMarkup(await SetPasswordPage());
+
     expect(html).toContain('name="password"');
-    expect(html).toContain('a-token-value');
+    expect(html).not.toContain('a-token-value');
   });
 });

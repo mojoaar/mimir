@@ -14,8 +14,13 @@ export type TokenKind = 'invite' | 'password_reset' | 'mfa_reset';
 export const MIN_PASSWORD_LENGTH = 12;
 const TOKEN_TTL_MINUTES = 60;
 
+/** The fragment is never sent to the server, so the token stays out of logs. */
+export function setPasswordUrl(publicUrl: string, token: string): string {
+  return `${publicUrl.replace(/\/+$/, '')}/set-password#${token}`;
+}
+
 async function tokenUrl(token: string): Promise<string> {
-  return `${await getPublicUrl()}/set-password/${token}`;
+  return setPasswordUrl(await getPublicUrl(), token);
 }
 
 /**

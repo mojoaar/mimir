@@ -4,10 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/admin'
 import { audit, describeAuditFailure } from '@/lib/audit'
-import { deliverToken } from '@/lib/auth/tokens'
-import { absoluteLink, sendEmail } from '@/lib/email/client'
+import { deliverToken, setPasswordUrl } from '@/lib/auth/tokens'
+import { sendEmail } from '@/lib/email/client'
 import { inviteEmail } from '@/lib/email/templates'
-import { getSiteSettings } from '@/lib/settings/site'
+import { getPublicUrl, getSiteSettings } from '@/lib/settings/site'
 import { translator, type Translate } from '@/lib/i18n/request'
 import { actionMessage } from '@/lib/i18n/errors'
 import {
@@ -69,7 +69,7 @@ export async function createUserAction(_prev: ActionState, formData: FormData): 
       return { ok: t('app.admin.users.created') }
     }
 
-    const url = await absoluteLink(`/set-password/${created.inviteToken}`)
+    const url = setPasswordUrl(await getPublicUrl(), created.inviteToken)
     const site = await getSiteSettings()
     const sent = await sendEmail({
       to: email,

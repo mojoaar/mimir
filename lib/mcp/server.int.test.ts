@@ -108,6 +108,24 @@ describe('mcp server', () => {
     expect(JSON.parse(read.result.content[0].text).body).toBe('the first body')
   })
 
+  it('searches every project when no project is named', async () => {
+    const body = 'roll back by redeploying the previous image'
+    await handleRpc(call('memory_write', { repo: 'github.com/alice/first', path: 'deploy/rollback', body }), alice, meta)
+    await handleRpc(call('memory_write', { repo: 'github.com/alice/second', path: 'auth/rotate', body }), alice, meta)
+
+    const all = (await handleRpc(call('memory_search', { query: 'redeploying' }), alice, meta)) as any
+    const hits = JSON.parse(all.result.content[0].text) as { projectSlug: string }[]
+    expect(new Set(hits.map((hit) => hit.projectSlug)).size).toBe(2)
+
+    const scoped = (await handleRpc(
+      call('memory_search', { query: 'redeploying', repo: 'github.com/alice/second' }),
+      alice,
+      meta,
+    )) as any
+    const one = JSON.parse(scoped.result.content[0].text) as { projectSlug: string }[]
+    expect(one.every((hit) => hit.projectSlug === 'second')).toBe(true)
+  })
+
   it('round-trips a write and a read through tools/call', async () => {
     const write = (await handleRpc(
       call('memory_write', { repo: 'github.com/a/b', path: 'conventions/x', body: 'use tabs' }),

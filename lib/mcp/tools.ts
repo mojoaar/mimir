@@ -100,7 +100,7 @@ const TOOLS: ToolDef[] = [
     name: 'memory_search',
     action: 'memory.read',
     description:
-      'Hybrid search over memory. Returns titles and summaries only - read the path if you need the body. Scope it with path_prefix so auth knowledge does not pollute a deploy question.',
+      'Hybrid search over memory. Returns titles and summaries only - read the path if you need the body. Scope it with path_prefix so auth knowledge does not pollute a deploy question. Without project or repo it searches every project you can read.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -115,10 +115,13 @@ const TOOLS: ToolDef[] = [
     handler: async (args, ctx) => {
       const query = str(args, 'query')
       if (!query) throw invalidParams('query is required')
-      const p = await projectFor(args, ctx, false)
+      // No project named means every project, which is the whole point of a
+      // session asking "did I solve this somewhere else?".
+      const scoped = str(args, 'project') || str(args, 'repo') || ctx.meta.repo
+      const projectId = scoped ? (await projectFor(args, ctx, false)).id : undefined
       return searchMemories({
         userId: ctx.user.id,
-        projectId: p.id,
+        projectId,
         query,
         pathPrefix: str(args, 'path_prefix'),
         limit: num(args, 'limit'),

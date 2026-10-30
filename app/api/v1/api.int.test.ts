@@ -9,6 +9,9 @@ import { GET as listVersionsRoute } from '@/app/api/v1/projects/[slug]/versions/
 import { POST as restoreVersionRoute } from '@/app/api/v1/projects/[slug]/versions/[id]/restore/route'
 import { GET as treeRoute } from '@/app/api/v1/projects/[slug]/tree/route'
 import { POST as learnRoute } from '@/app/api/v1/projects/[slug]/learn/route'
+import { POST as searchRoute } from '@/app/api/v1/search/route'
+import { resolveProject } from '@/lib/projects/service'
+import { writeMemory } from '@/lib/memory/service'
 import { sha256 } from '@/lib/crypto'
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
@@ -240,5 +243,19 @@ describe('memory history over the rest api', () => {
       `select count(*) from projects where slug = 'no-such-project'`,
     )
     expect(rows[0]?.count).toBe('0')
+  })
+})
+
+describe('search over the rest api', () => {
+  it('searches every project the token can read', async () => {
+    const second = await resolveProject(fixtures.alice, { repo: 'github.com/alice/second', create: true })
+    const body = 'roll back by redeploying the previous image'
+    await writeMemory({ userId: fixtures.alice, projectId: fixtures.aliceProjectId, path: 'deploy/rollback', body })
+    await writeMemory({ userId: fixtures.alice, projectId: second.id, path: 'auth/rotate', body })
+
+    const response = await searchRoute(req('/api/v1/search', { method: 'POST', body: { query: 'redeploying' } }))
+    expect(response.status).toBe(200)
+    const payload = (await response.json()) as { results: { projectSlug: string }[] }
+    expect(new Set(payload.results.map((hit) => hit.projectSlug)).size).toBe(2)
   })
 })

@@ -50,10 +50,19 @@ export async function saveEmbeddingAction(
       return { error: t('app.admin.embeddings.wrongDims', { expected: EMBEDDING_DIM, actual: dim }) }
     }
 
-    await setEmbeddingConfig({ providerId, model, dim }, user.id)
+    const { changed } = await setEmbeddingConfig({ providerId, model, dim }, user.id)
     await recordVerification(user.id, providerId, null)
-    // Rows written before this moment have no vector; embed them in the background.
-    await sendJob('backfill', {})
+    if (changed) {
+      // The new model writes a different space, so the old vectors are not
+      // comparable and must go before anything is rebuilt. Imported lazily
+      // because the job module registers a worker when it loads.
+      const { clearEmbeddings } = await import('@/lib/jobs/reembed')
+      await clearEmbeddings()
+      await sendJob('reembed', { confirm: true })
+    } else {
+      // Same space: only rows written while no vector could be made are missing.
+      await sendJob('backfill', {})
+    }
     revalidatePath('/app/admin/settings')
     return { ok: t('app.admin.embeddings.saved', { model, count: dim }) }
   } catch (error) {

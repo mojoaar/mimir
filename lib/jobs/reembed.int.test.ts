@@ -18,7 +18,7 @@ vi.mock('@/lib/providers/client', async (importOriginal) => {
   return { ...actual, embed: async () => [await state.vectors()] }
 })
 
-const { runReembed } = await import('./reembed')
+const { clearEmbeddings, runReembed } = await import('./reembed')
 
 const target: ProviderTarget = {
   id: '11111111-1111-1111-1111-111111111111',
@@ -83,6 +83,21 @@ describe('the re-embed job', () => {
     const result = await runReembed({ confirm: true })
     expect(result.missing).toBe(0)
     expect(await liveRows(true)).toBe(0)
+  })
+
+  it('drops every live vector, and only live ones, when asked', async () => {
+    await writeThreeEmbeddedMemoriesAndOneDeleted()
+
+    expect(await clearEmbeddings()).toBe(3)
+    expect(await liveRows(true)).toBe(3)
+
+    // The deleted row keeps its vector, so a restore is not a rebuild.
+    const { rows } = await adminPool().query<{ n: number }>(
+      `select count(*)::int as n from memories
+        where project_id = $1 and deleted_at is not null and embedding is not null`,
+      [projectId],
+    )
+    expect(rows[0]?.n).toBe(1)
   })
 
   it('refuses without an explicit confirmation', async () => {

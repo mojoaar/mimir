@@ -16,6 +16,7 @@ import { getIpAllowlist, getRequireMfa, setIpAllowlist, setRequireMfa } from './
 import { getPublicUrl, getSiteSettings, setSiteSettings } from './site'
 import { getTimeFormat, setClock, setTimezone } from './time'
 import { getLearningDefault, setLearningDefault } from './learning'
+import { setEmbeddingConfig } from './embedding'
 
 let actor: string
 
@@ -194,5 +195,17 @@ describe('analytics', () => {
   test('ignores a corrupt row rather than trusting it', async () => {
     await writeSetting('analytics', { enabled: true, scriptUrl: 'nonsense', websiteId: '' }, actor)
     expect(await getAnalytics()).toEqual({ enabled: false, scriptUrl: '', websiteId: '' })
+  })
+})
+
+describe('embedding config', () => {
+  test('says whether the config actually changed', async () => {
+    await setEmbeddingConfig({ providerId: 'p1', model: 'a', dim: 768 }, actor)
+    expect((await setEmbeddingConfig({ providerId: 'p1', model: 'a', dim: 768 }, actor)).changed).toBe(
+      false,
+    )
+    expect((await setEmbeddingConfig({ providerId: 'p1', model: 'b', dim: 768 }, actor)).changed).toBe(
+      true,
+    )
   })
 })

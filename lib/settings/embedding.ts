@@ -27,16 +27,28 @@ export async function getEmbeddingConfig(): Promise<EmbeddingConfig | null> {
   return { providerId, model, dim }
 }
 
+/**
+ * Returns whether the space actually changed: a new model means the vectors on
+ * disk describe a different space, and comparing the two ranks nothing.
+ */
 export async function setEmbeddingConfig(
   config: EmbeddingConfig,
   updatedBy: string,
-): Promise<void> {
+): Promise<{ changed: boolean }> {
   if (config.dim !== EMBEDDING_DIM) {
     throw new InvalidSetting(
       `the embedding column holds ${EMBEDDING_DIM} dimensions; ${config.dim} would need a migration`,
     )
   }
+  const previous = await getEmbeddingConfig()
+  const changed =
+    !previous ||
+    previous.providerId !== config.providerId ||
+    previous.model !== config.model ||
+    previous.dim !== config.dim
+
   await writeSetting(PROVIDER_KEY, config.providerId, updatedBy)
   await writeSetting(MODEL_KEY, config.model, updatedBy)
   await writeSetting(DIM_KEY, config.dim, updatedBy)
+  return { changed }
 }

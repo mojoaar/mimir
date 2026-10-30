@@ -27,9 +27,7 @@ export async function runReembed(
   const provider = await resolveEmbeddingProvider()
   if (!provider) throw invalidParams('no embedding provider is configured')
 
-  const { rowCount } = await adminPool().query(
-    `update memories set embedding = null, embedded_at = null, embedding_model = null where deleted_at is null`,
-  )
+  const cleared = await clearEmbeddings()
   // One pass is capped; loop until the tail is done. A provider that fails
   // mid-run embeds nothing on the next pass, so stop instead of spinning and
   // let the throw below report what is missing.
@@ -46,7 +44,18 @@ export async function runReembed(
     throw new Error(`${missing} memories are still without a vector; run re-embed again`)
   }
 
-  return { total: rowCount ?? 0, missing }
+  return { total: cleared, missing }
+}
+
+/**
+ * A vector only means something in the space it was made in, so a model change
+ * drops them all. Deleted rows keep theirs: a restore is not a rebuild.
+ */
+export async function clearEmbeddings(): Promise<number> {
+  const { rowCount } = await adminPool().query(
+    `update memories set embedding = null, embedded_at = null, embedding_model = null where deleted_at is null`,
+  )
+  return rowCount ?? 0
 }
 
 async function countMissing(): Promise<number> {

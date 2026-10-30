@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to give it one, and the docs now put the options block first, because the bare `opencode plugin add` entry can
   never carry a URL on its own.
 
+- A plugin configured with `options.url` and `options.tokenFile` can actually use them. Its tools called Mimir with
+  no URL or token, so a documented install answered "Mimir is unavailable" for every read, search and digest.
+
 ## [0.29.1] - 2026-10-30
 
 The dependencies move together, and the gate that proves it stays green.

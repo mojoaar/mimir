@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  calls: [] as { name: string; args: Record<string, unknown>; options?: { timeoutMs?: number } }[],
+  calls: [] as {
+    name: string
+    args: Record<string, unknown>
+    options?: { timeoutMs?: number; url?: string; token?: string }
+  }[],
   result: { ok: true, result: { text: '### auth\n- rotation — tokens last 30 days' } } as
     | { ok: true; result: unknown }
     | { ok: false; error: string },
@@ -292,6 +296,20 @@ describe('the tools it adds', () => {
       'mimir_read',
       'mimir_learn',
     ])
+  })
+
+  it('sends the url and token it was configured with', async () => {
+    mocks.calls.length = 0
+    mocks.reject = false
+    const { added } = await setup()
+    const digest = added.find((tool) => tool.name === 'mimir_digest')
+
+    await digest?.execute?.({})
+
+    // The environment is empty here, so a tool that read only `process.env`
+    // would fail on an install configured exactly as the docs show.
+    expect(mocks.calls[0]?.options?.url).toBe('http://127.0.0.1:3000')
+    expect(mocks.calls[0]?.options?.token).toBe('mimir_test')
   })
 
   it('reads a body so a path from search can be opened', async () => {

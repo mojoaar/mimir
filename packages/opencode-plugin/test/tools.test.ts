@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  calls: [] as { name: string; args: Record<string, unknown>; options?: { timeoutMs?: number } }[],
+  calls: [] as { name: string; args: Record<string, unknown>; options?: { timeoutMs?: number; url?: string; token?: string } }[],
   result: { ok: true, result: { text: 'the digest' } } as
     | { ok: true; result: unknown }
     | { ok: false; error: string },
@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../src/client.js', () => ({
   detectRepo: () => mocks.repo,
-  callTool: async (name: string, args: Record<string, unknown>, options?: { timeoutMs?: number }) => {
+  callTool: async (name: string, args: Record<string, unknown>, options?: { timeoutMs?: number; url?: string; token?: string }) => {
     mocks.calls.push({ name, args, options })
     return mocks.result
   },
@@ -119,7 +119,7 @@ describe('the plugin tools', () => {
     expect(mocks.calls[0]).toEqual({
       name: 'memory_digest',
       args: { budget_tokens: 800, repo: 'git@github.com:alice/notes.git' },
-      options: { timeoutMs: 5000 },
+      options: { url: 'http://127.0.0.1:3000', token: 't', timeoutMs: 5000 },
     })
     expect(result).toEqual({ content: 'the digest' })
   })
@@ -151,7 +151,7 @@ describe('the plugin tools', () => {
         repo: 'git@github.com:alice/notes.git',
         client: 'opencode',
       },
-      options: { timeoutMs: 8000 },
+      options: { url: 'http://127.0.0.1:3000', token: 't', timeoutMs: 8000 },
     })
     expect(result).toEqual({ content: 'Updated deploy/rollback.' })
   })

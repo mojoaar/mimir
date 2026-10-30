@@ -36,11 +36,11 @@ export async function registerTools(
   if (config.tools === 'auto' && (await servedByMcp(ctx, config.url))) return IDLE
 
   return ctx.tool.transform((editor) => {
-    editor.add(digestTool(repo))
-    editor.add(rememberTool(repo))
-    editor.add(searchTool(repo))
-    editor.add(readTool(repo))
-    editor.add(learnTool(repo))
+    editor.add(digestTool(repo, config))
+    editor.add(rememberTool(repo, config))
+    editor.add(searchTool(repo, config))
+    editor.add(readTool(repo, config))
+    editor.add(learnTool(repo, config))
   })
 }
 
@@ -70,7 +70,7 @@ function strip(value: string | undefined): string {
   return (value ?? '').replace(/\/+$/, '')
 }
 
-function digestTool(repo: string | null): ToolDefinition {
+function digestTool(repo: string | null, config: MimirConfig): ToolDefinition {
   return {
     name: 'mimir_digest',
     description:
@@ -91,7 +91,7 @@ function digestTool(repo: string | null): ToolDefinition {
       const result = await callTool(
         'memory_digest',
         { budget_tokens: Number(args.budget_tokens ?? 800), repo: repo ?? undefined },
-        { timeoutMs: 5000 },
+        { url: config.url, token: config.token, timeoutMs: 5000 },
       )
       if (!result.ok) return { content: `Mimir is unavailable (${result.error}). Carry on without it.` }
       const digest = result.result as { text?: string }
@@ -104,7 +104,7 @@ function digestTool(repo: string | null): ToolDefinition {
 // knowledge in two until someone asks the owner for a grant.
 const NEW_PROJECT = ' Started a new project. If a teammate already uses this repository, request access at /app/requests on your Mimir install.'
 
-function rememberTool(repo: string | null): ToolDefinition {
+function rememberTool(repo: string | null, config: MimirConfig): ToolDefinition {
   return {
     name: 'mimir_remember',
     description:
@@ -137,7 +137,7 @@ function rememberTool(repo: string | null): ToolDefinition {
           client: 'opencode',
           session: context?.sessionID,
         },
-        { timeoutMs: 8000 },
+        { url: config.url, token: config.token, timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Could not store that (${result.error}).` }
       const written = result.result as { path?: string; created?: boolean; projectCreated?: boolean }
@@ -149,7 +149,7 @@ function rememberTool(repo: string | null): ToolDefinition {
   }
 }
 
-function searchTool(repo: string | null): ToolDefinition {
+function searchTool(repo: string | null, config: MimirConfig): ToolDefinition {
   return {
     name: 'mimir_search',
     description:
@@ -168,7 +168,7 @@ function searchTool(repo: string | null): ToolDefinition {
       const result = await callTool(
         'memory_search',
         { query: typeof args.query === 'string' ? args.query : '', path_prefix: typeof args.path_prefix === 'string' ? args.path_prefix : undefined, repo: repo ?? undefined },
-        { timeoutMs: 8000 },
+        { url: config.url, token: config.token, timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Mimir is unavailable (${result.error}). Carry on without it.` }
       const hits = result.result as { path: string; title: string; summary: string | null }[]
@@ -189,7 +189,7 @@ function renderMemory(memory: { path?: string; title?: string; body?: string; up
   return `${head}\n# ${memory.title ?? ''}\n\n${memory.body ?? ''}`
 }
 
-function readTool(repo: string | null): ToolDefinition {
+function readTool(repo: string | null, config: MimirConfig): ToolDefinition {
   return {
     name: 'mimir_read',
     description:
@@ -205,7 +205,7 @@ function readTool(repo: string | null): ToolDefinition {
       const result = await callTool(
         'memory_read',
         { path: String(args.path ?? ''), repo: repo ?? undefined },
-        { timeoutMs: 8000 },
+        { url: config.url, token: config.token, timeoutMs: 8000 },
       )
       if (!result.ok) return { content: 'Nothing is stored at that path.' }
       return { content: renderMemory(result.result as { path?: string; title?: string; body?: string; updatedAt?: string }) }
@@ -213,7 +213,7 @@ function readTool(repo: string | null): ToolDefinition {
   }
 }
 
-function learnTool(repo: string | null): ToolDefinition {
+function learnTool(repo: string | null, config: MimirConfig): ToolDefinition {
   return {
     name: 'mimir_learn',
     description:
@@ -238,7 +238,7 @@ function learnTool(repo: string | null): ToolDefinition {
           client: 'opencode',
           session: context?.sessionID,
         },
-        { timeoutMs: 8000 },
+        { url: config.url, token: config.token, timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Could not hand that over (${result.error}).` }
       const queued = result.result as { queued?: boolean; reason?: string; projectCreated?: boolean }

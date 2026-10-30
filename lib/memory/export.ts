@@ -1,4 +1,5 @@
 import { withUser } from '@/lib/db/tx'
+import { InvalidInput } from '@/lib/memory/path'
 import { requireProjectRole } from '@/lib/projects/access'
 
 export const MAX_EXPORT_BYTES = 16 * 1024 * 1024
@@ -39,12 +40,12 @@ export async function exportProject(userId: string, projectId: string): Promise<
       name: string
       repo_key: string | null
       memories: number
-      bytes: number
+      bytes: string
     }>(
       `select p.slug, p.name, p.repo_key,
               (select count(*)::int from memories m
                 where m.project_id = p.id and m.deleted_at is null) as memories,
-              (select coalesce(sum(length(m.body)), 0)::int from memories m
+              (select coalesce(sum(length(m.body)), 0) from memories m
                 where m.project_id = p.id and m.deleted_at is null) as bytes
          from projects p
         where p.id = $1`,
@@ -53,8 +54,9 @@ export async function exportProject(userId: string, projectId: string): Promise<
     return rows[0] ?? null
   })
 
-  if (!meta) throw new ExportTooLarge()
-  if (meta.memories > MAX_EXPORT_MEMORIES || meta.bytes > MAX_EXPORT_BYTES) throw new ExportTooLarge()
+  // sum() is bigint, so it cannot overflow the way int4 does on a large project.
+  if (!meta) throw new InvalidInput('no such project')
+  if (meta.memories > MAX_EXPORT_MEMORIES || Number(meta.bytes) > MAX_EXPORT_BYTES) throw new ExportTooLarge()
 
   const rows = await withUser(userId, async (client) => {
     const { rows } = await client.query<Row>(

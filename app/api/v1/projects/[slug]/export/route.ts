@@ -17,6 +17,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         headers: {
           'content-type': format === 'json' ? 'application/json; charset=utf-8' : 'text/markdown; charset=utf-8',
           'content-disposition': `attachment; filename="${exported.filename.replace(/\.md$/, format === 'json' ? '.json' : '.md')}"`,
+        'cache-control': 'no-store',
         },
       })
     } catch (error) {

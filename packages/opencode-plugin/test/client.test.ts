@@ -31,7 +31,12 @@ describe('callTool', () => {
 
   it('fails without configuration and never throws', async () => {
     const result = await callTool('memory_digest', {}, { url: '', token: '' })
-    expect(result).toEqual({ ok: false, error: 'MIMIR_URL and MIMIR_TOKEN must be set' })
+    expect(result).toEqual({ ok: false, error: 'set MIMIR_URL and MIMIR_TOKEN' })
+  })
+
+  it('names only the variable that is missing', async () => {
+    const result = await callTool('memory_digest', {}, { url: 'http://127.0.0.1:3000', token: '' })
+    expect(result).toEqual({ ok: false, error: 'set MIMIR_TOKEN' })
   })
 
   it('reports a non-2xx without echoing the body', async () => {

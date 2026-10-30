@@ -116,8 +116,10 @@ const TOOLS: ToolDef[] = [
       const query = str(args, 'query')
       if (!query) throw invalidParams('query is required')
       // No project named means every project, which is the whole point of a
-      // session asking "did I solve this somewhere else?".
-      const scoped = str(args, 'project') || str(args, 'repo') || ctx.meta.repo
+      // session asking "did I solve this somewhere else?". The client header is
+      // deliberately not consulted: every configured agent sends one, so it
+      // would make the cross-project search unreachable.
+      const scoped = str(args, 'project') || str(args, 'repo')
       const projectId = scoped ? (await projectFor(args, ctx, false)).id : undefined
       return searchMemories({
         userId: ctx.user.id,

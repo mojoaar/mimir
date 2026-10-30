@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { adminPool } from '@/lib/db/pool'
-import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
+import { resetFixtures, seedGrant, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
 import { writeMemory } from './service'
 import { exportProject } from './export'
 
@@ -46,5 +46,25 @@ describe('exportProject', () => {
 
   it('refuses a caller who cannot read the project', async () => {
     await expect(exportProject(f.bob, projectId)).rejects.toMatchObject({ code: 'forbidden' })
+  })
+
+  it('lets a read-only grantee export the project', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy/compose', body: 'one container, no oracle' })
+    await seedGrant(projectId, f.bob, 'read')
+
+    const exported = await exportProject(f.bob, projectId)
+
+    expect(exported.markdown).toContain('one container, no oracle')
+  })
+
+  it('refuses a project over the row cap without loading a body', async () => {
+    // The count is decided first, so 5,001 one-byte rows must refuse cheaply.
+    await adminPool().query(
+      `insert into memories (project_id, path, body)
+       select $1, 'bulk/' || n, 'x' from generate_series(1, 5001) n`,
+      [projectId],
+    )
+
+    await expect(exportProject(f.alice, projectId)).rejects.toMatchObject({ code: 'too_large' })
   })
 })

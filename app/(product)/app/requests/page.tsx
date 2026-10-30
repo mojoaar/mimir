@@ -43,7 +43,7 @@ export default async function RequestsPage({
       <form action={requestAccessAction} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-[var(--text-muted)]">{t('app.requests.repo')}</span>
-          <input name="repo" placeholder="github.com/you/project" className={FIELD} />
+          <input name="repo" required placeholder="github.com/you/project" className={FIELD} />
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className="text-[var(--text-muted)]">{t('app.requests.note')}</span>

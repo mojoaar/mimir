@@ -205,7 +205,7 @@ curl -s -X POST "$MIMIR_URL/api/v1/projects/mimir/versions/9ac2…/restore" \\
           ['GET /api/v1/projects/:slug/versions?path=', '-', '{ versions: [{ id, path, title, kind, source, updatedAt, createdAt, bytes }] }'],
           ['POST /api/v1/projects/:slug/versions/:id/restore', '-', '{ restored: true, path }'],
           ['POST /api/v1/projects/:slug/ingest', '{ files: [{ path, body }], prefix? }', '{ written, skipped: [{ path, reason }] }'],
-          ['POST /api/v1/search', '{ query, path_prefix?, limit?, project? }', '{ results: [{ projectSlug, path, title, summary, score }] }'],
+          ['POST /api/v1/search', '{ query, path_prefix?, limit?, project? }', '{ results: [{ projectSlug, projectName, path, title, summary, excerpt, score }] }'],
           ['GET /api/v1/projects/:slug/export?format=json', '-', 'the project as Markdown, or JSON with format=json'],
         ]}
       />

@@ -126,6 +126,32 @@ describe('mcp server', () => {
     expect(one.every((hit) => hit.projectSlug === 'second')).toBe(true)
   })
 
+  it('ignores the repo header when the caller names no project', async () => {
+    const body = 'rotate the signing keys every quarter'
+    await handleRpc(call('memory_write', { repo: 'github.com/alice/first', path: 'auth/rotate', body }), alice, meta)
+    await handleRpc(call('memory_write', { repo: 'github.com/alice/second', path: 'auth/rotate', body }), alice, meta)
+
+    const reply = (await handleRpc(call('memory_search', { query: 'quarter' }), alice, {
+      ...meta,
+      repo: 'github.com/alice/first',
+    })) as any
+    const hits = JSON.parse(reply.result.content[0].text) as { projectSlug: string }[]
+
+    expect(new Set(hits.map((hit) => hit.projectSlug)).size).toBe(2)
+  })
+
+  it('leaves another account out of an unscoped search', async () => {
+    const body = 'redeploy the previous image'
+    await handleRpc(call('memory_write', { repo: 'github.com/alice/first', path: 'deploy/rollback', body }), alice, meta)
+    await handleRpc(call('memory_write', { repo: 'github.com/bob/private', path: 'deploy/rollback', body }), bob, meta)
+
+    const reply = (await handleRpc(call('memory_search', { query: 'redeploy' }), alice, meta)) as any
+    const hits = JSON.parse(reply.result.content[0].text) as { projectSlug: string }[]
+
+    expect(hits.length).toBeGreaterThan(0)
+    expect(hits.map((hit) => hit.projectSlug)).not.toContain('private')
+  })
+
   it('round-trips a write and a read through tools/call', async () => {
     const write = (await handleRpc(
       call('memory_write', { repo: 'github.com/a/b', path: 'conventions/x', body: 'use tabs' }),

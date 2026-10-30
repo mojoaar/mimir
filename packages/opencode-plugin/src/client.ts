@@ -1,4 +1,9 @@
 import { execFileSync } from 'node:child_process'
+function missingConfig(url: string, token: string): string {
+  const missing = [url ? null : 'MIMIR_URL', token ? null : 'MIMIR_TOKEN'].filter(Boolean)
+  return `set ${missing.join(' and ')}`
+}
+
 export type CallResult = { ok: true; result: unknown } | { ok: false; error: string }
 
 export type RouteResult = { ok: true; body: string } | { ok: false; error: string }
@@ -21,7 +26,7 @@ export async function callTool(
 ): Promise<CallResult> {
   const url = (options.url ?? process.env.MIMIR_URL ?? '').replace(/\/+$/, '')
   const token = options.token ?? process.env.MIMIR_TOKEN ?? ''
-  if (!url || !token) return { ok: false, error: 'MIMIR_URL and MIMIR_TOKEN must be set' }
+  if (!url || !token) return { ok: false, error: missingConfig(url, token) }
 
   try {
     const response = await (options.fetch ?? fetch)(`${url}/mcp`, {
@@ -87,7 +92,7 @@ export async function callRoute(
 ): Promise<RouteResult> {
   const url = (options.url ?? process.env.MIMIR_URL ?? '').replace(/\/+$/, '')
   const token = options.token ?? process.env.MIMIR_TOKEN ?? ''
-  if (!url || !token) return { ok: false, error: 'MIMIR_URL and MIMIR_TOKEN must be set' }
+  if (!url || !token) return { ok: false, error: missingConfig(url, token) }
 
   try {
     const response = await (options.fetch ?? fetch)(`${url}${path}`, {

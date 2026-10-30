@@ -1,17 +1,29 @@
 version: 2
 updates:
+  # TypeScript 7 is blocked by typescript-eslint, not by this repo: lint dies
+  # with "does not support TS 7.0" before it checks anything. Remove these
+  # ignores once typescript-eslint ships support for it.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
   - package-ecosystem: npm
     directory: /packages/opencode-plugin
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
   - package-ecosystem: npm
     directory: /packages/omp-plugin
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:

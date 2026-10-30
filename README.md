@@ -10,7 +10,7 @@ Nothing is stored as an opaque embedding you cannot inspect. Every memory is a p
 
 ## Status
 
-`0.29.0` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, and searches by keyword and by meaning.
+`0.29.1` - one container that authenticates users, stores and retrieves memory over MCP and REST, learns a title and a summary with your own model, and searches by keyword and by meaning.
 It backs itself up on a schedule, meters every remote model call on an admin usage page, and ships a localised landing page and a docs site with a config per agent.
 An agent can hand over a transcript and the project's own model distils it into memories, and a `procedure` is a kind
 that leads the session digest however old it is. The digest names a `gotcha` and a `decision` so a trap does not read

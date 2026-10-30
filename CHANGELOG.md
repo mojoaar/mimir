@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.1] - 2026-10-30
+
+The dependencies move together, and the gate that proves it stays green.
+
+### Changed
+
+- React and React DOM move to 19.3.1 as a pair. They refuse to run at different versions, so a one-sided bump
+  failed every page with "Incompatible React versions".
+- ESLint 10, with the rules unchanged. It still reports no errors.
+
+### Fixed
+
+- The root layout no longer types its props with a Next global that only exists after a build, so `npm run typecheck`
+  passes on a clean checkout.
+- The integration setup starts and stops the queue once, so a fresh CI database has the `pgboss` schema the job
+  read-model tests need.
+- Dependabot holds TypeScript majors until typescript-eslint supports them, because the linter cannot parse that
+  compiler yet.
+
 ## [0.29.0] - 2026-10-30
 
 Hardening, speed and the five features, in one release: the audit's correctness fixes, the reads and imports that no longer crawl, and the memory that travels to agents.

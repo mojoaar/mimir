@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { withAudit } from '@/lib/http/audited'
+import { readJson } from '@/lib/http/limit'
 import { resolveProject } from '@/lib/projects/service'
 import { sendJob } from '@/lib/jobs/boss'
 
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     async (user) => {
       const { slug } = await params
       const project = await resolveProject(user.id, { project: slug })
-      const input = (await request.json()) as { transcript?: unknown; hint?: unknown }
+      const input = await readJson<{ transcript?: unknown; hint?: unknown }>(request, MAX_TRANSCRIPT * 4 + 4096)
 
       if (typeof input.transcript !== 'string' || input.transcript.trim() === '') {
         return Response.json(

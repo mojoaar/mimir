@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { withAudit } from '@/lib/http/audited'
+import { readJson } from '@/lib/http/limit'
 import { resolveProject } from '@/lib/projects/service'
 import { MAX_INGEST_BYTES, ingestFiles, type IngestFile } from '@/lib/memory/ingest'
 
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     const { slug } = await params
     const project = await resolveProject(user.id, { project: slug })
 
-    const input = (await request.json()) as { files?: unknown; prefix?: unknown }
+    const input = await readJson<{ files?: unknown; prefix?: unknown }>(request, MAX_INGEST_BYTES + 4096)
     if (!Array.isArray(input.files)) {
       return Response.json({ error: 'files must be an array', code: 'invalid_params' }, { status: 400 })
     }

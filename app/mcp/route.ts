@@ -3,6 +3,7 @@ import { resolveApiKey } from '@/lib/auth/apikey'
 import { clientIp } from '@/lib/http/ip'
 import { getConfig } from '@/lib/config'
 import { checkApiRateLimit } from '@/lib/auth/rate-limit'
+import { readJson } from '@/lib/http/limit'
 import { handleRpc } from '@/lib/mcp/server'
 import { PARSE_ERROR, rpcError } from '@/lib/mcp/errors'
 import { rejectOversized } from '@/lib/http/limit'
@@ -46,8 +47,14 @@ export async function POST(request: NextRequest) {
 
   let body: unknown
   try {
-    body = await request.json()
-  } catch {
+    body = await readJson(request)
+  } catch (error) {
+    if ((error as { code?: string }).code === 'body_too_large') {
+      return json(
+        { jsonrpc: '2.0', id: null, error: rpcError(-32000, 'body_too_large', 'request body is too large') },
+        413,
+      )
+    }
     return json(
       { jsonrpc: '2.0', id: null, error: rpcError(PARSE_ERROR, 'parse_error', 'body is not valid JSON') },
       400,

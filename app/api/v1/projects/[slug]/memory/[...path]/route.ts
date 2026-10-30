@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { withAudit } from '@/lib/http/audited'
+import { readJson } from '@/lib/http/limit'
 import { resolveProject } from '@/lib/projects/service'
 import { deleteMemory, readMemory, writeMemory } from '@/lib/memory/service'
 
@@ -21,13 +22,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const { slug, path } = await params
     const project = await resolveProject(user.id, { project: slug })
 
-    const input = (await request.json()) as {
+    const input = await readJson<{
       body?: unknown
       title?: unknown
       kind?: unknown
       client?: unknown
       session?: unknown
-    }
+    }>(request)
     if (typeof input.body !== 'string') {
       return Response.json({ error: 'body must be a string', code: 'invalid_params' }, { status: 400 })
     }

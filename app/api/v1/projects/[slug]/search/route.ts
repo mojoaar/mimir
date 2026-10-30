@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { withAudit } from '@/lib/http/audited'
+import { readJson } from '@/lib/http/limit'
 import { resolveProject } from '@/lib/projects/service'
 import { searchMemories } from '@/lib/memory/search'
 
@@ -10,11 +11,11 @@ export async function POST(request: NextRequest, { params }: Params) {
     const { slug } = await params
     const project = await resolveProject(user.id, { project: slug })
 
-    const input = (await request.json()) as {
+    const input = await readJson<{
       query?: unknown
       path_prefix?: unknown
       limit?: unknown
-    }
+    }>(request)
     if (typeof input.query !== 'string') {
       return Response.json({ error: 'query must be a string', code: 'invalid_params' }, { status: 400 })
     }

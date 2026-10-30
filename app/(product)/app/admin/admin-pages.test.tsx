@@ -242,7 +242,7 @@ describe('the admin screens', () => {
     // The numbers come from the prune job, so a retention change cannot leave
     // this sentence promising a window the instance no longer keeps.
     expect(html).toContain('kept for 365 days')
-    expect(html).toContain('memory reads for 30')
+    expect(html).toContain('failed sign-ins for 30')
   })
 
   it('shows backups with the retention sentence', async () => {

@@ -222,6 +222,8 @@ export const en = {
   "app.project.gone": "That project no longer exists.",
   "app.project.archiveFailed": "Could not archive the project.",
   "app.project.restoreFailed": "Could not restore the project.",
+  "app.project.restoreConflict": "That path was written again after it was deleted, so this copy stayed deleted.",
+  "app.project.restoreGone": "That memory is no longer in the bin.",
   "app.project.delete": "Delete",
   "app.project.deleteHint":
     "Deleting an archived project removes its memories, versions, grants and folder claims, and cannot be undone. Type the slug to confirm.",
@@ -303,7 +305,7 @@ export const en = {
   "app.admin.audit.title": "Audit log",
   "app.admin.audit.export": "Export CSV",
   "app.admin.audit.retention":
-    "Entries are kept for {kept} days, and memory reads for {reads}, because they are most of the log. Nothing here can be edited or deleted; use Export CSV if you need a copy.",
+    "Entries are kept for {kept} days, and memory reads and failed sign-ins for {reads}, because they are most of the log. Nothing here can be edited or deleted; use Export CSV if you need a copy.",
   "app.admin.audit.allActions": "All actions",
   "app.admin.audit.action": "Action",
   "app.admin.audit.from": "From",

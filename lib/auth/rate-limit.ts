@@ -26,9 +26,31 @@ export function checkLoginRateLimit(account: string): { allowed: boolean; retryA
   return { allowed: true, retryAfter: 0 }
 }
 
+const SWEEP_ABOVE = 1000
+
 export function recordLoginFailure(account: string): void {
   const k = key(account)
-  attempts.set(k, [...(attempts.get(k) ?? []), Date.now()])
+  const now = Date.now()
+  if (attempts.size > SWEEP_ABOVE) sweep(now)
+  attempts.set(k, [...(attempts.get(k) ?? []), now])
+}
+
+/**
+ * An attacker picks the address, so one key per guess is memory they get for
+ * free. Stale keys are dropped, and the map is emptied outright if a burst
+ * inside one window ever pushes it past the cap.
+ */
+function sweep(now: number): void {
+  for (const [k, times] of attempts) {
+    const newest = times[times.length - 1] ?? 0
+    if (now - newest >= WINDOW_MS) attempts.delete(k)
+  }
+  if (attempts.size > SWEEP_ABOVE) attempts.clear()
+}
+
+/** Test hook: the sweep is otherwise only visible in the process heap. */
+export function loginRateLimitSize(): number {
+  return attempts.size
 }
 
 export function clearLoginRateLimit(account: string): void {

@@ -222,6 +222,8 @@ export const da: Messages = {
   "app.project.gone": "Projektet findes ikke længere.",
   "app.project.archiveFailed": "Projektet kunne ikke arkiveres.",
   "app.project.restoreFailed": "Projektet kunne ikke gendannes.",
+  "app.project.restoreConflict": "Stien blev skrevet igen, efter den blev slettet, så denne kopi forbliver slettet.",
+  "app.project.restoreGone": "Den erindring er ikke længere i papirkurven.",
   "app.project.delete": "Slet",
   "app.project.deleteHint":
     "Når du sletter et arkiveret projekt, fjernes dets erindringer, versioner, tildelinger og mappeknytninger, og det kan ikke fortrydes. Skriv slug for at bekræfte.",
@@ -302,7 +304,7 @@ export const da: Messages = {
   "app.admin.audit.title": "Revisionslog",
   "app.admin.audit.export": "Eksportér CSV",
   "app.admin.audit.retention":
-    "Poster gemmes i {kept} dage, og læsninger af erindringer i {reads} dage, fordi de udgør størstedelen af loggen. Intet her kan redigeres eller slettes; brug Eksportér CSV, hvis du skal have en kopi.",
+    "Poster gemmes i {kept} dage, og læsninger af erindringer og mislykkede logins i {reads} dage, fordi de udgør størstedelen af loggen. Intet her kan redigeres eller slettes; brug Eksportér CSV, hvis du skal have en kopi.",
   "app.admin.audit.allActions": "Alle handlinger",
   "app.admin.audit.action": "Handling",
   "app.admin.audit.from": "Fra",

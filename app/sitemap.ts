@@ -16,7 +16,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   )
   const marketing = LOCALES.map((locale) => ({
     url: `${origin}${locale === DEFAULT_LOCALE ? '' : `/${locale}`}`,
-    lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: locale === DEFAULT_LOCALE ? 1 : 0.8,
     alternates: { languages },
@@ -25,7 +24,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Docs are English only, so they carry no locale alternates.
   const docs = DOCS_SLUGS.map((slug) => ({
     url: `${origin}${slug}`,
-    lastModified: new Date(),
     changeFrequency: 'monthly' as const,
     priority: slug === '/docs' ? 0.7 : 0.5,
   }))

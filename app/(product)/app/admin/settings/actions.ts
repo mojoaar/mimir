@@ -9,16 +9,9 @@ import { getProviderSecret, recordVerification } from '@/lib/providers/service'
 import { verifyProvider } from '@/lib/providers/verify'
 import { EMBEDDING_DIM, setEmbeddingConfig } from '@/lib/settings/embedding'
 import { translator, type Translate } from '@/lib/i18n/request'
-import { actionMessage } from '@/lib/i18n/errors'
+import { flagError } from '@/lib/http/action-error'
 
 export type EmbeddingFormState = { ok?: string; error?: string }
-
-const KNOWN = new Set(['invalid_params', 'not_found', 'provider_error'])
-
-function message(error: unknown, t: Translate): string {
-  const mapped = actionMessage(error, t)
-  return mapped === t('app.error.generic') ? t('app.admin.embeddings.saveFailed') : mapped
-}
 
 export async function saveEmbeddingAction(
   _prev: EmbeddingFormState,
@@ -61,7 +54,7 @@ export async function saveEmbeddingAction(
     revalidatePath('/app/admin/settings')
     return { ok: t('app.admin.embeddings.saved', { model, count: dim }) }
   } catch (error) {
-    return { error: message(error, t) }
+    return { error: flagError(error, t, t('app.admin.embeddings.saveFailed')) }
   }
 }
 

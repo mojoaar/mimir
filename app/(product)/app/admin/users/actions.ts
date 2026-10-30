@@ -23,8 +23,6 @@ import {
 
 export type ActionState = { ok?: string; error?: string; link?: string }
 
-const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
-
 async function messageOf(error: unknown, t: Translate): Promise<string> {
   // redirect() signals by throwing. Catching it turned every successful action
   // into "That did not work" after the change had already been committed.

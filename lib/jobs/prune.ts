@@ -1,8 +1,12 @@
-import { AUDIT_READ_RETENTION_DAYS, AUDIT_RETENTION_DAYS } from '../audit/retention'
+import {
+  AUDIT_FAILED_RETENTION_DAYS,
+  AUDIT_READ_RETENTION_DAYS,
+  AUDIT_RETENTION_DAYS,
+} from '../audit/retention'
 import { withAdmin } from '../db/tx'
 import { registerWorker } from './boss'
 
-export type PruneResult = { reads: number; other: number }
+export type PruneResult = { reads: number; failed: number; other: number }
 
 /**
  * Ages the audit log out: memory traffic is the bulk and keeps four weeks, the
@@ -21,17 +25,26 @@ export async function runPrune(now: Date = new Date()): Promise<PruneResult> {
           and created_at < $1::timestamptz - ($2 || ' days')::interval`,
       [now, AUDIT_READ_RETENTION_DAYS],
     )
+    const failed = await client.query(
+      `delete from audit_log
+        where action = 'auth.failed'
+          and created_at < $1::timestamptz - ($2 || ' days')::interval`,
+      [now, AUDIT_FAILED_RETENTION_DAYS],
+    )
     const other = await client.query(
       `delete from audit_log
         where action not like 'memory.read%'
+          and action <> 'auth.failed'
           and created_at < $1::timestamptz - ($2 || ' days')::interval`,
       [now, AUDIT_RETENTION_DAYS],
     )
-    return { reads: reads.rowCount ?? 0, other: other.rowCount ?? 0 }
+    return { reads: reads.rowCount ?? 0, failed: failed.rowCount ?? 0, other: other.rowCount ?? 0 }
   })
 }
 
 registerWorker('prune', async () => {
   const result = await runPrune()
-  console.log(`mimir: pruned ${result.reads} read row(s) and ${result.other} other row(s)`)
+  console.log(
+    `mimir: pruned ${result.reads} read row(s), ${result.failed} failed sign-in(s) and ${result.other} other row(s)`,
+  )
 })

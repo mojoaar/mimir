@@ -15,12 +15,7 @@ import { requestEmailChange } from '@/lib/users/email-change'
 
 export type ActionState = { ok?: string; error?: string }
 
-const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
 const PROFILE = '/app/settings/profile'
-
-async function messageOf(error: unknown): Promise<string> {
-  return actionMessage(error, await translator())
-}
 
 async function sessionId(): Promise<string> {
   const value = (await cookies()).get(SESSION_COOKIE)?.value ?? ''
@@ -49,7 +44,7 @@ export async function updateProfileAction(
     try {
       await requestEmailChange(user.id, email, currentPassword)
     } catch (error) {
-      return { error: await messageOf(error) }
+      return { error: actionMessage(error, await translator()) }
     }
     revalidatePath(PROFILE)
     return { ok: t('app.profile.emailPending') }
@@ -58,7 +53,7 @@ export async function updateProfileAction(
   try {
     await updateProfile(user.id, { name })
   } catch (error) {
-    return { error: await messageOf(error) }
+    return { error: actionMessage(error, await translator()) }
   }
 
   revalidatePath(PROFILE)
@@ -81,7 +76,7 @@ export async function changePasswordAction(
   try {
     await changePassword(user.id, current, next, await sessionId())
   } catch (error) {
-    return { error: await messageOf(error) }
+    return { error: actionMessage(error, await translator()) }
   }
 
   revalidatePath(PROFILE)
@@ -95,7 +90,7 @@ export async function revokeSessionAction(formData: FormData): Promise<void> {
   try {
     await revokeOwnSession(user.id, id)
   } catch (error) {
-    redirect(`${PROFILE}?error=${encodeURIComponent(await messageOf(error))}`)
+    redirect(`${PROFILE}?error=${encodeURIComponent(actionMessage(error, await translator()))}`)
   }
 
   revalidatePath(PROFILE)

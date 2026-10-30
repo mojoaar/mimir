@@ -231,6 +231,8 @@ export const de: Messages = {
   "app.project.archiveFailed": "Das Projekt konnte nicht archiviert werden.",
   "app.project.restoreFailed":
     "Das Projekt konnte nicht wiederhergestellt werden.",
+  "app.project.restoreConflict": "Der Pfad wurde nach dem Löschen erneut geschrieben, daher bleibt diese Kopie gelöscht.",
+  "app.project.restoreGone": "Diese Erinnerung ist nicht mehr im Papierkorb.",
   "app.project.delete": "Löschen",
   "app.project.deleteHint":
     "Beim Löschen eines archivierten Projekts werden seine Erinnerungen, Versionen, Freigaben und Ordnerzuordnungen entfernt, und das lässt sich nicht rückgängig machen. Tippe den Slug zur Bestätigung.",
@@ -313,7 +315,7 @@ export const de: Messages = {
   "app.admin.audit.title": "Protokoll",
   "app.admin.audit.export": "CSV exportieren",
   "app.admin.audit.retention":
-    "Einträge werden {kept} Tage aufbewahrt, Lesezugriffe auf Erinnerungen {reads} Tage, weil sie den Großteil des Protokolls ausmachen. Nichts hier lässt sich bearbeiten oder löschen; nutze CSV exportieren, wenn du eine Kopie brauchst.",
+    "Einträge werden {kept} Tage aufbewahrt, Lesezugriffe auf Erinnerungen und fehlgeschlagene Anmeldungen {reads} Tage, weil sie den Großteil des Protokolls ausmachen. Nichts hier lässt sich bearbeiten oder löschen; nutze CSV exportieren, wenn du eine Kopie brauchst.",
   "app.admin.audit.allActions": "Alle Aktionen",
   "app.admin.audit.action": "Aktion",
   "app.admin.audit.from": "Von",

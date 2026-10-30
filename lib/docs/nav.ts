@@ -46,4 +46,8 @@ export const DOCS_NAV: DocGroup[] = [
   },
 ]
 
-export const DOCS_SLUGS: string[] = DOCS_NAV.flatMap((group) => group.links.map((link) => link.href))
+export const DOCS_SLUGS: string[] = DOCS_NAV.flatMap((group) => [
+  // A group can be a page of its own (Agents), and the sitemap asks for pages.
+  ...(group.href ? [group.href] : []),
+  ...group.links.map((link) => link.href),
+])

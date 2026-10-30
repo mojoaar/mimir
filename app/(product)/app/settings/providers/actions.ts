@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/auth/context'
 import { audit } from '@/lib/audit'
-import { translator, type Translate } from '@/lib/i18n/request'
-import { actionMessage } from '@/lib/i18n/errors'
+import { translator } from '@/lib/i18n/request'
+import { flagError } from '@/lib/http/action-error'
 import { presetFor, type PresetId, type ProviderKind } from '@/lib/providers/presets'
 import {
   createProvider,
@@ -19,15 +19,6 @@ export type ProviderFormState = { ok?: boolean; error?: string }
 export type VerifyState = { ok?: boolean; error?: string; dim?: number }
 
 const PATH = '/app/settings/providers'
-
-// Codes the service raises on purpose. Anything else is a bug and must not be
-// shown to a user with a driver message attached.
-const KNOWN = new Set(['invalid_params', 'not_found', 'provider_error'])
-
-function messageOf(error: unknown, t: Translate, fallback: string): string {
-  const mapped = actionMessage(error, t)
-  return mapped === t('app.error.generic') ? fallback : mapped
-}
 
 export async function createProviderAction(
   _prev: ProviderFormState,
@@ -75,7 +66,7 @@ export async function createProviderAction(
       isDefault,
     })
   } catch (error) {
-    return { error: messageOf(error, t, t('app.providers.saveFailed')) }
+    return { error: flagError(error, t, t('app.providers.saveFailed')) }
   }
 
   revalidatePath(PATH)
@@ -106,7 +97,7 @@ export async function savePricesAction(
   try {
     await setProviderPrices(user.id, id, { input, output })
   } catch (error) {
-    return { error: messageOf(error, t, t('app.providers.saveFailed')) }
+    return { error: flagError(error, t, t('app.providers.saveFailed')) }
   }
 
   revalidatePath(PATH)

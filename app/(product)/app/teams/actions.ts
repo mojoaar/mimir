@@ -10,12 +10,6 @@ import { addTeamMember, createTeam, deleteTeam, leaveTeam, removeTeamMember, ren
 
 export type ActionState = { ok?: string; error?: string }
 
-const KNOWN = new Set(['forbidden', 'invalid_params', 'not_found'])
-
-async function messageOf(error: unknown): Promise<string> {
-  return actionMessage(error, await translator())
-}
-
 export async function createTeamAction(
   _prev: ActionState,
   formData: FormData,
@@ -30,7 +24,7 @@ export async function createTeamAction(
     const team = await createTeam(user.id, name)
     id = team.id
   } catch (error) {
-    return { error: await messageOf(error) }
+    return { error: actionMessage(error, await translator()) }
   }
 
   revalidatePath('/app/teams')
@@ -50,7 +44,7 @@ export async function addMemberAction(
   try {
     await addTeamMember(user.id, teamId, email)
   } catch (error) {
-    return { error: await messageOf(error) }
+    return { error: actionMessage(error, await translator()) }
   }
 
   revalidatePath(`/app/teams/${teamId}`)
@@ -66,7 +60,7 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
     await removeTeamMember(user.id, teamId, userId)
   } catch (error) {
     // The redirect sits outside the try: a thrown redirect is not a failure.
-    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(await messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(actionMessage(error, await translator()))}`)
   }
 
   revalidatePath(`/app/teams/${teamId}`)
@@ -80,7 +74,7 @@ export async function deleteTeamAction(formData: FormData): Promise<void> {
   try {
     await deleteTeam(user.id, teamId)
   } catch (error) {
-    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(await messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(actionMessage(error, await translator()))}`)
   }
 
   revalidatePath('/app/teams')
@@ -94,7 +88,7 @@ export async function leaveTeamAction(formData: FormData): Promise<void> {
   try {
     await leaveTeam(user.id, teamId)
   } catch (error) {
-    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(await messageOf(error))}`)
+    redirect(`/app/teams/${teamId}?error=${encodeURIComponent(actionMessage(error, await translator()))}`)
   }
 
   revalidatePath('/app/teams')
@@ -114,7 +108,7 @@ export async function renameTeamAction(
   try {
     await renameTeam(user.id, teamId, name)
   } catch (error) {
-    return { error: await messageOf(error) }
+    return { error: actionMessage(error, await translator()) }
   }
 
   revalidatePath(`/app/teams/${teamId}`)

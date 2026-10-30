@@ -3,22 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { audit, describeAuditFailure } from '@/lib/audit'
+import { audit } from '@/lib/audit'
 import { requireUser } from '@/lib/auth/context'
 import { deleteMemory, restoreMemory, writeMemory } from '@/lib/memory/service'
 import { restoreVersion } from '@/lib/memory/versions'
-import { translator, type Translate } from '@/lib/i18n/request'
-import { actionMessage } from '@/lib/i18n/errors'
+import { translator } from '@/lib/i18n/request'
+import { flagError } from '@/lib/http/action-error'
 
 export type ActionState = { ok?: string; error?: string }
-
-const KNOWN = new Set(['invalid_path', 'invalid_params', 'body_too_large', 'forbidden', 'not_found'])
-
-function messageOf(error: unknown, t: Translate, generic: string): string {
-  console.error('memory action failed', describeAuditFailure(error))
-  const mapped = actionMessage(error, t)
-  return mapped === t('app.error.generic') ? generic : mapped
-}
 
 function field(formData: FormData, name: string): string {
   const value = formData.get(name)
@@ -48,7 +40,7 @@ export async function saveMemoryAction(_prev: ActionState, formData: FormData): 
     return { ok: t('app.browse.saved') }
   } catch (error) {
     const t = await translator()
-    return { error: messageOf(error, t, t('app.error.generic')) }
+    return { error: flagError(error, t, t('app.error.generic')) }
   }
 }
 
@@ -83,10 +75,8 @@ export async function restoreMemoryAction(formData: FormData): Promise<void> {
   revalidatePath(`/app/projects/${slug}`)
 
   if (!result.restored) {
-    const reason =
-      result.reason === 'conflict'
-        ? 'That path was written again after it was deleted, so this copy stayed deleted.'
-        : 'That memory is no longer in the bin.'
+    const t = await translator()
+    const reason = result.reason === 'conflict' ? t('app.project.restoreConflict') : t('app.project.restoreGone')
     redirect(`/app/projects/${slug}?deleted=1&error=${encodeURIComponent(reason)}`)
   }
 

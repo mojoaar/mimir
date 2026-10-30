@@ -7,3 +7,6 @@
  */
 export const AUDIT_READ_RETENTION_DAYS = 30
 export const AUDIT_RETENTION_DAYS = 365
+
+/** A failed sign-in is noise once it is a month old, and an attacker sets the volume. */
+export const AUDIT_FAILED_RETENTION_DAYS = 30

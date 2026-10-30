@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   checkLoginRateLimit,
+  loginRateLimitSize,
   checkResetRateLimit,
   clearLoginRateLimit,
   recordLoginFailure,
@@ -83,5 +84,24 @@ describe('the reset throttle', () => {
     for (let i = 0; i < 4; i++) checkResetRateLimit(alice)
 
     expect(checkResetRateLimit('bob@example.test').allowed).toBe(true)
+  })
+})
+
+describe('the memory the throttle keeps', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('drops accounts that have been quiet for longer than the window', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-30T10:00:00Z'))
+    for (let i = 0; i < 1001; i++) recordLoginFailure(`attacker${i}@example.test`)
+
+    vi.setSystemTime(new Date('2026-10-30T10:20:00Z'))
+    recordLoginFailure('one-more@example.test')
+
+    // Every older key is outside the fifteen minute window, so the sweep has
+    // nothing to keep once it is forced to run.
+    expect(loginRateLimitSize()).toBeLessThan(10)
   })
 })

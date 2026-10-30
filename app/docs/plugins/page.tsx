@@ -62,8 +62,8 @@ export default function PluginsPage() {
   ]
 }`}</Code>
       <P>
-        It registers four tools: <code>mimir_digest</code>, <code>mimir_remember</code>, <code>mimir_search</code>{' '}
-        and <code>mimir_learn</code>. <code>tools</code> decides whether they are added. <code>auto</code>, the
+        It registers five tools: <code>mimir_digest</code>, <code>mimir_remember</code>, <code>mimir_search</code>,{' '}
+        <code>mimir_read</code> and <code>mimir_learn</code>. <code>tools</code> decides whether they are added. <code>auto</code>, the
         default, leaves them out when an MCP server already points at the same <code>/mcp</code>, <code>always</code>{' '}
         adds them anyway, and <code>never</code> adds none. The digest and the reminder arrive whatever you pick.
       </P>
@@ -86,8 +86,8 @@ export default function PluginsPage() {
       <Code language="bash">{`export MIMIR_URL=https://mimir.example.com
 export MIMIR_TOKEN=mimir_...`}</Code>
       <P>
-        It registers the same four tools: <code>mimir_digest</code>, <code>mimir_remember</code>,{' '}
-        <code>mimir_search</code> and <code>mimir_learn</code>. MCP tools stay available beside them as{' '}
+        It registers the same five tools: <code>mimir_digest</code>, <code>mimir_remember</code>,{' '}
+        <code>mimir_search</code>, <code>mimir_read</code> and <code>mimir_learn</code>. MCP tools stay available beside them as{' '}
         <code>mcp__mimir__memory_write</code> and the rest, so the plugin does not take the server away.{' '}
         <code>MIMIR_REPO</code> overrides the repository read from <code>git remote get-url origin</code>, which is
         what a folder that is not a repository needs. A new session, or <code>/reload-plugins</code>, picks it up.

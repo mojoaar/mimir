@@ -19,6 +19,11 @@ describe('the readme', () => {
     expect(readme).toContain(`${TOOL_NAMES.length} MCP tools`)
   })
 
+  it('mentions the export and reading a memory, not only writing one', () => {
+    expect(readme).toContain('mimir export')
+    expect(readme).toContain('search, read, learn')
+  })
+
   it('sends nobody to a Settings page that does not exist', () => {
     // "Admin → Settings → Re-embed everything" is a real path and stays; what
     // went away in 0.17.0 is the user's own Settings page.

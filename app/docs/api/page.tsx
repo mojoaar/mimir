@@ -205,8 +205,16 @@ curl -s -X POST "$MIMIR_URL/api/v1/projects/mimir/versions/9ac2…/restore" \\
           ['GET /api/v1/projects/:slug/versions?path=', '-', '{ versions: [{ id, path, title, kind, source, updatedAt, createdAt, bytes }] }'],
           ['POST /api/v1/projects/:slug/versions/:id/restore', '-', '{ restored: true, path }'],
           ['POST /api/v1/projects/:slug/ingest', '{ files: [{ path, body }], prefix? }', '{ written, skipped: [{ path, reason }] }'],
+          ['POST /api/v1/search', '{ query, path_prefix?, limit?, project? }', '{ results: [{ projectSlug, path, title, summary, score }] }'],
+          ['GET /api/v1/projects/:slug/export?format=json', '-', 'the project as Markdown, or JSON with format=json'],
         ]}
       />
+
+      <P>
+        The export is a readable copy of a project, not a backup: it carries no versions, no grants and no vectors, and
+        it stops at 5,000 memories or 16 MB rather than build a file nobody can open. Use the backup settings for a
+        restore.
+      </P>
 
       <H2>Errors</H2>
       <Table
@@ -218,6 +226,7 @@ curl -s -X POST "$MIMIR_URL/api/v1/projects/mimir/versions/9ac2…/restore" \\
           ['invalid_params', '400', 'A field is missing or the wrong type'],
           ['invalid_path', '400', 'A memory path is malformed after normalisation'],
           ['body_too_large', '413', 'The memory body is over 256 KB'],
+          ['too_large', '413', 'The project is too large to export in one file'],
           ['rate_limited', '429', 'The per-user rate limit; read Retry-After'],
           ['internal', '500', '{ "error": "internal error" } - the database message never leaves the server'],
         ]}

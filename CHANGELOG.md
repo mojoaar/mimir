@@ -12,6 +12,22 @@ could be compared across two models, and a digest that could be buried.
 
 ### Added
 
+- **A plugin can read a memory body.** `mimir_read` joins both plugins, so a search hit is something the agent can
+  open without an MCP server beside it.
+
+- **Search across every project, from an agent.** Leave out `project` and `repo` and `memory_search` asks everything
+  the caller can read, which is how a session answers "did I solve this somewhere else?". The same call is
+  `POST /api/v1/search`, and `mimir search` on the command line.
+
+- **Export a project as one file.** The project header, `GET /api/v1/projects/{slug}/export` and `mimir export` give
+  a Markdown file, or JSON with `?format=json`, carrying every path, title, summary, body, kind and who wrote it. A
+  project over 5,000 memories or 16 MB refuses with a clear message instead of building a file nobody can open. It is
+  a readable copy, not a backup: no versions, no grants, no vectors.
+
+- **Ask an owner for access to a repository.** A second person on the same repository no longer has to start a
+  project of their own. `/app/requests` takes a repository and a note, the owner sees it on the project's settings
+  page and grants write in one press, and the request is one row per person per project until it is answered.
+
 - **Security headers on every response.** `frame-ancestors 'none'` and `X-Frame-Options: DENY` stop the app being
   framed, `Referrer-Policy: strict-origin-when-cross-origin` keeps a token out of the next site's logs,
   `X-Content-Type-Options: nosniff` stops a browser guessing a type, and `Permissions-Policy` turns off the device

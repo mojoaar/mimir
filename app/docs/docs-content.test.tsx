@@ -244,6 +244,25 @@ describe('plugins', () => {
     expect(text).toContain('All eleven')
   })
 
+  it('names the read tool the plugins also register', async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('mimir_read')
+  })
+
+  it('says a search can cross every project', async () => {
+    const text = renderToStaticMarkup(await ToolsPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('did I solve this somewhere else')
+  })
+
+  it('documents the export route and what it is not', async () => {
+    const text = renderToStaticMarkup(await ApiPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('/export')
+    expect(text).toContain('not a backup')
+  })
+
   it('sits in the sidebar and on the index', async () => {
     const slugs = DOCS_NAV.flatMap((group) => group.links.map((link) => link.href))
     expect(slugs).toContain('/docs/plugins')

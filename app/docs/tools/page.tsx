@@ -37,7 +37,8 @@ export default async function ToolsPage() {
       <P>
         Returns hits with <code>path</code>, <code>title</code>, <code>summary</code> and a fused score. Vector and
         keyword results are combined with reciprocal rank fusion, so a score is a rank artefact, not a similarity:
-        compare order, never the number.
+        compare order, never the number. Leave out <code>project</code> and <code>repo</code> and it searches every
+        project you can read, which is how a session answers "did I solve this somewhere else?".
       </P>
 
       <H2>memory_read</H2>

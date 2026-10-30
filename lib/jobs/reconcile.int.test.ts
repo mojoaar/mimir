@@ -6,10 +6,12 @@ import { writeMemory } from '@/lib/memory/service'
 
 // Enqueueing is the whole output of the sweep, so it is what the test watches.
 const queue = vi.hoisted(() => ({ extract: vi.fn(), backfill: vi.fn() }))
-vi.mock('@/lib/jobs/enqueue', () => ({
+// A partial mock: the integration config shares a module registry between
+// files, so a replacement that omits an export breaks an unrelated suite.
+vi.mock('@/lib/jobs/enqueue', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/jobs/enqueue')>()),
   enqueueExtraction: queue.extract,
   enqueueBackfill: queue.backfill,
-  enqueueEmbeddingRebuild: vi.fn(),
 }))
 
 const { runReconcile } = await import('./reconcile')

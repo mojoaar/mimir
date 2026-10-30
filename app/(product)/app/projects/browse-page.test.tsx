@@ -34,68 +34,85 @@ vi.mock("@/lib/projects/service", () => ({
   getProject: async () => state.project,
   listProjects: async () => [],
 }));
+const entries = [
+  {
+    path: "auth/cookies",
+    title: "Cookie settings",
+    hasSummary: true,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  },
+  {
+    path: "auth/rotation",
+    title: "Rotate tokens",
+    hasSummary: false,
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+  },
+];
+
 vi.mock("@/lib/memory/service", () => ({
-  treeMemory: async () => [
-    {
-      path: "auth/cookies",
-      title: "Cookie settings",
-      hasSummary: true,
-      createdAt: new Date(0),
-      updatedAt: new Date(0),
-    },
-    {
-      path: "auth/rotation",
-      title: "Rotate tokens",
-      hasSummary: false,
-      createdAt: new Date(0),
-      updatedAt: new Date(0),
-    },
-  ],
-  readMemory: async (_userId: string, _projectId: string, path: string) =>
-    path === "auth/rotation"
+  // Imported only for the type of the deleted list.
+  listDeletedMemories: async () => [],
+}));
+
+// One call now feeds the whole page, so one mock stands in for six helpers.
+vi.mock("@/lib/memory/view", () => ({
+  readProjectView: async (input: { path?: string; versionId?: string }) => ({
+    memory:
+      input.path === "auth/rotation"
+        ? {
+            id: "m1",
+            path: "auth/rotation",
+            title: "Rotate tokens",
+            summary: null,
+            body: "Rotate every 30 days.",
+            kind: "note",
+            client: null,
+            session: null,
+            updatedAt: new Date(0),
+          }
+        : null,
+    entries,
+    deleted: [],
+    versions: [
+      {
+        id: "9",
+        path: "auth/rotation",
+        title: "Rotate tokens",
+        kind: "note",
+        source: "agent",
+        client: null,
+        session: null,
+        updatedAt: new Date(0),
+        createdAt: new Date(0),
+        bytes: 20,
+      },
+    ],
+    // A version from a different memory in the same project: the page must not
+    // diff it against the memory that is open.
+    version: input.versionId
       ? {
-          id: "m1",
-          path: "auth/rotation",
-          title: "Rotate tokens",
+          id: "9",
+          path: "other/path",
+          title: "Foreign",
           summary: null,
-          body: "Rotate every 30 days.",
+          body: "FOREIGN BODY",
           kind: "note",
+          source: "agent",
+          client: null,
+          session: null,
           updatedAt: new Date(0),
+          createdAt: new Date(0),
+          bytes: 12,
         }
       : null,
-  listDeletedMemories: async () => [],
-  readMissing: null,
+  }),
 }));
+
 vi.mock("@/lib/memory/search", () => ({ searchMemories: async () => [] }));
 vi.mock("@/lib/settings/time", () => ({
   getTimeFormat: async () => ({ timeZone: "UTC", clock: "24h" }),
-}));
-vi.mock("@/lib/memory/versions", () => ({
-  listVersions: async () => [
-    {
-      id: "9",
-      path: "auth/rotation",
-      title: "Rotate tokens",
-      kind: "note",
-      source: "agent",
-      updatedAt: new Date(0),
-      createdAt: new Date(0),
-      bytes: 20,
-    },
-  ],
-  // A version from a different memory in the same project: the page must not
-  // diff it against the memory that is open.
-  getVersion: async () => ({
-    id: "9",
-    path: "other/path",
-    title: "Foreign",
-    summary: null,
-    body: "FOREIGN BODY",
-    kind: "note",
-    source: "agent",
-    updatedAt: new Date(0),
-    createdAt: new Date(0),
-  }),
 }));
 
 import ProjectBrowser from "./[slug]/page";

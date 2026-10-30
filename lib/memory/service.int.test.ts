@@ -3,10 +3,12 @@ import { adminPool, closePools } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
 // The queue is not running in an integration test; the call is what matters.
 const queue = vi.hoisted(() => ({ extract: vi.fn(), backfill: vi.fn() }))
-vi.mock('@/lib/jobs/enqueue', () => ({
+// A partial mock: the integration config shares a module registry between
+// files, so a replacement that omits an export breaks an unrelated suite.
+vi.mock('@/lib/jobs/enqueue', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/jobs/enqueue')>()),
   enqueueExtraction: queue.extract,
   enqueueBackfill: queue.backfill,
-  enqueueEmbeddingRebuild: vi.fn(),
 }))
 
 import {

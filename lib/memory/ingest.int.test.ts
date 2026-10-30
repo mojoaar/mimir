@@ -4,9 +4,9 @@ import { Fixtures, resetFixtures, seedTwoUsersWithProjects } from '../db/seed'
 // one, exactly as the old tests did.
 const provider = { preset: 'deepseek', model: 'test-embed', baseUrl: 'http://localhost', apiKey: null }
 const state = vi.hoisted(() => ({ batch: false, calls: [] as number[] }))
-vi.mock('@/lib/providers/resolve', () => ({
+vi.mock('@/lib/providers/resolve', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/providers/resolve')>()),
   resolveEmbeddingProvider: async () => (state.batch ? provider : null),
-  resolveExtractionProvider: async () => null,
 }))
 vi.mock('@/lib/providers/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/providers/client')>()

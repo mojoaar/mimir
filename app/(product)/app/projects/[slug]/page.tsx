@@ -1,14 +1,9 @@
 import Link from "next/link";
 
 import { requireUser } from "@/lib/auth/context";
-import {
-  listDeletedMemories,
-  readMemory,
-  treeMemory,
-  type TreeOrder,
-} from "@/lib/memory/service";
+import { listDeletedMemories, type TreeOrder } from "@/lib/memory/service";
 import { searchMemories } from "@/lib/memory/search";
-import { getVersion, listVersions } from "@/lib/memory/versions";
+import { readProjectView, type ProjectView } from "@/lib/memory/view";
 import { getProject } from "@/lib/projects/service";
 
 import {
@@ -51,6 +46,14 @@ const first = (value: Param): string =>
 // Memories live as deep as an agent writes them; the tree shows them all.
 const TREE_DEPTH = 12;
 
+const MISSING_MEMORY: ProjectView = {
+  memory: null,
+  entries: [],
+  deleted: [],
+  versions: [],
+  version: null,
+};
+
 export default async function ProjectBrowser({
   params,
   searchParams,
@@ -74,21 +77,30 @@ export default async function ProjectBrowser({
   const asked = first(search.sort) as TreeOrder;
   const sort: TreeOrder = SORTS.includes(asked) ? asked : "path";
 
-  let memory = null;
-  if (requested) {
-    try {
-      memory = await readMemory(user.id, project.id, requested);
-    } catch (error) {
-      // A bad path is a miss; anything else (database down) must not look like one.
-      if ((error as { code?: string }).code !== "invalid_path") throw error;
-      return <Missing kind="memory" t={t} />;
-    }
-    if (!memory) return <Missing kind="memory" t={t} />;
-  }
+  const versionId = first(search.version);
+  const [{ memory, entries, deleted, versions, version }, { timeZone }] =
+    await Promise.all([
+      readProjectView({
+        userId: user.id,
+        projectId: project.id,
+        path: requested || undefined,
+        sort,
+        depth: TREE_DEPTH,
+        versionId: versionId || undefined,
+      }).catch((error) => {
+        // A bad path is a miss; anything else (database down) must not look
+        // like one.
+        if ((error as { code?: string }).code === "invalid_path") {
+          return MISSING_MEMORY;
+        }
+        throw error;
+      }),
+      getTimeFormat(),
+    ]);
 
-  const [entries, deleted, hits, versions, { timeZone }] = await Promise.all([
-    treeMemory(user.id, project.id, "", TREE_DEPTH, sort),
-    listDeletedMemories(user.id, project.id),
+  if (requested && !memory) return <Missing kind="memory" t={t} />;
+
+  const [hits] = await Promise.all([
     query
       ? searchMemories({
           userId: user.id,
@@ -97,10 +109,6 @@ export default async function ProjectBrowser({
           limit: 50,
         })
       : Promise.resolve([]),
-    memory
-      ? listVersions(user.id, project.id, memory.path)
-      : Promise.resolve([]),
-    getTimeFormat(),
   ]);
 
   const rows = entries.map((entry) => ({
@@ -109,14 +117,10 @@ export default async function ProjectBrowser({
     updated: stamp(entry.updatedAt, timeZone, { dateOnly: true }),
   }));
 
-  const versionId = first(search.version);
-  const found = versionId
-    ? await getVersion(user.id, project.id, versionId)
-    : null;
   // A version id can be pasted from a different memory in the same project;
   // diffing it here would show one memory's history beside another's body.
   const selectedVersion =
-    found && memory && found.path === memory.path ? found : null;
+    version && memory && version.path === memory.path ? version : null;
   const diff =
     selectedVersion && memory
       ? diffLines(selectedVersion.body, memory.body)

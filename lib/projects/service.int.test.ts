@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const enqueue = vi.hoisted(() => vi.fn())
-vi.mock('@/lib/jobs/enqueue', () => ({ enqueueExtraction: enqueue }))
+vi.mock('@/lib/jobs/enqueue', () => ({ enqueueExtraction: enqueue, enqueueBackfill: async () => {} }))
 
 import { adminPool } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects } from '@/lib/db/seed'

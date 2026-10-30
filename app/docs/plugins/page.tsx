@@ -47,8 +47,11 @@ export default function PluginsPage() {
       </P>
 
       <H2>OpenCode</H2>
-      <Code language="bash">opencode plugin add @mojoaar/opencode-mimir</Code>
-      <P>Or name it in opencode.json when you need to pass options:</P>
+      <P>
+        The plugin reads its URL from <code>options.url</code> or <code>MIMIR_URL</code>, and its token from{' '}
+        <code>options.token</code>, <code>options.tokenFile</code> or <code>MIMIR_TOKEN</code>. Without a URL it
+        loads and stays inactive, and the only clue is one line in the OpenCode log.
+      </P>
       <Code language="json">{`{
   "plugins": [
     {
@@ -61,6 +64,11 @@ export default function PluginsPage() {
     }
   ]
 }`}</Code>
+      <P>
+        The short form, <code>opencode plugin add @mojoaar/opencode-mimir</code>, carries no options, so it only
+        works when <code>MIMIR_URL</code> and <code>MIMIR_TOKEN</code> are exported in the environment OpenCode runs
+        in. Otherwise use the options block above.
+      </P>
       <P>
         It registers five tools: <code>mimir_digest</code>, <code>mimir_remember</code>, <code>mimir_search</code>,{' '}
         <code>mimir_read</code> and <code>mimir_learn</code>. <code>tools</code> decides whether they are added. <code>auto</code>, the

@@ -244,6 +244,16 @@ describe('plugins', () => {
     expect(text).toContain('All eleven')
   })
 
+  it('says the plugin needs a url before it does anything', async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+
+    // The bare `opencode plugin add` entry carries no options, and an inert
+    // plugin looks exactly like a working one until a command is missing.
+    expect(text).toContain('stays inactive')
+    expect(text).toContain('MIMIR_URL')
+    expect(text.indexOf('MIMIR_URL')).toBeLessThan(text.indexOf('opencode plugin add'))
+  })
+
   it('names the read tool the plugins also register', async () => {
     const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
 

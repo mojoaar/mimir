@@ -40,7 +40,8 @@ There is also a page per agent
 (OpenCode, Claude Code, Codex, Cursor, Gemini CLI, Pi, Oh My Pi, Antigravity, Hermes,
 Muse) with the exact config file each one reads. The OpenCode plugin is
 `@mojoaar/opencode-mimir`, which runs on the OpenCode v2 plugin API and installs straight from this
-repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); Oh My Pi installs
+repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); it needs a URL and a token, passed as
+plugin options or exported as `MIMIR_URL` and `MIMIR_TOKEN`, or it loads and stays inactive; Oh My Pi installs
 `@mojoaar/omp-mimir` with `omp plugin install @mojoaar/omp-mimir`; the Claude Code session-start hook is
 `hooks/mimir-session-start.sh`.
 

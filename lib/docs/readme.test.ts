@@ -13,6 +13,13 @@ describe('the readme', () => {
     expect(readme).toContain('the project explicitly')
   })
 
+  it('says the opencode plugin needs a url before it does anything', () => {
+    // A bare plugin entry carries no options, so the README must name the
+    // variables that make it work.
+    expect(readme).toContain('MIMIR_URL')
+    expect(readme).toContain('stays inactive')
+  })
+
   it('lists every tool the server exposes, and says how many', async () => {
     const { TOOL_NAMES } = await import('@/lib/mcp/tools')
     for (const tool of TOOL_NAMES) expect(readme, tool).toContain(`\`${tool}\``)

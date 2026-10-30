@@ -1,6 +1,6 @@
 import { withAdmin, withUser } from '@/lib/db/tx'
 import { requireProjectRole } from '@/lib/projects/access'
-import { enqueueExtraction } from '@/lib/jobs/enqueue'
+import { enqueueBackfill, enqueueExtraction } from '@/lib/jobs/enqueue'
 import { embedText } from './embeddings'
 import { archiveVersion } from './versions'
 import { BodyTooLarge, InvalidInput, MAX_BODY_BYTES, normalisePath, titleFromBody } from './path'
@@ -147,6 +147,9 @@ export async function writeMemory(input: WriteInput): Promise<WriteResult> {
   })
 
   await enqueueExtraction(input.projectId)
+  // The provider was down or unconfigured, so this row has no vector at all.
+  // Search will never find it until something backfills it.
+  if (!embedded) await enqueueBackfill(input.projectId)
   return result
 }
 

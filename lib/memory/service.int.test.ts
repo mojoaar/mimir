@@ -1,6 +1,14 @@
-import { afterAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { adminPool, closePools } from '@/lib/db/pool'
 import { resetFixtures, seedGrant, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
+// The queue is not running in an integration test; the call is what matters.
+const queue = vi.hoisted(() => ({ extract: vi.fn(), backfill: vi.fn() }))
+vi.mock('@/lib/jobs/enqueue', () => ({
+  enqueueExtraction: queue.extract,
+  enqueueBackfill: queue.backfill,
+  enqueueEmbeddingRebuild: vi.fn(),
+}))
+
 import {
   deleteMemory,
   listDeletedMemories,
@@ -18,6 +26,8 @@ beforeEach(async () => {
   await resetFixtures()
   f = await seedTwoUsersWithProjects()
   projectId = f.aliceProjectId
+  queue.extract.mockClear()
+  queue.backfill.mockClear()
 })
 
 afterAll(async () => {
@@ -40,6 +50,13 @@ describe('memory service', () => {
     expect(rows[0]?.embedding).toBeNull()
     expect(rows[0]?.embedded_at).toBeNull()
     expect(rows[0]?.embedding_model).toBeNull()
+  })
+
+  it('queues a backfill when the vector could not be made', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'a/unvectored', body: 'no provider here' })
+
+    // Nobody is going to press a button for this one, so the write has to ask.
+    expect(queue.backfill).toHaveBeenCalledWith(projectId)
   })
 
   it('remembers which client and session wrote a memory', async () => {

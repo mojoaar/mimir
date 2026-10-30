@@ -29,3 +29,16 @@ export async function enqueueEmbeddingRebuild(changed: boolean): Promise<boolean
   const id = changed ? await sendJob('reembed', { confirm: true }) : await sendJob('backfill', {})
   return id !== null
 }
+
+/**
+ * A vector that could not be made at write time is the only copy of its gap:
+ * nothing sweeps for it later, so the write asks for a backfill itself.
+ */
+export async function enqueueBackfill(projectId: string): Promise<void> {
+  try {
+    const { sendJob } = await import('./boss')
+    await sendJob('backfill', { projectId }, { singletonKey: `backfill:${projectId}` })
+  } catch (error) {
+    console.error(`could not queue backfill (${(error as Error).message})`)
+  }
+}

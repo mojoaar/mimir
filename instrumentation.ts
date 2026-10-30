@@ -24,6 +24,7 @@ export async function register() {
   await import('./lib/jobs/backup')
   await import('./lib/jobs/prune')
   await import('./lib/jobs/purge')
+  await import('./lib/jobs/reconcile')
   const { startJobs } = await import('./lib/jobs/boss')
   await startJobs()
 

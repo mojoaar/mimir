@@ -1,7 +1,15 @@
 import { PgBoss } from 'pg-boss'
 import { getConfig } from '../config'
 
-export type JobName = 'extract' | 'learn' | 'backfill' | 'reembed' | 'backup' | 'prune' | 'purge'
+export type JobName =
+  | 'extract'
+  | 'learn'
+  | 'backfill'
+  | 'reembed'
+  | 'reconcile'
+  | 'backup'
+  | 'prune'
+  | 'purge'
 
 // `short` keeps one queued job per singletonKey, which is what makes the
 // extract debounce work: the tenth write in a minute reuses the first job.
@@ -10,6 +18,7 @@ const POLICIES: Record<JobName, 'short' | 'standard'> = {
   learn: 'standard',
   backfill: 'standard',
   reembed: 'standard',
+  reconcile: 'standard',
   backup: 'standard',
   prune: 'standard',
   purge: 'standard',
@@ -87,6 +96,8 @@ export async function startJobs(): Promise<void> {
     }
     await instance.schedule('prune', '15 3 * * *', {})
     await instance.schedule('purge', '20 4 * * *', {})
+    // After purge, so the sweep does not race a soft delete.
+    await instance.schedule('reconcile', '40 4 * * *', {})
     process.once('SIGTERM', () => void stopJobs())
     process.once('SIGINT', () => void stopJobs())
   })()

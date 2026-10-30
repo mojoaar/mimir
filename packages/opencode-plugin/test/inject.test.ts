@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
     | { ok: false; error: string },
   reject: false,
   repo: 'git@github.com:alice/notes.git' as string | null,
+  history: [] as unknown[],
+  historyFails: false,
 }))
 
 vi.mock('../src/client.js', () => ({
@@ -60,6 +62,10 @@ function context(overrides: Record<string, unknown> = {}) {
         return registration(`session:${name}`)
       },
       synthetic: async ({ text }: { text: string }) => void notices.push(text),
+      context: async () => {
+        if (mocks.historyFails) throw new Error('no history')
+        return mocks.history
+      },
     },
     command: {
       transform: async (callback: (editor: { add: (command: AddedCommand) => void }) => void) => {
@@ -564,27 +570,39 @@ describe('the transcript it hands over', () => {
 })
 
 describe('the command to hand it over now', () => {
-  // Two of these clear the 500 character floor with room to spare.
-  const long = (label: string) => ({ role: 'user', content: `${label} `.repeat(80) })
+  // Stored messages, shaped like session.context records.
+  const stored = (label: string) => ({ type: 'user', text: `${label} `.repeat(80) })
+  const spoken = (label: string) => ({
+    type: 'assistant',
+    content: [{ type: 'text', text: `${label} `.repeat(80) }],
+  })
 
-  it('sends the session the command was typed in', async () => {
-    const { nudge, command, notices } = await setup()
+  it('reads a resumed session before any turn has run', async () => {
+    const { command, notices } = await setup()
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { queued: true } }
+    mocks.history = [stored('one'), spoken('two')]
 
-    await nudge({ sessionID: 'c1', system: [], messages: [long('one'), long('two')] })
+    // No nudge hook call here: this is the reported case, the command is the
+    // first action after a restart and no model turn has run yet.
     await command.execute({ sessionID: 'c1' })
 
     const learn = mocks.calls.filter((call) => call.name === 'memory_learn')
     expect(learn).toHaveLength(1)
-    expect(String(learn[0]?.args.transcript)).toContain('two')
+    expect(String(learn[0]?.args.transcript)).toContain('user: one')
+    expect(String(learn[0]?.args.transcript)).toContain('assistant: two')
     expect(learn[0]?.args.repo).toBe('git@github.com:alice/notes.git')
     expect(notices[0]).toContain('Mimir is writing')
   })
 
-  it('says so when there is nothing worth sending', async () => {
+  it('sends nothing when the session has no user or assistant text', async () => {
     const { command, notices } = await setup()
     mocks.calls.length = 0
+    mocks.history = [
+      { type: 'system', text: 'instructions' },
+      { type: 'synthetic', text: 'nothing worth handing over' },
+      { type: 'idle' },
+    ]
 
     await command.execute({ sessionID: 'c2' })
 
@@ -592,25 +610,38 @@ describe('the command to hand it over now', () => {
     expect(notices[0]).toContain('Nothing worth handing over')
   })
 
-  it('reports an unreachable Mimir instead of throwing', async () => {
-    const { nudge, command, notices } = await setup()
+  it('does not call an unreadable session empty', async () => {
+    const { command, notices } = await setup()
     mocks.calls.length = 0
+    mocks.history = [stored('one')]
+    mocks.historyFails = true
+
+    await command.execute({ sessionID: 'c3' })
+    mocks.historyFails = false
+
+    expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(0)
+    expect(notices[0]).toContain('could not read this session')
+  })
+
+  it('reports an unreachable Mimir instead of throwing', async () => {
+    const { command, notices } = await setup()
+    mocks.calls.length = 0
+    mocks.history = [stored('alpha'), stored('beta')]
     mocks.reject = true
 
-    await nudge({ sessionID: 'c3', system: [], messages: [long('alpha'), long('beta')] })
-    await expect(command.execute({ sessionID: 'c3' })).resolves.toBeUndefined()
+    await expect(command.execute({ sessionID: 'c4' })).resolves.toBeUndefined()
 
     mocks.reject = false
     expect(notices[0]).toContain('unreachable')
   })
 
   it('names the session the command came from', async () => {
-    const { nudge, command } = await setup()
+    const { command } = await setup()
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { queued: true } }
     mocks.reject = false
+    mocks.history = [stored('alpha'), stored('beta')]
 
-    await nudge({ sessionID: 'c5', system: [], messages: [long('alpha'), long('beta')] })
     await command.execute({ sessionID: 'c5' })
 
     expect(mocks.calls[0]?.args.client).toBe('opencode')
@@ -618,14 +649,14 @@ describe('the command to hand it over now', () => {
   })
 
   it('does not send the same session twice', async () => {
-    const { nudge, command } = await setup()
+    const { command } = await setup()
     mocks.calls.length = 0
     mocks.result = { ok: true, result: { queued: true } }
     mocks.reject = false
+    mocks.history = [stored('xray'), stored('yankee')]
 
-    await nudge({ sessionID: 'c4', system: [], messages: [long('xray'), long('yankee')] })
-    await command.execute({ sessionID: 'c4' })
-    await command.execute({ sessionID: 'c4' })
+    await command.execute({ sessionID: 'c6' })
+    await command.execute({ sessionID: 'c6' })
 
     expect(mocks.calls.filter((call) => call.name === 'memory_learn')).toHaveLength(1)
   })

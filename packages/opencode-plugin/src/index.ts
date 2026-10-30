@@ -26,6 +26,8 @@ const LEARN_HINT =
 const LEARN_NOW_HINT =
   'The user asked for this session to be kept now. Keep what was decided, what broke and any convention, and skip what Mimir already has.'
 const NOTHING_TO_SEND = 'Nothing worth handing over yet.'
+const ALREADY = 'This session was already handed over.'
+const UNREADABLE = 'Mimir could not read this session, so nothing was sent.'
 const SENT = 'Mimir is writing what this session settled.'
 const QUEUE_OFF = 'Mimir took it, but its queue is not running.'
 const UNREACHABLE = 'Mimir is unreachable, so nothing was sent.'
@@ -136,14 +138,9 @@ export default Plugin.define({
     // The reminder rides the message count. A shrink means a compaction just
     // happened, which is the worst moment to lose a detail, so it nudges early.
     const counts = new Map<string, { turns: number; nudgedAt: number }>()
-    // The command below is handed no messages, only a session id, so the hook
-    // keeps the newest transcript for it. One string per live session, at most
-    // 32 KB, dropped once it has been sent.
-    const snapshots = new Map<string, string>()
     const nudge = await ctx.session.hook('context', async (event) => {
       const state = counts.get(event.sessionID) ?? { turns: 0, nudgedAt: 0 }
       const turns = event.messages?.length ?? 0
-      if (turns > state.turns) snapshots.set(event.sessionID, transcript(event.messages ?? []))
       const due = turns < state.turns || turns - state.nudgedAt >= NUDGE_EVERY
       counts.set(event.sessionID, { turns, nudgedAt: due ? turns : state.nudgedAt })
 
@@ -180,32 +177,49 @@ export default Plugin.define({
     })
 
     // A manual handover, for the sessions that end before they ever compact.
+    // One process hands a session over once, so a second command does not
+    // queue the same transcript again.
+    const sent = new Set<string>()
     const command = await ctx.command.transform((editor) => {
       editor.add({
         name: 'mimir-learn',
         description: 'Hand this session to Mimir now.',
         execute: async ({ sessionID }) => {
-          const text = snapshots.get(sessionID) ?? ''
           let notice = NOTHING_TO_SEND
-          if (text.length >= MIN_TRANSCRIPT) {
-            const sent = await callTool(
-              'memory_learn',
-              {
-                repo: repo ?? undefined,
-                transcript: text,
-                hint: LEARN_NOW_HINT,
-                client: 'opencode',
-                session: sessionID,
-              },
-              { ...config, timeoutMs: 4000 },
-            ).catch(() => null)
-            const queued = sent?.ok ? (sent.result as { queued?: boolean }).queued : undefined
-            if (!sent?.ok) notice = UNREACHABLE
-            else if (queued === false) notice = QUEUE_OFF
-            else {
-              notice = SENT
-              // Kept on failure above, so a retry has something to send.
-              snapshots.delete(sessionID)
+          if (sent.has(sessionID)) {
+            notice = ALREADY
+          } else {
+            let history: readonly unknown[] | null = null
+            try {
+              history = await ctx.session.context({ sessionID })
+            } catch {
+              history = null
+            }
+
+            if (history === null) {
+              notice = UNREADABLE
+            } else {
+              const text = sessionTranscript(history)
+              if (text.length >= MIN_TRANSCRIPT) {
+                const result = await callTool(
+                  'memory_learn',
+                  {
+                    repo: repo ?? undefined,
+                    transcript: text,
+                    hint: LEARN_NOW_HINT,
+                    client: 'opencode',
+                    session: sessionID,
+                  },
+                  { ...config, timeoutMs: 4000 },
+                ).catch(() => null)
+                const queued = result?.ok ? (result.result as { queued?: boolean }).queued : undefined
+                if (!result?.ok) notice = UNREACHABLE
+                else if (queued === false) notice = QUEUE_OFF
+                else {
+                  notice = SENT
+                  sent.add(sessionID)
+                }
+              }
             }
           }
           await ctx.session.synthetic({ sessionID, text: notice }).catch(() => null)

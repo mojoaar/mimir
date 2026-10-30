@@ -22,7 +22,7 @@ vi.mock('../src/client.js', () => ({
   },
 }))
 
-import plugin from '../src/index.js'
+import plugin, { sessionTranscript } from '../src/index.js'
 
 type ContextEvent = {
   sessionID: string
@@ -657,5 +657,39 @@ describe('an install with no url', () => {
       if (before.token === undefined) delete process.env.MIMIR_TOKEN
       else process.env.MIMIR_TOKEN = before.token
     }
+  })
+})
+
+describe('a stored session transcript', () => {
+  it('reads user and assistant text and skips the rest', () => {
+    const text = sessionTranscript([
+      { type: 'user', text: 'we settled on short-lived tokens' },
+      {
+        type: 'assistant',
+        content: [
+          { type: 'reasoning', text: 'hmm' },
+          { type: 'text', text: 'recorded' },
+          { type: 'tool', name: 'bash' },
+        ],
+      },
+      { type: 'system', text: 'instructions' },
+      { type: 'synthetic', text: 'nothing worth handing over' },
+      { type: 'idle' },
+    ])
+
+    expect(text).toBe('user: we settled on short-lived tokens\n\nassistant: recorded')
+  })
+
+  it('keeps the tail of a long session under the cap', () => {
+    const messages = Array.from({ length: 40 }, (_, index) => ({
+      type: 'user',
+      text: `turn ${index} ${'x'.repeat(2_000)}`,
+    }))
+
+    const text = sessionTranscript(messages)
+
+    expect(text).toHaveLength(32_000)
+    expect(text).toContain('turn 39')
+    expect(text).not.toContain('turn 0 ')
   })
 })

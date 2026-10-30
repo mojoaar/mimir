@@ -57,6 +57,38 @@ function textOf(value: unknown): string {
 }
 
 /**
+ * The session API hands back message records, not the provider shapes the
+ * context hook uses: a user turn keeps its words in `text`, an assistant turn
+ * in `content`. System and synthetic records are instructions, not conversation.
+ */
+export function sessionTranscript(messages: readonly unknown[]): string {
+  const lines: string[] = []
+  for (const message of messages) {
+    if (typeof message !== 'object' || message === null) continue
+    const record = message as { type?: unknown; text?: unknown; content?: unknown }
+    if (record.type === 'user') {
+      const body = textOf(record.text)
+      if (body) lines.push(`user: ${body}`)
+    } else if (record.type === 'assistant') {
+      const body = assistantText(record.content)
+      if (body) lines.push(`assistant: ${body}`)
+    }
+  }
+  return lines.join('\n\n').slice(-MAX_TRANSCRIPT)
+}
+
+/** Reasoning and tool parts are not conversation, and they are the bulk of it. */
+function assistantText(content: unknown): string {
+  if (!Array.isArray(content)) return ''
+  return content
+    .filter((part) => (part as { type?: unknown })?.type === 'text')
+    .map((part) => (part as { text?: unknown }).text)
+    .filter((part): part is string => typeof part === 'string')
+    .join('\n')
+    .trim()
+}
+
+/**
  * One injection point and two tools. The hook is what puts the project's
  * digest in front of the model before the first turn, so a session starts
  * informed without spending a tool call. Everything here is fail-soft: a slow

@@ -61,7 +61,20 @@ export default async function ToolsPage() {
       <H2>memory_tree</H2>
       <P>
         Arguments: <code>path</code> (a prefix, default the root) and <code>depth</code> (default 3). Directories are
-        virtual: they are derived from path prefixes, so there is nothing to create and nothing empty to clean up.
+        virtual: they are derived from path prefixes, so there is nothing to create and nothing empty to clean up. A
+        listing stops at 500 paths, so a larger project is read through a folder prefix or a search.
+      </P>
+
+      <H2>memory_versions</H2>
+      <P>
+        Arguments: <code>path</code>. Returns the versions of that one memory, newest first, with the size, the date
+        and the client that wrote each. Use it before overwriting a path you did not write.
+      </P>
+
+      <H2>memory_restore</H2>
+      <P>
+        Argument: <code>versionId</code>, from <code>memory_versions</code>. Puts that body back as the current one.
+        The body it replaces is archived first, so a restore is itself undoable.
       </P>
 
       <H2>memory_delete</H2>

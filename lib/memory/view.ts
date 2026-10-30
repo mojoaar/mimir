@@ -6,7 +6,7 @@ import type { TreeEntry, TreeOrder } from './types'
 import type { MemoryRow } from './types'
 import type { MemoryVersion, VersionSummary } from './versions'
 import { VERSION_LIMIT } from './versions'
-import type { DeletedMemory } from './service'
+import { TREE_LIMIT, type DeletedMemory } from './service'
 
 export type ProjectViewInput = {
   userId: string
@@ -107,7 +107,8 @@ export async function readProjectView(input: ProjectViewInput): Promise<ProjectV
             and deleted_at is null
             and ($2 = '' or path = $2 or starts_with(path, $2 || '/'))
             and array_length(string_to_array(path, '/'), 1) <= $3
-          order by ${TREE_ORDER[input.sort]}`,
+          order by ${TREE_ORDER[input.sort]}
+          limit ${TREE_LIMIT}`,
         [projectId, prefix, levels],
       )
       .then(({ rows }) =>

@@ -37,7 +37,7 @@ export default function AgentsIndex() {
       <H2>What you get</H2>
       <Ul>
         <li>
-          Any MCP client: the nine tools, and the digest when the agent asks for it. The server sends a short
+          Any MCP client: the eleven tools, and the digest when the agent asks for it. The server sends a short
           protocol on <code>initialize</code> - digest first, search before re-deriving, one memory per outcome.
           Clients differ in whether they show that to the model; if yours does not, paste the block from its page into
           the file it reads.

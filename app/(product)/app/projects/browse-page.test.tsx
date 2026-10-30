@@ -52,8 +52,9 @@ const entries = [
 ];
 
 vi.mock("@/lib/memory/service", () => ({
-  // Imported only for the type of the deleted list.
+  // Imported only for the type of the deleted list, and for the tree cap.
   listDeletedMemories: async () => [],
+  TREE_LIMIT: 500,
 }));
 
 // One call now feeds the whole page, so one mock stands in for six helpers.

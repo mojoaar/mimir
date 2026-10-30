@@ -192,6 +192,9 @@ export async function restoreVersion(
     title: version.title,
     kind: version.kind,
     source: 'restore',
+    // The restoring caller may be a script from another machine, so the honest
+    // answer is that Mimir itself wrote this row.
+    client: 'mimir',
   })
 
   return { restored: true, path: version.path }

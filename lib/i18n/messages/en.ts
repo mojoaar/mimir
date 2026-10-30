@@ -191,6 +191,7 @@ export const en = {
   "app.tree.byPath": "Path",
   "app.tree.byAdded": "Added",
   "app.tree.byUpdated": "Updated",
+  "app.tree.capped": "Showing the first {limit} paths. Narrow with a folder or a search.",
   "app.editor.body": "Memory body",
   "app.editor.save": "Save",
   "app.editor.saving": "Saving…",

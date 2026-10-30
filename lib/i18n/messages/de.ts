@@ -196,6 +196,7 @@ export const de: Messages = {
   "app.tree.byPath": "Pfad",
   "app.tree.byAdded": "Hinzugefügt",
   "app.tree.byUpdated": "Aktualisiert",
+  "app.tree.capped": "Die ersten {limit} Pfade werden angezeigt. Grenze mit einem Ordner oder einer Suche ein.",
   "app.editor.body": "Inhalt der Erinnerung",
   "app.editor.save": "Speichern",
   "app.editor.saving": "Wird gespeichert…",

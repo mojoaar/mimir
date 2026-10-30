@@ -126,7 +126,7 @@ memory_write   remember that deploys run from main`}</Code>
             <Link className="text-[var(--accent)] underline" href="/docs/tools">
               Tool reference
             </Link>{' '}
-            - all nine tools, their arguments and what each one returns.
+            - all eleven tools, their arguments and what each one returns.
           </li>
           <li>
             <Link className="text-[var(--accent)] underline" href="/docs/changelog">

@@ -241,7 +241,7 @@ describe('plugins', () => {
     expect(text).toContain('injected once per session')
     expect(text).toContain('opencode plugin add @mojoaar/opencode-mimir')
     expect(text).toContain('omp plugin install @mojoaar/omp-mimir')
-    expect(text).toContain('All nine')
+    expect(text).toContain('All eleven')
   })
 
   it('sits in the sidebar and on the index', async () => {

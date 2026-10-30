@@ -193,6 +193,10 @@ export async function readMemory(
  * folder table and no empty directory to keep in sync.
  */
 /** A named ordering, never a column from the request. */
+// A project of a hundred thousand paths is a project whose owner needs a
+// folder or a search, not one two-megabyte page.
+export const TREE_LIMIT = 500
+
 const TREE_ORDER: Record<TreeOrder, string> = {
   path: 'path',
   added: 'created_at desc, path',
@@ -205,6 +209,7 @@ export async function treeMemory(
   pathPrefix: string,
   depth: number,
   order: TreeOrder = 'path',
+  limit = TREE_LIMIT,
 ): Promise<TreeEntry[]> {
   const prefix = pathPrefix.trim() === '' ? '' : normalisePath(pathPrefix)
   const levels = Number.isFinite(depth) ? Math.max(1, Math.trunc(depth)) : 1
@@ -226,8 +231,9 @@ export async function treeMemory(
           and deleted_at is null
           and ($2 = '' or path = $2 or starts_with(path, $2 || '/'))
           and array_length(string_to_array(path, '/'), 1) <= $3
-        order by ${TREE_ORDER[order]}`,
-      [projectId, prefix, prefixDepth + levels],
+        order by ${TREE_ORDER[order]}
+        limit $4`,
+      [projectId, prefix, prefixDepth + levels, limit],
     )
     return rows.map((row) => ({
       path: row.path,

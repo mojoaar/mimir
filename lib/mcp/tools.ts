@@ -9,6 +9,7 @@ import {
   deleteMemory,
 } from '@/lib/memory/service'
 import { searchMemories } from '@/lib/memory/search'
+import { listVersions, restoreVersion } from '@/lib/memory/versions'
 import { buildDigest } from '@/lib/memory/digest'
 import { ingestFiles, type IngestFile } from '@/lib/memory/ingest'
 import { learningReadiness } from '@/lib/projects/learning'
@@ -282,6 +283,48 @@ const TOOLS: ToolDef[] = [
         session: str(args, 'session')?.slice(0, 128) ?? null,
       })
       return { queued: id !== null, projectCreated: p.created }
+    },
+  },
+  {
+    name: 'memory_versions',
+    action: 'memory.read',
+    description:
+      'List the versions of one memory, newest first, with the size and who wrote each. Use it before overwriting a path you did not write.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project: PROJECT_ARG,
+        repo: REPO_ARG,
+        path: { type: 'string', description: 'The memory path' },
+      },
+      required: ['path'],
+    },
+    handler: async (args, ctx) => {
+      const path = str(args, 'path')
+      if (!path) throw invalidParams('path is required')
+      const p = await projectFor(args, ctx, false)
+      return listVersions(ctx.user.id, p.id, path)
+    },
+  },
+  {
+    name: 'memory_restore',
+    action: 'memory.write',
+    description:
+      'Put a version back. The current body is archived first, so restoring is itself undoable.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project: PROJECT_ARG,
+        repo: REPO_ARG,
+        versionId: { type: 'string', description: 'From memory_versions' },
+      },
+      required: ['versionId'],
+    },
+    handler: async (args, ctx) => {
+      const versionId = str(args, 'versionId')
+      if (!versionId) throw invalidParams('versionId is required')
+      const p = await projectFor(args, ctx, false)
+      return restoreVersion(ctx.user.id, p.id, versionId)
     },
   },
   {

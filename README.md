@@ -93,7 +93,7 @@ Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASS
 
 ## Tools
 
-9 MCP tools, mirrored one-to-one on `/api/v1`:
+11 MCP tools, mirrored one-to-one on `/api/v1`:
 
 | Tool | Purpose |
 |---|---|
@@ -104,6 +104,8 @@ Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASS
 | `memory_write` | Upsert one path |
 | `memory_ingest` | Bulk import: up to 100 files (2 MB) into one path prefix |
 | `memory_learn` | Hand over a transcript; the project model writes up to three memories |
+| `memory_versions` | The versions of one path, newest first, with size and writer |
+| `memory_restore` | Put a version back; the current body is archived first |
 | `memory_delete` | Soft delete, recoverable for 30 days |
 | `project_list` | Projects the caller can reach |
 

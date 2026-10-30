@@ -294,6 +294,20 @@ describe('treeMemory path prefixes', () => {
   })
 })
 
+describe('treeMemory limit', () => {
+  it('stops at the limit instead of sending every path', async () => {
+    await adminPool().query(
+      `insert into memories (project_id, path, title, body, kind, updated_at, created_at)
+       select $1, 'bulk/' || n, 'Bulk ' || n, 'body ' || n, 'note', now(), now()
+         from generate_series(1, 501) as n`,
+      [projectId],
+    )
+
+    expect(await treeMemory(f.alice, projectId, '', 2)).toHaveLength(500)
+    expect(await treeMemory(f.alice, projectId, '', 2, 'path', 10)).toHaveLength(10)
+  })
+})
+
 describe('treeMemory order', () => {
   it('orders by when a memory was first written, and by when it changed', async () => {
     await writeMemory({ userId: f.alice, projectId, path: 'alpha/old', body: 'a' })

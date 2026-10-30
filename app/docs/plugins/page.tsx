@@ -31,7 +31,7 @@ export default function PluginsPage() {
           ['Install', 'One entry in the client config', 'One package per harness'],
           ['Digest at the first turn', 'No, the agent has to call memory_digest', 'Yes, injected once per session'],
           ['Reminder before compaction', 'No', 'Yes, at twenty turns or after a compaction'],
-          ['Tools', 'All nine, including tree, read, ingest and delete', 'Four: digest, remember, search and learn'],
+          ['Tools', 'All eleven, including tree, read, versions, ingest and delete', 'Four: digest, remember, search and learn'],
           ['Works in', 'Any MCP client', 'OpenCode and Oh My Pi'],
           ['When Mimir is down', 'The tool call fails', 'Silent, and the session carries on'],
         ]}

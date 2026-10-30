@@ -54,7 +54,7 @@ describe('mcp server', () => {
     expect(reply.error.data.code).toBe('invalid_params')
   })
 
-  it('answers initialize and lists eight tools', async () => {
+  it('answers initialize and lists eleven tools', async () => {
     const init = (await handleRpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }, alice, meta)) as any
     expect(init.result.serverInfo.name).toBe('mimir')
     expect(init.result.instructions).toContain('memory_digest')
@@ -69,9 +69,43 @@ describe('mcp server', () => {
       'memory_write',
       'memory_ingest',
       'memory_learn',
+      'memory_versions',
+      'memory_restore',
       'memory_delete',
       'project_list',
     ])
+  })
+
+  it('lists the versions of a path, and puts one back', async () => {
+    const path = 'deploy/rollback'
+    await handleRpc(call('memory_write', { repo: 'github.com/a/b', path, body: 'the first body' }), alice, meta)
+    await handleRpc(call('memory_write', { repo: 'github.com/a/b', path, body: 'the second body' }), alice, meta)
+
+    const listed = (await handleRpc(
+      call('memory_versions', { repo: 'github.com/a/b', path }),
+      alice,
+      meta,
+    )) as any
+    expect(listed.error).toBeUndefined()
+    const versions = JSON.parse(listed.result.content[0].text)
+    expect(versions[0].bytes).toBeGreaterThan(0)
+
+    const restored = (await handleRpc(
+      call('memory_restore', { repo: 'github.com/a/b', versionId: versions[0].id }),
+      alice,
+      meta,
+    )) as any
+    expect(JSON.parse(restored.result.content[0].text)).toEqual({
+      restored: true,
+      path,
+    })
+
+    const read = (await handleRpc(
+      call('memory_read', { repo: 'github.com/a/b', path }),
+      alice,
+      meta,
+    )) as any
+    expect(JSON.parse(read.result.content[0].text).body).toBe('the first body')
   })
 
   it('round-trips a write and a read through tools/call', async () => {

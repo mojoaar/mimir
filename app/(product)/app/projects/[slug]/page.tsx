@@ -14,6 +14,7 @@ import {
 import { MemoryEditor } from "./editor";
 import { diffLines, MemoryHistory } from "./history";
 import { MemoryTree } from "./tree";
+import { TREE_LIMIT } from "@/lib/memory/service";
 import { RefreshButton } from "../../refresh";
 import { Missing } from "../missing";
 import { translator, type Translate } from "@/lib/i18n/request";
@@ -201,6 +202,11 @@ export default async function ProjectBrowser({
               byUpdated: t("app.tree.byUpdated"),
             }}
           />
+          {entries.length >= TREE_LIMIT ? (
+            <p className="mt-2 text-xs text-[var(--text-muted)]">
+              {t("app.tree.capped", { limit: TREE_LIMIT })}
+            </p>
+          ) : null}
         </aside>
 
         <section className="min-w-0 flex-1">

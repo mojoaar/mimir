@@ -191,6 +191,7 @@ export const da: Messages = {
   "app.tree.byPath": "Sti",
   "app.tree.byAdded": "Tilføjet",
   "app.tree.byUpdated": "Opdateret",
+  "app.tree.capped": "Viser de første {limit} stier. Indsnævr med en mappe eller en søgning.",
   "app.editor.body": "Mindets indhold",
   "app.editor.save": "Gem",
   "app.editor.saving": "Gemmer…",

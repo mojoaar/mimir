@@ -13,19 +13,10 @@ describe('the readme', () => {
     expect(readme).toContain('the project explicitly')
   })
 
-  it('documents every tool the server exposes', () => {
-    for (const tool of [
-      'memory_digest',
-      'memory_search',
-      'memory_tree',
-      'memory_read',
-      'memory_write',
-      'memory_ingest',
-      'memory_delete',
-      'project_list',
-    ]) {
-      expect(readme, tool).toContain(`\`${tool}\``)
-    }
+  it('lists every tool the server exposes, and says how many', async () => {
+    const { TOOL_NAMES } = await import('@/lib/mcp/tools')
+    for (const tool of TOOL_NAMES) expect(readme, tool).toContain(`\`${tool}\``)
+    expect(readme).toContain(`${TOOL_NAMES.length} MCP tools`)
   })
 
   it('sends nobody to a Settings page that does not exist', () => {

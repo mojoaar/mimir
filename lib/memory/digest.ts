@@ -30,6 +30,13 @@ const MAX_ROWS = 200
 const LABELLED = new Set(['gotcha', 'decision'])
 
 /**
+ * An empty digest is the only moment a client learns the project is new, so it
+ * is spent on the one instruction that prevents rediscovering prior art.
+ */
+export const EMPTY_HINT =
+  'This project has no memories yet. Call memory_search without a project to search every project you can read before re-deriving anything.'
+
+/**
  * Session-start injection. No query, no embedding, one indexed read: an agent
  * opening a session has no search terms yet, so selection is deterministic -
  * most recently updated first, L0 for everything, L1 for the newest five.
@@ -65,7 +72,7 @@ export async function buildDigest(input: DigestInput): Promise<Digest> {
   })
 
   if (rows.length === 0 && procedures.length === 0) {
-    return { text: '', memoryCount: 0, truncated: false }
+    return { text: EMPTY_HINT, memoryCount: 0, truncated: false }
   }
 
   const recent = new Set(rows.slice(0, RECENT_SUMMARIES).map((row) => row.path))

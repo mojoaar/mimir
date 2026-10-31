@@ -1,8 +1,8 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { closePools } from '@/lib/db/pool'
 import { resetFixtures, seedTwoUsersWithProjects, type Fixtures } from '@/lib/db/seed'
-import { buildDigest } from './digest'
-import { writeMemory } from './service'
+import { buildDigest, EMPTY_HINT } from './digest'
+import { deleteMemory, writeMemory } from './service'
 
 let f: Fixtures
 let projectId: string
@@ -124,12 +124,6 @@ describe('buildDigest', () => {
     expect(digest.memoryCount).toBeLessThan(12)
   })
 
-  it('returns an empty string for an empty project', async () => {
-    const digest = await buildDigest({ userId: f.alice, projectId })
-    expect(digest.text).toBe('')
-    expect(digest.truncated).toBe(false)
-  })
-
   it('refuses a project the user cannot read', async () => {
     await expect(buildDigest({ userId: f.bob, projectId })).rejects.toMatchObject({
       code: 'forbidden',
@@ -182,5 +176,40 @@ describe('what the digest leaves out', () => {
     })
 
     expect((await buildDigest({ userId: f.alice, projectId })).text).toContain('import/only')
+  })
+
+  it('points a brand-new project at the cross-project search', async () => {
+    const digest = await buildDigest({ userId: f.alice, projectId })
+
+    expect(digest.memoryCount).toBe(0)
+    expect(digest.text).toBe(EMPTY_HINT)
+    expect(digest.text).toContain('memory_search')
+    expect(digest.text).toContain('every project')
+  })
+
+  it('does not point at the search when the project has memories', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy/rollback', body: 'Roll back the tag' })
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+
+    expect(digest.text).not.toContain('every project')
+  })
+
+  it('does not call a project with only imported files new', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'import/only', body: 'readme', kind: 'import' })
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+
+    expect(digest.text).not.toContain('every project')
+  })
+
+  it('points at the search when every memory is deleted', async () => {
+    await writeMemory({ userId: f.alice, projectId, path: 'deploy/rollback', body: 'Roll back the tag' })
+    await deleteMemory(f.alice, projectId, 'deploy/rollback')
+
+    const digest = await buildDigest({ userId: f.alice, projectId })
+
+    expect(digest.text).toBe(EMPTY_HINT)
+    expect(digest.truncated).toBe(false)
   })
 })

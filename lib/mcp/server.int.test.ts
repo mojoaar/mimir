@@ -59,6 +59,7 @@ describe('mcp server', () => {
     expect(init.result.serverInfo.name).toBe('mimir')
     expect(init.result.instructions).toContain('memory_digest')
     expect(init.result.instructions).toContain('one outcome')
+    expect(init.result.instructions).toContain('memory_search without a project')
 
     const list = (await handleRpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' }, alice, meta)) as any
     expect(list.result.tools.map((t: { name: string }) => t.name)).toEqual([

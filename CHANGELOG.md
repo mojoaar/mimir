@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.4] - 2026-10-31
+
+The build actions move together, and the plugin types catch up.
+
+### Changed
+
+- `actions/upload-artifact` moves to 7.0.2 and `actions/download-artifact` to 8.0.2 as a matched pair. The release
+  merge job downloads the digests the image jobs upload, so the two have to move together.
+
+- `@opencode/plugin` types move to 2.2.0, matching the 2.2.x host the plugin already runs on. No app code changes.
+
 ## [0.29.3] - 2026-10-30
 
 The command reads the session it was typed in.

@@ -1,6 +1,6 @@
 {
   "name": "@mojoaar/omp-mimir",
-  "version": "0.29.3",
+  "version": "0.29.4",
   "description": "Mimir long-term memory for oh-my-pi sessions",
   "type": "module",
   "main": "src/index.ts",

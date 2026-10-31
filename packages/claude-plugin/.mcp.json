@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mimir": {
+      "type": "http",
+      "url": "${MIMIR_URL}/mcp",
+      "headers": { "Authorization": "Bearer ${MIMIR_TOKEN}" }
+    }
+  }
+}

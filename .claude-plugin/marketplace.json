@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "mimir",
+  "version": "0.31.0",
+  "description": "Long-term project memory for coding agents.",
+  "owner": { "name": "mojoaar" },
+  "plugins": [
+    {
+      "name": "mimir",
+      "description": "The project digest at session start, a handover before compaction, and the Mimir tools.",
+      "source": "./packages/claude-plugin",
+      "category": "productivity"
+    }
+  ]
+}

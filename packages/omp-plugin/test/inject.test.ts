@@ -20,7 +20,11 @@ vi.mock("../src/client.js", () => ({
   },
 }));
 
-import mimir, { DIGEST_HEADER, NUDGE_HEADER } from "../src/index.js";
+import mimir, {
+  DIGEST_HEADER,
+  NUDGE_HEADER,
+  sessionTranscript,
+} from "../src/index.js";
 
 type Message = Record<string, unknown>;
 type Command = {
@@ -640,5 +644,149 @@ describe("an install with no url", () => {
     expect(String(missing?.content[0]?.text)).toContain(
       "Nothing is stored at that path.",
     );
+  });
+});
+
+describe("reading the stored session", () => {
+  const historyCtx = (getMessages: () => Promise<unknown[]>) => ({
+    ...ctx,
+    sessionManager: { getMessages },
+  });
+  const pad = (label: string) => ({
+    role: "user",
+    content: `${label} `.repeat(80),
+  });
+
+  it("sends it when the command runs before any hook", async () => {
+    const built = fake();
+    mimir(built.pi as never);
+    mocks.calls.length = 0;
+    notices.length = 0;
+    mocks.result = { ok: true, result: { queued: true } };
+
+    await built.commands
+      .find((entry) => entry.name === "mimir-learn")
+      ?.handler(
+        undefined,
+        historyCtx(async () => [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "the deploy rolls back on the health check",
+              },
+            ],
+          },
+          {
+            role: "assistant",
+            content: [{ type: "text", text: "noted, use the tag not latest" }],
+          },
+        ]),
+      );
+
+    const learn = mocks.calls.filter((call) => call.name === "memory_learn");
+    expect(learn).toHaveLength(1);
+    expect(String(learn[0]?.args.transcript)).toContain("deploy rolls back");
+    expect(notices[0]).toContain("Mimir is writing");
+  });
+
+  it("says so when the session cannot be read and nothing was captured", async () => {
+    const built = fake();
+    mimir(built.pi as never);
+    mocks.calls.length = 0;
+    notices.length = 0;
+
+    await built.commands
+      .find((entry) => entry.name === "mimir-learn")
+      ?.handler(
+        undefined,
+        historyCtx(async () => {
+          throw new Error("nope");
+        }),
+      );
+
+    expect(
+      mocks.calls.filter((call) => call.name === "memory_learn"),
+    ).toHaveLength(0);
+    expect(notices[0]).toContain("could not read this session");
+  });
+
+  it("treats a non-list history as unreadable", async () => {
+    const built = fake();
+    mimir(built.pi as never);
+    notices.length = 0;
+
+    await built.commands
+      .find((entry) => entry.name === "mimir-learn")
+      ?.handler(
+        undefined,
+        historyCtx(async () => "not a list" as never),
+      );
+
+    expect(notices[0]).toContain("could not read this session");
+  });
+
+  it("uses the captured snapshot when the host offers no history", async () => {
+    const { commands, context } = await setup();
+    mocks.calls.length = 0;
+    notices.length = 0;
+    mocks.result = { ok: true, result: { queued: true } };
+
+    await context(
+      { type: "context", messages: [pad("alpha"), pad("beta")] },
+      ctx,
+    );
+    await commands
+      .find((entry) => entry.name === "mimir-learn")
+      ?.handler(undefined, ctx);
+
+    expect(
+      mocks.calls.filter((call) => call.name === "memory_learn"),
+    ).toHaveLength(1);
+  });
+
+  it("refuses a second handover in the same process", async () => {
+    const built = fake();
+    mimir(built.pi as never);
+    mocks.calls.length = 0;
+    notices.length = 0;
+    mocks.result = { ok: true, result: { queued: true } };
+    const command = built.commands.find(
+      (entry) => entry.name === "mimir-learn",
+    );
+    const withHistory = historyCtx(async () => [
+      {
+        role: "user",
+        content: [{ type: "text", text: `${"studio ".repeat(80)}` }],
+      },
+    ]);
+
+    await command?.handler(undefined, withHistory);
+    await command?.handler(undefined, withHistory);
+
+    expect(
+      mocks.calls.filter((call) => call.name === "memory_learn"),
+    ).toHaveLength(1);
+    expect(notices.at(-1)).toContain("already handed over");
+  });
+});
+
+describe("a stored session transcript", () => {
+  it("keeps what each side said and skips everything else", () => {
+    expect(
+      sessionTranscript([
+        { role: "system", text: "ignore me" },
+        { role: "user", text: "deploy with the tag" },
+        {
+          role: "assistant",
+          content: [
+            { type: "reasoning", text: "hmm" },
+            { type: "text", text: "noted" },
+          ],
+        },
+        { role: "tool", content: [{ type: "text", text: "noise" }] },
+      ]),
+    ).toBe("user: deploy with the tag\n\nassistant: noted");
   });
 });

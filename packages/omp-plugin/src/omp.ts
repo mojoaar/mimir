@@ -27,6 +27,13 @@ export type ExtensionContext = {
   /** False in rpc, json and print modes, where there is nobody to notify. */
   hasUI: boolean;
   ui: { notify(text: string): void };
+  /**
+   * Probed on omp 18.13.3: the host hands a sessionManager with only
+   * `onEntryAppended`, and no `getSessionFile`, so both stay optional and the
+   * plugin falls back to the session file on disk.
+   */
+  sessionManager?: { getMessages?: () => Promise<unknown[]> };
+  getSessionFile?: () => string | null;
 };
 
 export type DeveloperMessage = {

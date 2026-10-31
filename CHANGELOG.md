@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-10-31
+
+The Oh My Pi plugin reads the session it was asked about.
+
+### Fixed
+
+- The Oh My Pi plugin warns once when it has no URL, instead of loading and registering nothing in silence.
+- `/mimir-learn` reads the stored session, so it works as the first action after a restart. omp 18.13.3 gives
+  extensions no session reader, so the transcript comes from the session file the host writes; a second handover
+  in the same process answers that the session was already handed over.
+- `mimir_read` says when Mimir is unreachable, instead of reporting an empty path for every failure.
+
 ## [0.30.0] - 2026-10-31
 
 A new project starts with what you already learned elsewhere.

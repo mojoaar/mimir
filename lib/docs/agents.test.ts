@@ -47,6 +47,11 @@ describe("agent docs", () => {
     }
   });
 
+  it("flags every client that has a plugin of its own", () => {
+    const withPlugin = AGENTS.filter((agent) => agent.plugin).map((agent) => agent.id);
+    expect(withPlugin.sort()).toEqual(["claude-code", "oh-my-pi", "opencode"]);
+  });
+
   it("installs the Claude Code plugin from the marketplace", () => {
     const notes = agentById("claude-code")?.notes.join(" ") ?? "";
     expect(notes).toContain("plugin marketplace add mojoaar/mimir");

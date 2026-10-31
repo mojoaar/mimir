@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-10-31
+
+Claude Code takes its place in the accent row.
+
+### Fixed
+
+- The landing page marks Claude Code as a client with a plugin of its own, the way it already marks OpenCode and Oh
+  My Pi, now that `mimir@mimir` exists.
+
+
 ## [0.31.0] - 2026-10-31
 
 Mimir moves into Claude Code as a plugin.

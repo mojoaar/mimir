@@ -56,6 +56,7 @@ export const AGENTS: AgentDoc[] = [
     id: "claude-code",
     name: "Claude Code",
     tier: 1,
+    plugin: true,
     file: ".mcp.json at the repository root",
     snippet: (url) =>
       JSON.stringify(

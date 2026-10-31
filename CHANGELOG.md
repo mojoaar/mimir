@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-10-31
+
+A new project starts with what you already learned elsewhere.
+
 ### Added
 
 - A session in a project with no memories now receives a pointer to the cross-project search instead of an empty

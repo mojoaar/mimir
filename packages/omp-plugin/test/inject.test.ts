@@ -1,3 +1,6 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -557,6 +560,25 @@ describe("the command to hand it over now", () => {
       mocks.calls.filter((call) => call.name === "memory_learn"),
     ).toHaveLength(0);
     expect(notices[0]).toContain("Nothing worth handing over");
+  });
+
+  it("treats a machine with no omp sessions as nothing to send", async () => {
+    // The CI runner has never run omp, so the session directory does not exist.
+    // A missing directory means there is nothing to read, not that reading failed.
+    vi.stubEnv("HOME", mkdtempSync(join(tmpdir(), "omp-none-")));
+    try {
+      const { pi, commands } = fake();
+      mimir(pi as never);
+      notices.length = 0;
+
+      await commands
+        .find((entry) => entry.name === "mimir-learn")
+        ?.handler(undefined, ctx);
+
+      expect(notices[0]).toContain("Nothing worth handing over");
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   it("reports an unreachable Mimir instead of throwing", async () => {

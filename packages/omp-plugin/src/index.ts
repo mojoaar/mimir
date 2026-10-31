@@ -1,6 +1,7 @@
 import {
   closeSync,
   openSync,
+  existsSync,
   readFileSync,
   readdirSync,
   readSync,
@@ -138,6 +139,9 @@ function sessionHeader(file: string): { type?: unknown; cwd?: unknown } | null {
  * entry names this directory is the session being appended to.
  */
 function sessionFile(cwd: string): string | null {
+  // A machine that has never run omp has no sessions directory at all, which
+  // means there is nothing to read, not that the read failed.
+  if (!existsSync(SESSIONS())) return null;
   let best: { file: string; mtime: number } | null = null;
   for (const entry of readdirSync(SESSIONS(), { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;

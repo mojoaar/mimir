@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-10-31
+
+Mimir moves into Claude Code as a plugin.
+
+### Added
+
+- A Claude Code plugin, installed from this repository with `/plugin marketplace add mojoaar/mimir` and
+  `/plugin install mimir@mimir`. It puts the project digest in front of the first turn, hands the session over just
+  before compaction, adds `/mimir-learn` for a handover on demand, and bundles the MCP server.
+- The manual session hook is corrected: a `SessionStart` hook on Claude Code 2.1 and later must print
+  `hookSpecificOutput.additionalContext` JSON, so the old plain-text script is an error there. The plugin emits the
+  JSON form and is now the documented path.
+
+
 ## [0.30.2] - 2026-10-31
 
 The Oh My Pi command reads a machine with no sessions as empty, not broken.

@@ -3,7 +3,9 @@
   "name": "mimir",
   "version": "0.31.0",
   "description": "Long-term project memory for coding agents.",
-  "owner": { "name": "mojoaar" },
+  "owner": {
+    "name": "mojoaar"
+  },
   "plugins": [
     {
       "name": "mimir",

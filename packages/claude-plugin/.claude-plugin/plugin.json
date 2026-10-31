@@ -2,6 +2,8 @@
   "name": "mimir",
   "version": "0.31.0",
   "description": "Long-term project memory: the digest at session start, a handover before compaction, and the Mimir tools.",
-  "author": { "name": "mojoaar" },
+  "author": {
+    "name": "mojoaar"
+  },
   "homepage": "https://github.com/mojoaar/mimir"
 }

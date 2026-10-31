@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.2] - 2026-10-31
+
+The Oh My Pi command reads a machine with no sessions as empty, not broken.
+
+### Fixed
+
+- `/mimir-learn` no longer reports that it cannot read the session on a machine that has never run omp. A missing
+  sessions directory means there is nothing to hand over, not that the read failed.
+
 ## [Unreleased]
+
 
 ## [0.30.1] - 2026-10-31
 

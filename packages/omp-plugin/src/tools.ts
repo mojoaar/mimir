@@ -109,7 +109,13 @@ export function registerTools(
         { path: String(params.path ?? ''), repo: repo(ctx) },
         { ...config, timeoutMs: 8000 },
       )
-      if (!found.ok) return result('Nothing is stored at that path.')
+      if (!found.ok) {
+        return result(
+          found.error === 'not_found'
+            ? 'Nothing is stored at that path.'
+            : `Mimir is unreachable (${found.error}), so that path could not be read.`,
+        )
+      }
       const memory = found.result as { path?: string; title?: string; body?: string; updatedAt?: string }
       const day = typeof memory.updatedAt === 'string' ? memory.updatedAt.slice(0, 10) : ''
       const head = day ? `${memory.path ?? ''} · updated ${day}` : (memory.path ?? '')

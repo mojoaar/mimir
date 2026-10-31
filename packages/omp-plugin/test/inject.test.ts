@@ -5,10 +5,14 @@ const mocks = vi.hoisted(() => ({
   result: { ok: true, result: { text: "### auth\n- tokens last 30 days" } } as
     { ok: true; result: unknown } | { ok: false; error: string },
   repo: "git@github.com:alice/notes.git" as string | null,
+  config: { url: "http://127.0.0.1:3000", token: "mimir_test" } as {
+    url: string;
+    token: string;
+  } | null,
 }));
 
 vi.mock("../src/client.js", () => ({
-  resolveConfig: () => ({ url: "http://127.0.0.1:3000", token: "mimir_test" }),
+  resolveConfig: () => mocks.config,
   detectRepo: () => mocks.repo,
   callTool: async (name: string, args: Record<string, unknown>) => {
     mocks.calls.push({ name, args });
@@ -585,5 +589,56 @@ describe("the command to hand it over now", () => {
     expect(
       mocks.calls.filter((call) => call.name === "memory_learn"),
     ).toHaveLength(1);
+  });
+});
+
+describe("an install with no url", () => {
+  it("says once why it is doing nothing", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const before = mocks.config;
+    mocks.config = null;
+
+    try {
+      const built = fake();
+      mimir(built.pi as never);
+
+      // A configured install would have registered these; an inert one must
+      // leave nothing behind and must say why, in a log with no other clue.
+      expect(built.commands).toHaveLength(0);
+      expect(built.tools).toHaveLength(0);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]?.[0])).toContain("MIMIR_URL");
+    } finally {
+      warn.mockRestore();
+      mocks.config = before;
+    }
+  });
+
+  it("tells an unreachable Mimir apart from a path that is not stored", async () => {
+    const built = fake();
+    mimir(built.pi as never);
+    const read = built.tools.find((tool) => tool.name === "mimir_read");
+
+    mocks.result = { ok: false, error: "connect ECONNREFUSED" };
+    const failed = await read?.execute(
+      "id",
+      { path: "deploy/rollback" },
+      undefined,
+      undefined,
+      ctx,
+    );
+    expect(String(failed?.content[0]?.text)).toContain("unreachable");
+
+    mocks.result = { ok: false, error: "not_found" };
+    const missing = await read?.execute(
+      "id",
+      { path: "deploy/rollback" },
+      undefined,
+      undefined,
+      ctx,
+    );
+    expect(String(missing?.content[0]?.text)).toContain(
+      "Nothing is stored at that path.",
+    );
   });
 });

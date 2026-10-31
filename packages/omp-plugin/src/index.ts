@@ -61,9 +61,16 @@ function textOf(value: unknown): string {
  * call. Everything here is fail-soft: a slow or missing Mimir must never hold
  * up a session.
  */
+export const UNCONFIGURED =
+  'mimir: no url, so no digest, tools or /mimir-learn. Set MIMIR_URL and put the token in ~/.omp/mimir-token, or set MIMIR_TOKEN_FILE.'
+
 export default function mimir(pi: ExtensionAPI): void {
   const config = resolveConfig()
-  if (!config) return
+  if (!config) {
+    // This API has no logger, and an inert plugin is otherwise invisible.
+    console.warn(UNCONFIGURED)
+    return
+  }
 
   // A folder without a git remote still needs a stable key, or every write
   // lands in a fresh project. The server maps absolute paths to `local:<hash>`.

@@ -1,354 +1,401 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
-import { TOOL_NAMES } from '@/lib/mcp/tools'
-import { DOCS_NAV } from '@/lib/docs/nav'
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { TOOL_NAMES } from "@/lib/mcp/tools";
+import { DOCS_NAV } from "@/lib/docs/nav";
 
-const pkg = JSON.parse(readFileSync(path.join(process.cwd(), 'package.json'), 'utf8')) as { version: string }
+const pkg = JSON.parse(
+  readFileSync(path.join(process.cwd(), "package.json"), "utf8"),
+) as { version: string };
 
-import AgentsIndex from './agents/page'
-import ApiPage from './api/page'
-import BackupsPage from './backups/page'
-import ChangelogPage from './changelog/page'
-import HowItWorksPage from './how-it-works/page'
-import ProvidersPage from './providers/page'
-import DocsIndex from './page'
-import McpPage from './mcp/page'
-import PluginsPage from './plugins/page'
-import SearchPage from './search/page'
-import SelfHostingPage from './self-hosting/page'
-import ToolsPage from './tools/page'
+import AgentsIndex from "./agents/page";
+import ApiPage from "./api/page";
+import BackupsPage from "./backups/page";
+import ChangelogPage from "./changelog/page";
+import HowItWorksPage from "./how-it-works/page";
+import ProvidersPage from "./providers/page";
+import DocsIndex from "./page";
+import McpPage from "./mcp/page";
+import PluginsPage from "./plugins/page";
+import SearchPage from "./search/page";
+import SelfHostingPage from "./self-hosting/page";
+import ToolsPage from "./tools/page";
 
 const pages = [
-  ['how-it-works', HowItWorksPage],
-  ['providers', ProvidersPage],
-  ['self-hosting', SelfHostingPage],
-  ['backups', BackupsPage],
-  ['mcp', McpPage],
-  ['plugins', PluginsPage],
-  ['api', ApiPage],
-  ['tools', ToolsPage],
-  ['search', SearchPage],
-  ['changelog', ChangelogPage],
-  ['agents', AgentsIndex],
-] as const
+  ["how-it-works", HowItWorksPage],
+  ["providers", ProvidersPage],
+  ["self-hosting", SelfHostingPage],
+  ["backups", BackupsPage],
+  ["mcp", McpPage],
+  ["plugins", PluginsPage],
+  ["api", ApiPage],
+  ["tools", ToolsPage],
+  ["search", SearchPage],
+  ["changelog", ChangelogPage],
+  ["agents", AgentsIndex],
+] as const;
 
-describe('docs content', () => {
-  it.each(pages)('%s renders a real page', async (_name, Page) => {
-    const html = renderToStaticMarkup(await Page())
+describe("docs content", () => {
+  it.each(pages)("%s renders a real page", async (_name, Page) => {
+    const html = renderToStaticMarkup(await Page());
 
-    expect(html).toContain('<h1')
-    expect(html).not.toContain('TODO')
-  })
+    expect(html).toContain("<h1");
+    expect(html).not.toContain("TODO");
+  });
 
-  it('shows a raw mcp call and its envelope', async () => {
-    const html = renderToStaticMarkup(await McpPage())
+  it("shows a raw mcp call and its envelope", async () => {
+    const html = renderToStaticMarkup(await McpPage());
 
-    expect(html).toContain('tools/call')
-    expect(html).toContain('jsonrpc')
-    expect(html).toContain('2025-06-18')
-  })
+    expect(html).toContain("tools/call");
+    expect(html).toContain("jsonrpc");
+    expect(html).toContain("2025-06-18");
+  });
 
-  it('says the protocol arrives on connect', async () => {
-    const html = renderToStaticMarkup(await McpPage())
+  it("says the protocol arrives on connect", async () => {
+    const html = renderToStaticMarkup(await McpPage());
 
-    expect(html).toContain('What the agent is told')
-    expect(html).toContain('initialize')
-    expect(html).toContain('One memory is one outcome')
-  })
+    expect(html).toContain("What the agent is told");
+    expect(html).toContain("initialize");
+    expect(html).toContain("One memory is one outcome");
+  });
 
-  it('separates the plain endpoint from the plugin', async () => {
-    const html = renderToStaticMarkup(AgentsIndex())
+  it("separates the plain endpoint from the plugin", async () => {
+    const html = renderToStaticMarkup(AgentsIndex());
 
-    expect(html).toContain('What you get')
-    expect(html).toContain('OpenCode and Oh My Pi plugins')
-    expect(html).toContain('href="/docs/plugins"')
-    expect(html).toContain('initialize')
-  })
+    expect(html).toContain("What you get");
+    expect(html).toContain("OpenCode and Oh My Pi plugins");
+    expect(html).toContain('href="/docs/plugins"');
+    expect(html).toContain("initialize");
+  });
 
-  it('names every mcp tool', async () => {
-    const html = renderToStaticMarkup(await McpPage())
+  it("names every mcp tool", async () => {
+    const html = renderToStaticMarkup(await McpPage());
 
     for (const tool of TOOL_NAMES) {
-      expect(html).toContain(tool)
+      expect(html).toContain(tool);
     }
-  })
+  });
 
-  it('shows the routes that exist', async () => {
-    const html = renderToStaticMarkup(await ApiPage())
+  it("shows the routes that exist", async () => {
+    const html = renderToStaticMarkup(await ApiPage());
 
-    expect(html).toContain('/api/v1/projects')
-    expect(html).toContain('/api/v1/projects/:slug/search')
+    expect(html).toContain("/api/v1/projects");
+    expect(html).toContain("/api/v1/projects/:slug/search");
     // A route table alone does not teach; the page carries request and response.
-    expect(html).toContain('&quot;memoryCount&quot;')
-    expect(html).toContain('restored')
-    expect(html).toContain('body_too_large')
-  })
+    expect(html).toContain("&quot;memoryCount&quot;");
+    expect(html).toContain("restored");
+    expect(html).toContain("body_too_large");
+  });
 
-  it('renders the current version', async () => {
-    const html = renderToStaticMarkup(await ChangelogPage())
+  it("renders the current version", async () => {
+    const html = renderToStaticMarkup(await ChangelogPage());
 
-    expect(html).toContain(pkg.version)
-  })
+    expect(html).toContain(pkg.version);
+  });
 
-  it('keeps a wrapped bullet in one paragraph', async () => {
-    const html = renderToStaticMarkup(await ChangelogPage())
+  it("keeps a wrapped bullet in one paragraph", async () => {
+    const html = renderToStaticMarkup(await ChangelogPage());
 
     // The file is hard-wrapped; a continuation line is not a new item.
-    expect(html).toContain('not only write blind. mimir_search and mimir_learn join mimir_digest')
-    expect(html).not.toContain('<p>mimir_digest and mimir_remember')
-  })
+    expect(html).toContain(
+      "not only write blind. mimir_search and mimir_learn join mimir_digest",
+    );
+    expect(html).not.toContain("<p>mimir_digest and mimir_remember");
+  });
 
-  it('links the whole raw file instead of a cut-off sample', async () => {
-    const html = renderToStaticMarkup(await ChangelogPage())
+  it("links the whole raw file instead of a cut-off sample", async () => {
+    const html = renderToStaticMarkup(await ChangelogPage());
 
     // The page used to render the first 400 characters of the file, which ended
     // mid-word and offered no way to the rest of it.
-    expect(html).toContain('href="/changelog.md"')
-    expect(html).not.toContain('All notable changes to this project')
-  })
-})
+    expect(html).toContain('href="/changelog.md"');
+    expect(html).not.toContain("All notable changes to this project");
+  });
+});
 
-describe('the import page', () => {
-  it('documents the ingest command', async () => {
-    const html = renderToStaticMarkup(await SelfHostingPage())
+describe("the import page", () => {
+  it("documents the ingest command", async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage());
 
-    expect(html).toContain('mimir ingest')
-    expect(html).toContain('--project')
-  })
-})
+    expect(html).toContain("mimir ingest");
+    expect(html).toContain("--project");
+  });
+});
 
-describe('the sharing section', () => {
-  it('explains teams and what they can do', async () => {
-    const html = renderToStaticMarkup(await SelfHostingPage())
+describe("the sharing section", () => {
+  it("explains teams and what they can do", async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage());
 
-    expect(html).toContain('team')
-    expect(html).toContain('share')
-    expect(html).toContain('never the owner')
-  })
-})
+    expect(html).toContain("team");
+    expect(html).toContain("share");
+    expect(html).toContain("never the owner");
+  });
+});
 
-describe('destinations', () => {
+describe("destinations", () => {
   // The user's own Settings page went away in 0.17.0: keys, two-factor and the
   // profile share one page, and Providers sits in the header. A page still
   // saying "Settings → X" sends people looking for a section that is not there.
   it.each([
-    ['how-it-works', HowItWorksPage],
-    ['providers', ProvidersPage],
-    ['mcp', McpPage],
-    ['api', ApiPage],
-  ] as const)('%s sends nobody to a Settings section', async (_name, Page) => {
-    const html = renderToStaticMarkup(await Page())
+    ["how-it-works", HowItWorksPage],
+    ["providers", ProvidersPage],
+    ["mcp", McpPage],
+    ["api", ApiPage],
+  ] as const)("%s sends nobody to a Settings section", async (_name, Page) => {
+    const html = renderToStaticMarkup(await Page());
 
-    for (const stale of ['Settings → Providers', 'Settings → API keys', 'Settings → Security', 'Settings → Profile']) {
-      expect(html, stale).not.toContain(stale)
+    for (const stale of [
+      "Settings → Providers",
+      "Settings → API keys",
+      "Settings → Security",
+      "Settings → Profile",
+    ]) {
+      expect(html, stale).not.toContain(stale);
     }
-  })
-})
+  });
+});
 
-describe('the index', () => {
-  it('links every page it is the entry point for', async () => {
-    const html = renderToStaticMarkup(await DocsIndex())
+describe("the index", () => {
+  it("links every page it is the entry point for", async () => {
+    const html = renderToStaticMarkup(await DocsIndex());
 
     // Tool reference and changelog had no inbound link anywhere.
-    expect(html).toContain('href="/docs/tools"')
-    expect(html).toContain('href="/docs/changelog"')
-  })
-})
+    expect(html).toContain('href="/docs/tools"');
+    expect(html).toContain('href="/docs/changelog"');
+  });
+});
 
-describe('pageview analytics', () => {
-  it('says where the values go and what it sends', async () => {
-    const html = renderToStaticMarkup(await SelfHostingPage())
+describe("pageview analytics", () => {
+  it("says where the values go and what it sends", async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage());
 
-    expect(html).toContain('Pageview analytics')
-    expect(html).toContain('Do Not Track')
-    expect(html).toContain('/script.js')
-  })
-})
+    expect(html).toContain("Pageview analytics");
+    expect(html).toContain("Do Not Track");
+    expect(html).toContain("/script.js");
+  });
+});
 
-describe('the account page', () => {
-  it('explains the profile, the password and the sessions', async () => {
-    const html = renderToStaticMarkup(await SelfHostingPage())
+describe("the account page", () => {
+  it("explains the profile, the password and the sessions", async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage());
 
-    expect(html).toContain('Profile</strong> in the user menu')
-    expect(html).toContain('password change')
-    expect(html).toContain('sessions signed in')
-  })
-})
+    expect(html).toContain("Profile</strong> in the user menu");
+    expect(html).toContain("password change");
+    expect(html).toContain("sessions signed in");
+  });
+});
 
-describe('the language section', () => {
-  it('explains the menu, the saved choice and the public pages', async () => {
-    const html = renderToStaticMarkup(await SelfHostingPage())
+describe("the language section", () => {
+  it("explains the menu, the saved choice and the public pages", async () => {
+    const html = renderToStaticMarkup(await SelfHostingPage());
 
-    expect(html).toContain('English, Danish and German')
-    expect(html).toContain('saved on the account')
-    expect(html).toContain('/da')
-  })
-})
+    expect(html).toContain("English, Danish and German");
+    expect(html).toContain("saved on the account");
+    expect(html).toContain("/da");
+  });
+});
 
-describe('the explanation pages', () => {
-  it('explains the memory model without a model configured', async () => {
-    const html = renderToStaticMarkup(await HowItWorksPage())
+describe("the explanation pages", () => {
+  it("explains the memory model without a model configured", async () => {
+    const html = renderToStaticMarkup(await HowItWorksPage());
 
-    expect(html).toContain('Paths are the index')
-    expect(html).toContain('20 versions')
-    expect(html).toContain('800 tokens')
-  })
+    expect(html).toContain("Paths are the index");
+    expect(html).toContain("20 versions");
+    expect(html).toContain("800 tokens");
+  });
 
-  it('shows how a new project finds prior art in the other projects', async () => {
-    const text = renderToStaticMarkup(await HowItWorksPage()).replace(/<[^>]+>/g, '')
+  it("shows how a new project finds prior art in the other projects", async () => {
+    const text = renderToStaticMarkup(await HowItWorksPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
-    expect(text).toContain('no memories yet')
-    expect(text).toContain('memory_search')
-    expect(text).toContain('Omitting')
-  })
+    expect(text).toContain("no memories yet");
+    expect(text).toContain("memory_search");
+    expect(text).toContain("Omitting");
+  });
 
-  it('names every provider preset and the dimension rule', async () => {    const html = renderToStaticMarkup(await ProvidersPage())
+  it("names every provider preset and the dimension rule", async () => {
+    const html = renderToStaticMarkup(await ProvidersPage());
 
-    for (const preset of ['DeepSeek', 'OpenCode Go', 'Ollama', 'Octen', 'Mistral', 'OpenAI-compatible']) {
-      expect(html).toContain(preset)
+    for (const preset of [
+      "DeepSeek",
+      "OpenCode Go",
+      "Ollama",
+      "Octen",
+      "Mistral",
+      "OpenAI-compatible",
+    ]) {
+      expect(html).toContain(preset);
     }
-    expect(html).toContain('vector(768)')
-    expect(html).toContain('codestral-embed')
-  })
-})
+    expect(html).toContain("vector(768)");
+    expect(html).toContain("codestral-embed");
+  });
+});
 
-describe('the name', () => {
-  it('explains where it comes from on the overview', () => {
-    const html = renderToStaticMarkup(DocsIndex())
+describe("the name", () => {
+  it("explains where it comes from on the overview", () => {
+    const html = renderToStaticMarkup(DocsIndex());
 
-    expect(html).toContain('Mímir')
-    expect(html).toContain('well')
-    expect(html).toContain('traded an eye')
-  })
-})
+    expect(html).toContain("Mímir");
+    expect(html).toContain("well");
+    expect(html).toContain("traded an eye");
+  });
+});
 
-describe('session learning', () => {
-  it('documents memory_learn and the procedure kind', async () => {
-    const html = renderToStaticMarkup(await ToolsPage())
+describe("session learning", () => {
+  it("documents memory_learn and the procedure kind", async () => {
+    const html = renderToStaticMarkup(await ToolsPage());
 
-    expect(html).toContain('memory_learn')
-    expect(html).toContain('procedure')
-  })
+    expect(html).toContain("memory_learn");
+    expect(html).toContain("procedure");
+  });
 
-  it('says why procedures lead the digest', async () => {
-    const html = renderToStaticMarkup(await HowItWorksPage())
+  it("says why procedures lead the digest", async () => {
+    const html = renderToStaticMarkup(await HowItWorksPage());
 
-    expect(html).toContain('Procedures are always listed first')
-  })
-})
+    expect(html).toContain("Procedures are always listed first");
+  });
+});
 
-describe('plugins', () => {
-  it('compares MCP with the plugin, and shows both installs', async () => {
+describe("plugins", () => {
+  it("compares MCP with the plugin, and shows both installs", async () => {
     // The code block is highlighted into spans, so compare the text, not the markup.
-    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+    const text = renderToStaticMarkup(await PluginsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
-    expect(text).toContain('MCP or plugin')
-    expect(text).toContain('injected once per session')
-    expect(text).toContain('opencode plugin add @mojoaar/opencode-mimir')
-    expect(text).toContain('omp plugin install @mojoaar/omp-mimir')
-    expect(text).toContain('All eleven')
-  })
+    expect(text).toContain("MCP or plugin");
+    expect(text).toContain("injected once per session");
+    expect(text).toContain("opencode plugin add @mojoaar/opencode-mimir");
+    expect(text).toContain("omp plugin install @mojoaar/omp-mimir");
+    expect(text).toContain("All eleven");
+  });
 
-  it('says the plugin needs a url before it does anything', async () => {
-    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+  it("says the plugin needs a url before it does anything", async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
     // The bare `opencode plugin add` entry carries no options, and an inert
     // plugin looks exactly like a working one until a command is missing.
-    expect(text).toContain('stays inactive')
-    expect(text).toContain('MIMIR_URL')
-    expect(text.indexOf('MIMIR_URL')).toBeLessThan(text.indexOf('opencode plugin add'))
-  })
+    expect(text).toContain("stays inactive");
+    expect(text).toContain("MIMIR_URL");
+    expect(text.indexOf("MIMIR_URL")).toBeLessThan(
+      text.indexOf("opencode plugin add"),
+    );
+  });
 
-  it('names the read tool the plugins also register', async () => {
-    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+  it("names the read tool the plugins also register", async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
-    expect(text).toContain('mimir_read')
-  })
+    expect(text).toContain("mimir_read");
+  });
 
-  it('says a search can cross every project', async () => {
-    const text = renderToStaticMarkup(await ToolsPage()).replace(/<[^>]+>/g, '')
+  it("says a search can cross every project", async () => {
+    const text = renderToStaticMarkup(await ToolsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
-    expect(text).toContain('did I solve this somewhere else')
-  })
+    expect(text).toContain("did I solve this somewhere else");
+  });
 
-  it('documents the export route and what it is not', async () => {
-    const text = renderToStaticMarkup(await ApiPage()).replace(/<[^>]+>/g, '')
+  it("documents the export route and what it is not", async () => {
+    const text = renderToStaticMarkup(await ApiPage()).replace(/<[^>]+>/g, "");
 
-    expect(text).toContain('/export')
-    expect(text).toContain('not a backup')
-  })
+    expect(text).toContain("/export");
+    expect(text).toContain("not a backup");
+  });
 
-  it('sits in the sidebar and on the index', async () => {
-    const slugs = DOCS_NAV.flatMap((group) => group.links.map((link) => link.href))
-    expect(slugs).toContain('/docs/plugins')
+  it("sits in the sidebar and on the index", async () => {
+    const slugs = DOCS_NAV.flatMap((group) =>
+      group.links.map((link) => link.href),
+    );
+    expect(slugs).toContain("/docs/plugins");
 
-    const html = renderToStaticMarkup(await DocsIndex())
-    expect(html).toContain('href="/docs/plugins"')
-  })
+    const html = renderToStaticMarkup(await DocsIndex());
+    expect(html).toContain('href="/docs/plugins"');
+  });
 
-  it('documents the command that hands a session over now', async () => {
-    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+  it("documents the command that hands a session over now", async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
-    expect(text).toContain('/mimir-learn')
-    expect(text).toContain('sends the conversation so far')
-  })
+    expect(text).toContain("/mimir-learn");
+    expect(text).toContain("sends the conversation so far");
+  });
 
-  it('says what happens when the context is compacted', async () => {
-    const text = renderToStaticMarkup(await PluginsPage()).replace(/<[^>]+>/g, '')
+  it("says what happens when the context is compacted", async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
-    expect(text).toContain('When the context is compacted')
-    expect(text).toContain('memory_learn')
-    expect(text).toContain('three memories')
-  })
-})
+    expect(text).toContain("When the context is compacted");
+    expect(text).toContain("memory_learn");
+    expect(text).toContain("three memories");
+  });
+});
 
-describe('provenance', () => {
-  it('says where a memory came from, and that it is optional', async () => {
-    const html = renderToStaticMarkup(await ToolsPage())
+describe("provenance", () => {
+  it("says where a memory came from, and that it is optional", async () => {
+    const html = renderToStaticMarkup(await ToolsPage());
 
-    expect(html).toContain('traced back to the conversation')
-    expect(html).toContain('client')
-    expect(html).toContain('session')
-  })
-})
+    expect(html).toContain("traced back to the conversation");
+    expect(html).toContain("client");
+    expect(html).toContain("session");
+  });
+});
 
-describe('folders as a repo', () => {
-  it('explains on the how-it-works page that a project can be a folder', () => {
-    const html = renderToStaticMarkup(HowItWorksPage())
+describe("folders as a repo", () => {
+  it("explains on the how-it-works page that a project can be a folder", () => {
+    const html = renderToStaticMarkup(HowItWorksPage());
 
-    expect(html).toContain('or a folder you claim')
-    expect(html).toContain('deepest claim winning')
-  })
+    expect(html).toContain("or a folder you claim");
+    expect(html).toContain("deepest claim winning");
+  });
 
-  it('lists a project\'s folders in the tool reference', async () => {
-    const text = renderToStaticMarkup(await ToolsPage()).replace(/<[^>]+>/g, '')
+  it("lists a project's folders in the tool reference", async () => {
+    const text = renderToStaticMarkup(await ToolsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
 
-    expect(text).toContain('the absolute folders each one answers for')
-  })
+    expect(text).toContain("the absolute folders each one answers for");
+  });
 
-  it('explains that a folder can stand in for a repository', () => {
-    const html = renderToStaticMarkup(McpPage())
+  it("explains that a folder can stand in for a repository", () => {
+    const html = renderToStaticMarkup(McpPage());
 
-    expect(html).toContain('Claim a folder under a project')
-    expect(html).toContain('A git remote wins')
+    expect(html).toContain("Claim a folder under a project");
+    expect(html).toContain("A git remote wins");
     // A claim is per account, so it cannot promise anything for a teammate.
-    expect(html).toContain('every session you start')
-  })
+    expect(html).toContain("every session you start");
+  });
 
-  it('warns that a claim does not carry to a teammate', () => {
+  it("warns that a claim does not carry to a teammate", () => {
     // Two people on one project, each in their own non-git folder, is the case
     // where the map silently splits the knowledge, so both pages name the way
     // out instead of leaving the reader to discover it.
-    expect(renderToStaticMarkup(McpPage())).toContain('the project explicitly')
-    expect(renderToStaticMarkup(HowItWorksPage())).toContain('the project explicitly')
-  })
+    expect(renderToStaticMarkup(McpPage())).toContain("the project explicitly");
+    expect(renderToStaticMarkup(HowItWorksPage())).toContain(
+      "the project explicitly",
+    );
+  });
 
-  it('says a Windows path works and a home shorthand does not', () => {
-    const html = renderToStaticMarkup(McpPage())
+  it("says a Windows path works and a home shorthand does not", () => {
+    const html = renderToStaticMarkup(McpPage());
 
-    expect(html).toContain('C:\\Users\\you\\AI')
-    expect(html).toContain('til')
-  })
-})
+    expect(html).toContain("C:\\Users\\you\\AI");
+    expect(html).toContain("til");
+  });
+});

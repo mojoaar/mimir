@@ -153,12 +153,13 @@ function searchTool(repo: string | null, config: MimirConfig): ToolDefinition {
   return {
     name: 'mimir_search',
     description:
-      'Search what this project has already settled in Mimir. Returns paths, titles and summaries; read a path with the MCP server if you need the body.',
+      'Search what this project has already settled in Mimir, or every project with all: true. Returns paths, titles and summaries; read a path with the MCP server if you need the body.',
     input: {
       type: 'object',
       properties: {
         query: { type: 'string', description: 'What to look for, in plain words' },
         path_prefix: { type: 'string', description: 'Scope to a directory, e.g. auth' },
+        all: { type: 'boolean', description: 'Search every project, not only this one' },
       },
       required: ['query'],
       additionalProperties: false,
@@ -167,7 +168,11 @@ function searchTool(repo: string | null, config: MimirConfig): ToolDefinition {
       const args = input as ToolInput
       const result = await callTool(
         'memory_search',
-        { query: typeof args.query === 'string' ? args.query : '', path_prefix: typeof args.path_prefix === 'string' ? args.path_prefix : undefined, repo: repo ?? undefined },
+        {
+          query: typeof args.query === 'string' ? args.query : '',
+          path_prefix: typeof args.path_prefix === 'string' ? args.path_prefix : undefined,
+          repo: args.all === true ? undefined : (repo ?? undefined),
+        },
         { url: config.url, token: config.token, timeoutMs: 8000 },
       )
       if (!result.ok) return { content: `Mimir is unavailable (${result.error}). Carry on without it.` }

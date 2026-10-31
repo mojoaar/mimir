@@ -80,12 +80,13 @@ export function registerTools(
     parameters: z.object({
       query: z.string().describe('What to look for, in plain words'),
       path_prefix: z.string().optional().describe('Scope to a directory, e.g. auth'),
+      all: z.boolean().optional().describe('Search every project, not only this one'),
     }),
     approval: 'read',
     async execute(_id, params, _signal, _update, ctx) {
       const found = await callTool(
         'memory_search',
-        { query: params.query, path_prefix: params.path_prefix, repo: repo(ctx) },
+        { query: params.query, path_prefix: params.path_prefix, repo: params.all ? undefined : repo(ctx) },
         { ...config, timeoutMs: 8000 },
       )
       if (!found.ok) return result(`Mimir is unavailable (${found.error}). Carry on without it.`)

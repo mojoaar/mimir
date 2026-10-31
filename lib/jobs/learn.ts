@@ -2,7 +2,7 @@ import { chatComplete, type ProviderError } from '@/lib/providers/client'
 import { resolveExtractionProvider } from '@/lib/providers/resolve'
 import { withAdmin } from '@/lib/db/tx'
 import { MEMORY_KINDS } from '@/lib/memory/types'
-import { buildDigest } from '@/lib/memory/digest'
+import { buildDigest, EMPTY_HINT } from '@/lib/memory/digest'
 import { writeMemory } from '@/lib/memory/service'
 import { registerWorker } from './boss'
 import { EXTRACT_TIMEOUT_MS } from './constants'
@@ -88,7 +88,8 @@ export async function runLearn(data: LearnData): Promise<LearnResult> {
   if (!provider) return { written: 0 }
 
   const digest = await buildDigest({ userId: project.owner_user_id, projectId, budgetTokens: DIGEST_BUDGET })
-  const known = digest.text.trim() === '' ? '(nothing yet)' : digest.text.trim()
+  const known =
+    digest.text.trim() === '' || digest.text === EMPTY_HINT ? '(nothing yet)' : digest.text.trim()
   const lookFor = hint ? `Look for: ${hint}\n\n` : ''
   const content = `What this project already knows:\n\n${known}\n\n${lookFor}Session:\n\n${transcript.slice(0, 32768)}`
 

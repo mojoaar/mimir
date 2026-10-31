@@ -7,66 +7,75 @@
  */
 
 export type StringSchema = {
-  describe(text: string): StringSchema
-  optional(): StringSchema
-}
+  describe(text: string): StringSchema;
+  optional(): StringSchema;
+};
+
+export type BooleanSchema = {
+  describe(text: string): BooleanSchema;
+  optional(): BooleanSchema;
+};
 
 export type Zod = {
-  object(shape: Record<string, StringSchema>): unknown
-  string(): StringSchema
-}
+  object(shape: Record<string, StringSchema | BooleanSchema>): unknown;
+  string(): StringSchema;
+  boolean(): BooleanSchema;
+};
 
 export type ExtensionContext = {
-  cwd: string
+  cwd: string;
   /** False in rpc, json and print modes, where there is nobody to notify. */
-  hasUI: boolean
-  ui: { notify(text: string): void }
-}
+  hasUI: boolean;
+  ui: { notify(text: string): void };
+};
 
 export type DeveloperMessage = {
-  role: 'developer'
-  content: string
-  timestamp: number
-  synthetic?: boolean
-}
+  role: "developer";
+  content: string;
+  timestamp: number;
+  synthetic?: boolean;
+};
 
 /** The messages about to go to the model. Treated as opaque: we only append. */
-export type Message = Record<string, unknown>
+export type Message = Record<string, unknown>;
 
-export type ContextEvent = { messages: Message[] }
-export type ContextResult = { messages: Message[] } | undefined
+export type ContextEvent = { messages: Message[] };
+export type ContextResult = { messages: Message[] } | undefined;
 
-export type TextBlock = { type: 'text'; text: string }
+export type TextBlock = { type: "text"; text: string };
 
 export type ToolResult = {
-  content: TextBlock[]
-  details: Record<string, unknown>
-}
+  content: TextBlock[];
+  details: Record<string, unknown>;
+};
 
 export type ToolDefinition = {
-  name: string
-  label: string
-  description: string
-  parameters: unknown
+  name: string;
+  label: string;
+  description: string;
+  parameters: unknown;
   /** `read` skips the write confirmation omp shows for anything that mutates. */
-  approval?: 'read' | 'write' | 'exec'
+  approval?: "read" | "write" | "exec";
   execute(
     toolCallId: string,
     params: Record<string, unknown>,
     signal: AbortSignal | undefined,
     onUpdate: unknown,
     ctx: ExtensionContext,
-  ): Promise<ToolResult>
-}
+  ): Promise<ToolResult>;
+};
 
 export type CommandDefinition = {
-  description?: string
-  handler(args: unknown, ctx: ExtensionContext): Promise<void> | void
-}
+  description?: string;
+  handler(args: unknown, ctx: ExtensionContext): Promise<void> | void;
+};
 
 export type ExtensionAPI = {
-  zod: Zod
-  on<E = unknown>(event: string, handler: (event: E, ctx: ExtensionContext) => unknown | Promise<unknown>): void
-  registerTool(tool: ToolDefinition): void
-  registerCommand(name: string, definition: CommandDefinition): void
-}
+  zod: Zod;
+  on<E = unknown>(
+    event: string,
+    handler: (event: E, ctx: ExtensionContext) => unknown | Promise<unknown>,
+  ): void;
+  registerTool(tool: ToolDefinition): void;
+  registerCommand(name: string, definition: CommandDefinition): void;
+};

@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   digest, so the first task in a new repository starts from what you already settled elsewhere. The docs show the
   pattern with an example.
 
+- The OpenCode and Oh My Pi plugin search tools take `all: true`, which reaches every project instead of only the
+  current one, so the advice is actionable from the plugins as well as from the MCP server.
+
 ## [0.29.4] - 2026-10-31
 
 The build actions move together, and the plugin types catch up.

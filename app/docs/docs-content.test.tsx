@@ -196,8 +196,15 @@ describe('the explanation pages', () => {
     expect(html).toContain('800 tokens')
   })
 
-  it('names every provider preset and the dimension rule', async () => {
-    const html = renderToStaticMarkup(await ProvidersPage())
+  it('shows how a new project finds prior art in the other projects', async () => {
+    const text = renderToStaticMarkup(await HowItWorksPage()).replace(/<[^>]+>/g, '')
+
+    expect(text).toContain('no memories yet')
+    expect(text).toContain('memory_search')
+    expect(text).toContain('Omitting')
+  })
+
+  it('names every provider preset and the dimension rule', async () => {    const html = renderToStaticMarkup(await ProvidersPage())
 
     for (const preset of ['DeepSeek', 'OpenCode Go', 'Ollama', 'Octen', 'Mistral', 'OpenAI-compatible']) {
       expect(html).toContain(preset)

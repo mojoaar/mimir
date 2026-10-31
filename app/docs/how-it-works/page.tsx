@@ -71,6 +71,25 @@ export default function HowItWorksPage() {
         line would cost a third of the budget to say nothing.
       </P>
 
+      <H2>A new project is not a blank slate</H2>
+      <P>
+        When a project has no memories yet, the digest says so and points at the cross-project search instead of
+        returning nothing. That one sentence is the nudge: search once before designing what another project already
+        settled.
+      </P>
+      <Code language="json">{`{
+  "name": "memory_search",
+  "arguments": { "query": "token refresh rotation" }
+}`}</Code>
+      <P>
+        Omitting <code>project</code> and <code>repo</code> is what makes the search cross every project you can read.
+        Name either one and it stays inside that project.
+      </P>
+      <P>
+        A fresh service asking for <code>token refresh rotation</code> finds the rotation note written in your
+        previous API project, reads that path, and starts from the decision instead of rediscovering it.
+      </P>
+
       <H2>Search is two arms and a fuse</H2>
       <P>
         A keyword arm over PostgreSQL full-text search and a vector arm over pgvector run on the same rows. Their ranked

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A session in a project with no memories now receives a pointer to the cross-project search instead of an empty
+  digest, so the first task in a new repository starts from what you already settled elsewhere. The docs show the
+  pattern with an example.
+
 ## [0.29.4] - 2026-10-31
 
 The build actions move together, and the plugin types catch up.

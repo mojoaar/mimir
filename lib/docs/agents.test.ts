@@ -47,6 +47,12 @@ describe("agent docs", () => {
     }
   });
 
+  it("installs the Claude Code plugin from the marketplace", () => {
+    const notes = agentById("claude-code")?.notes.join(" ") ?? "";
+    expect(notes).toContain("plugin marketplace add mojoaar/mimir");
+    expect(notes).toContain("plugin install mimir@mimir");
+  });
+
   it("returns undefined for an unknown agent", () => {
     expect(agentById("nope")).toBeUndefined();
   });

@@ -66,7 +66,8 @@ export const de: Messages = {
   "data.body":
     "Ein Container und ein Postgres, das du schon betreibst. Nichts verlässt die Box, außer du richtest einen Anbieter ein, und dann nur der Text, den du geschrieben hast. Der optionale Seitenaufruf-Zähler spricht nur mit deiner eigenen Umami-Instanz. Backups werden mit einem Schlüssel verschlüsselt, den nur du hast, und das Wiederherstellungsskript liegt im Repo.",
 
-  "clients.title": "Läuft mit den Agenten, die du schon nutzt, über MCP oder ein Plugin",
+  "clients.title":
+    "Läuft mit den Agenten, die du schon nutzt, über MCP oder ein Plugin",
   "clients.titleAccent": "Plugin",
   "stats.container": "Container",
   "stats.mcp": "MCP-Werkzeuge",
@@ -89,9 +90,11 @@ export const de: Messages = {
     "Teile ein Projekt mit einer Person oder einem Team, mit Lese- oder Schreibrecht, und nimm es mit einem Klick zurück.",
   "connect.title": "Einen Agenten verbinden",
   "connect.opencode": "OpenCode-Plugin",
+  "connect.claude": "Claude-Code-Plugin",
   "connect.mcp": "Jeder MCP-Client",
   "connect.omp": "Oh-My-Pi-Plugin",
-  "connect.hint": "Die beiden Plugins fügen außerdem den Digest ein, was MCP nicht kann.",
+  "connect.hint":
+    "Die beiden Plugins fügen außerdem den Digest ein, was MCP nicht kann.",
   "data.contrast":
     "Kein Konto bei uns, keine Lizenz pro Nutzer, und keine Kopie deiner Erinnerungen außerhalb dessen, wohin du sie gelegt hast.",
 
@@ -143,9 +146,11 @@ export const de: Messages = {
   "app.forgot.blocked": "Diese Adresse darf diesen Server nicht nutzen.",
   "app.forgot.empty": "Gib die Adresse an, mit der du dich anmeldest.",
   "app.emailConfirm.title": "Bestätige deine neue Adresse",
-  "app.emailConfirm.body": "Klicke unten, um diese Adresse für dein Konto zu verwenden. Alle anderen Sitzungen werden dabei abgemeldet.",
+  "app.emailConfirm.body":
+    "Klicke unten, um diese Adresse für dein Konto zu verwenden. Alle anderen Sitzungen werden dabei abgemeldet.",
   "app.emailConfirm.button": "Diese Adresse bestätigen",
-  "app.emailConfirm.invalid": "Der Link ist unvollständig. Öffne den neuesten aus deinem Postfach.",
+  "app.emailConfirm.invalid":
+    "Der Link ist unvollständig. Öffne den neuesten aus deinem Postfach.",
   "app.emailConfirm.done": "{email} ist jetzt deine Adresse.",
   "app.setPassword.title": "Passwort festlegen",
   "app.setPassword.body":
@@ -197,7 +202,8 @@ export const de: Messages = {
   "app.tree.byPath": "Pfad",
   "app.tree.byAdded": "Hinzugefügt",
   "app.tree.byUpdated": "Aktualisiert",
-  "app.tree.capped": "Die ersten {limit} Pfade werden angezeigt. Grenze mit einem Ordner oder einer Suche ein.",
+  "app.tree.capped":
+    "Die ersten {limit} Pfade werden angezeigt. Grenze mit einem Ordner oder einer Suche ein.",
   "app.editor.body": "Inhalt der Erinnerung",
   "app.editor.save": "Speichern",
   "app.editor.saving": "Wird gespeichert…",
@@ -234,7 +240,8 @@ export const de: Messages = {
     "Das Projekt konnte nicht wiederhergestellt werden.",
   "app.project.export": "Exportieren",
   "app.requests.title": "Zugriff anfragen",
-  "app.requests.body": "Ein Repository, das ein Kollege bereits hinzugefügt hat, hat sein eigenes Projekt. Frage den Eigentümer nach Zugriff, statt in eine zweite Kopie zu schreiben; die Anfrage erscheint auf der Einstellungsseite des Projekts.",
+  "app.requests.body":
+    "Ein Repository, das ein Kollege bereits hinzugefügt hat, hat sein eigenes Projekt. Frage den Eigentümer nach Zugriff, statt in eine zweite Kopie zu schreiben; die Anfrage erscheint auf der Einstellungsseite des Projekts.",
   "app.requests.repo": "Repository",
   "app.requests.note": "Warum (optional)",
   "app.requests.notePlaceholder": "Woran du arbeitest",
@@ -243,16 +250,20 @@ export const de: Messages = {
   "app.requests.pending": "Wartet auf einen Eigentümer",
   "app.requests.granted": "Zugriff gewährt",
   "app.requests.declined": "Abgelehnt",
-  "app.requests.requested": "Anfrage gesendet. Der Eigentümer sieht sie auf der Einstellungsseite des Projekts.",
-  "app.requests.already": "Du hast bereits Zugriff, oder es ist schon eine Anfrage offen.",
-  "app.project.restoreConflict": "Der Pfad wurde nach dem Löschen erneut geschrieben, daher bleibt diese Kopie gelöscht.",
+  "app.requests.requested":
+    "Anfrage gesendet. Der Eigentümer sieht sie auf der Einstellungsseite des Projekts.",
+  "app.requests.already":
+    "Du hast bereits Zugriff, oder es ist schon eine Anfrage offen.",
+  "app.project.restoreConflict":
+    "Der Pfad wurde nach dem Löschen erneut geschrieben, daher bleibt diese Kopie gelöscht.",
   "app.project.restoreGone": "Diese Erinnerung ist nicht mehr im Papierkorb.",
   "app.project.delete": "Löschen",
   "app.project.deleteHint":
     "Beim Löschen eines archivierten Projekts werden seine Erinnerungen, Versionen, Freigaben und Ordnerzuordnungen entfernt, und das lässt sich nicht rückgängig machen. Tippe den Slug zur Bestätigung.",
   "app.project.confirmPlaceholder": "Slug eingeben",
   "app.project.confirmLabel": "Tippe {slug}, um das Projekt zu löschen",
-  "app.project.confirmMismatch": "Das ist nicht der Slug. Es wurde nichts gelöscht.",
+  "app.project.confirmMismatch":
+    "Das ist nicht der Slug. Es wurde nichts gelöscht.",
   "app.project.deleted": "{slug} gelöscht.",
   "app.admin.overview.title": "Überblick",
   "app.admin.overview.users": "Benutzer",
@@ -510,7 +521,8 @@ export const de: Messages = {
   "app.projectSettings.folderHint":
     "Ein absoluter Pfad im Stil deines Rechners: /Users/you/AI oder C:\\Users\\you\\AI. Ein Ordner, der bereits zu einem anderen deiner Projekte gehört, muss dort zuerst freigegeben werden.",
   "app.projectSettings.requests": "Zugriffsanfragen",
-  "app.projectSettings.requestsBody": "Personen, die dieses Repository bereits anderswo haben, bitten darum, hier zu schreiben.",
+  "app.projectSettings.requestsBody":
+    "Personen, die dieses Repository bereits anderswo haben, bitten darum, hier zu schreiben.",
   "app.projectSettings.requestsEmpty": "Keine offenen Anfragen.",
   "app.projectSettings.grant": "Schreibzugriff geben",
   "app.projectSettings.decline": "Ablehnen",
@@ -644,7 +656,8 @@ export const de: Messages = {
   "app.profile.needCurrentPassword":
     "Gib dein aktuelles Passwort ein, um die E-Mail-Adresse zu ändern.",
   "app.profile.saved": "Gespeichert.",
-  "app.profile.emailPending": "Prüfe die neue Adresse und klicke auf den Link, um die Änderung abzuschließen.",
+  "app.profile.emailPending":
+    "Prüfe die neue Adresse und klicke auf den Link, um die Änderung abzuschließen.",
   "app.profile.passwordsDiffer": "Die neuen Passwörter stimmen nicht überein.",
   "app.profile.passwordChanged":
     "Passwort geändert. Alle anderen Geräte sind abgemeldet.",

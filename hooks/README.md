@@ -5,8 +5,16 @@ already knows, the newest ones with a summary. One request, no model call.
 
 ## Claude Code
 
-`mimir-session-start.sh` prints the digest to stdout. Wire it to `SessionStart`
-in `.claude/settings.json`:
+The maintained path is the plugin in `packages/claude-plugin`: `/plugin
+marketplace add mojoaar/mimir`, then `/plugin install mimir@mimir`. It prints
+the JSON Claude Code requires, and adds the compaction handover and
+`/mimir-learn`.
+
+The script below still works, but only if it prints the JSON form: a
+`SessionStart` hook on Claude Code 2.1 and later must emit
+`hookSpecificOutput.additionalContext`, and plain text is now a hook error. The
+script prints plain text, so it needs wrapping before you wire it to
+`SessionStart` in `.claude/settings.json`:
 
 ```json
 {
@@ -14,7 +22,10 @@ in `.claude/settings.json`:
     "SessionStart": [
       {
         "hooks": [
-          { "type": "command", "command": "sh /path/to/mimir/hooks/mimir-session-start.sh" }
+          {
+            "type": "command",
+            "command": "sh /path/to/mimir/hooks/mimir-session-start.sh"
+          }
         ]
       }
     ]

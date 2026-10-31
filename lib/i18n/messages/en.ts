@@ -64,7 +64,8 @@ export const en = {
   "data.body":
     "One container and a Postgres you already run. Nothing leaves the box unless you configure a provider, and then only the text you wrote. The optional pageview counter talks to your own Umami instance and nothing else. Backups are encrypted with a key only you hold, and the restore script ships in the repo.",
 
-  "clients.title": "Works with the agents you already run, over MCP or a plugin",
+  "clients.title":
+    "Works with the agents you already run, over MCP or a plugin",
   "clients.titleAccent": "plugin",
   "stats.container": "container",
   "stats.mcp": "MCP tools",
@@ -87,9 +88,11 @@ export const en = {
     "Share a project with a person or a team, with read or write access, and take it back in one click.",
   "connect.title": "Connect an agent",
   "connect.opencode": "OpenCode plugin",
+  "connect.claude": "Claude Code plugin",
   "connect.mcp": "Any MCP client",
   "connect.omp": "Oh My Pi plugin",
-  "connect.hint": "The two plugins also inject the digest, which MCP cannot do.",
+  "connect.hint":
+    "The two plugins also inject the digest, which MCP cannot do.",
   "data.contrast":
     "No account with us, no per-seat licence, and no copy of your memories anywhere you did not put it.",
 
@@ -139,9 +142,11 @@ export const en = {
   "app.forgot.blocked": "This address is not allowed to use this server.",
   "app.forgot.empty": "Enter the address you sign in with.",
   "app.emailConfirm.title": "Confirm your new address",
-  "app.emailConfirm.body": "Click below to use this address for your account. Every other session is signed out when you do.",
+  "app.emailConfirm.body":
+    "Click below to use this address for your account. Every other session is signed out when you do.",
   "app.emailConfirm.button": "Confirm this address",
-  "app.emailConfirm.invalid": "This link is incomplete. Open the newest one from your inbox.",
+  "app.emailConfirm.invalid":
+    "This link is incomplete. Open the newest one from your inbox.",
   "app.emailConfirm.done": "{email} is now your address.",
   "app.setPassword.title": "Set a password",
   "app.setPassword.body":
@@ -192,7 +197,8 @@ export const en = {
   "app.tree.byPath": "Path",
   "app.tree.byAdded": "Added",
   "app.tree.byUpdated": "Updated",
-  "app.tree.capped": "Showing the first {limit} paths. Narrow with a folder or a search.",
+  "app.tree.capped":
+    "Showing the first {limit} paths. Narrow with a folder or a search.",
   "app.editor.body": "Memory body",
   "app.editor.save": "Save",
   "app.editor.saving": "Saving…",
@@ -225,7 +231,8 @@ export const en = {
   "app.project.restoreFailed": "Could not restore the project.",
   "app.project.export": "Export",
   "app.requests.title": "Ask for access",
-  "app.requests.body": "A repository a teammate already added has a project of its own. Ask its owner for access instead of writing into a second copy; the request appears on that project's settings page.",
+  "app.requests.body":
+    "A repository a teammate already added has a project of its own. Ask its owner for access instead of writing into a second copy; the request appears on that project's settings page.",
   "app.requests.repo": "Repository",
   "app.requests.note": "Why (optional)",
   "app.requests.notePlaceholder": "What you are working on",
@@ -234,9 +241,12 @@ export const en = {
   "app.requests.pending": "Waiting for an owner",
   "app.requests.granted": "Access granted",
   "app.requests.declined": "Declined",
-  "app.requests.requested": "Request sent. The owner sees it on the project's settings page.",
-  "app.requests.already": "You already have access, or a request is already open.",
-  "app.project.restoreConflict": "That path was written again after it was deleted, so this copy stayed deleted.",
+  "app.requests.requested":
+    "Request sent. The owner sees it on the project's settings page.",
+  "app.requests.already":
+    "You already have access, or a request is already open.",
+  "app.project.restoreConflict":
+    "That path was written again after it was deleted, so this copy stayed deleted.",
   "app.project.restoreGone": "That memory is no longer in the bin.",
   "app.project.delete": "Delete",
   "app.project.deleteHint":
@@ -492,7 +502,8 @@ export const en = {
   "app.projectSettings.folderHint":
     "An absolute path, in the style your machine uses: /Users/you/AI or C:\\Users\\you\\AI. A folder already claimed by another of your projects must be released there first.",
   "app.projectSettings.requests": "Access requests",
-  "app.projectSettings.requestsBody": "People who already have this repository elsewhere are asking to write here.",
+  "app.projectSettings.requestsBody":
+    "People who already have this repository elsewhere are asking to write here.",
   "app.projectSettings.requestsEmpty": "No open requests.",
   "app.projectSettings.grant": "Grant write",
   "app.projectSettings.decline": "Decline",
@@ -625,7 +636,8 @@ export const en = {
   "app.profile.needCurrentPassword":
     "Enter your current password to change your email address.",
   "app.profile.saved": "Saved.",
-  "app.profile.emailPending": "Check the new address and click the link to finish the change.",
+  "app.profile.emailPending":
+    "Check the new address and click the link to finish the change.",
   "app.profile.passwordsDiffer": "The new passwords do not match.",
   "app.profile.passwordChanged":
     "Password changed. Every other device is signed out.",

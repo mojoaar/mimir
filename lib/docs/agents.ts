@@ -73,7 +73,8 @@ export const AGENTS: AgentDoc[] = [
       ),
     notes: [
       `Or add it from the CLI: claude mcp add --transport http mimir <your-url>/mcp --header "Authorization: Bearer $${TOKEN}"`,
-      "Add the session-start hook to inject the project digest when a session begins: point SessionStart at hooks/mimir-session-start.sh (see hooks/README.md).",
+      "Install the plugin instead of wiring a hook by hand: `/plugin marketplace add mojoaar/mimir`, then `/plugin install mimir@mimir`. It puts the digest in the first turn, hands the session over before compaction, and adds a `/mimir-learn` command.",
+      "The older plain-text hook (hooks/mimir-session-start.sh) is an error on Claude Code 2.1 and later, which requires a SessionStart hook to print hookSpecificOutput JSON. The plugin does that.",
     ],
   },
   {

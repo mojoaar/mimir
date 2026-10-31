@@ -66,7 +66,8 @@ export const da: Messages = {
   "data.body":
     "Én container og en Postgres, du allerede kører. Intet forlader boksen, medmindre du opsætter en udbyder, og så kun den tekst, du skrev. Den valgfrie sidevisningstæller taler kun med din egen Umami-installation. Backupper krypteres med en nøgle, kun du har, og gendannelsesscriptet ligger i repoet.",
 
-  "clients.title": "Virker med de agenter, du allerede kører, over MCP eller et plugin",
+  "clients.title":
+    "Virker med de agenter, du allerede kører, over MCP eller et plugin",
   "clients.titleAccent": "plugin",
   "stats.container": "container",
   "stats.mcp": "MCP-værktøjer",
@@ -89,9 +90,11 @@ export const da: Messages = {
     "Del et projekt med en person eller et hold, med læse- eller skriveadgang, og tag det tilbage med ét klik.",
   "connect.title": "Forbind en agent",
   "connect.opencode": "OpenCode-plugin",
+  "connect.claude": "Claude Code-plugin",
   "connect.mcp": "Enhver MCP-klient",
   "connect.omp": "Oh My Pi-plugin",
-  "connect.hint": "De to plugins indsætter også digesten, hvilket MCP ikke kan.",
+  "connect.hint":
+    "De to plugins indsætter også digesten, hvilket MCP ikke kan.",
   "data.contrast":
     "Ingen konto hos os, ingen pris pr. bruger, og ingen kopi af dine erindringer uden for det sted, du selv har lagt dem.",
 
@@ -140,9 +143,11 @@ export const da: Messages = {
   "app.forgot.blocked": "Denne adresse har ikke adgang til serveren.",
   "app.forgot.empty": "Skriv den adresse, du logger ind med.",
   "app.emailConfirm.title": "Bekræft din nye adresse",
-  "app.emailConfirm.body": "Klik nedenfor for at bruge denne adresse på din konto. Alle andre sessioner logges ud, når du gør det.",
+  "app.emailConfirm.body":
+    "Klik nedenfor for at bruge denne adresse på din konto. Alle andre sessioner logges ud, når du gør det.",
   "app.emailConfirm.button": "Bekræft denne adresse",
-  "app.emailConfirm.invalid": "Linket er ufuldstændigt. Åbn det nyeste fra din indbakke.",
+  "app.emailConfirm.invalid":
+    "Linket er ufuldstændigt. Åbn det nyeste fra din indbakke.",
   "app.emailConfirm.done": "{email} er nu din adresse.",
   "app.setPassword.title": "Vælg en adgangskode",
   "app.setPassword.body": "Vælg mindst 12 tegn. Linket virker kun én gang.",
@@ -192,7 +197,8 @@ export const da: Messages = {
   "app.tree.byPath": "Sti",
   "app.tree.byAdded": "Tilføjet",
   "app.tree.byUpdated": "Opdateret",
-  "app.tree.capped": "Viser de første {limit} stier. Indsnævr med en mappe eller en søgning.",
+  "app.tree.capped":
+    "Viser de første {limit} stier. Indsnævr med en mappe eller en søgning.",
   "app.editor.body": "Mindets indhold",
   "app.editor.save": "Gem",
   "app.editor.saving": "Gemmer…",
@@ -225,7 +231,8 @@ export const da: Messages = {
   "app.project.restoreFailed": "Projektet kunne ikke gendannes.",
   "app.project.export": "Eksportér",
   "app.requests.title": "Bed om adgang",
-  "app.requests.body": "Et repository, som en kollega allerede har tilføjet, har sit eget projekt. Bed ejeren om adgang i stedet for at skrive i en anden kopi; anmodningen vises på projektets indstillingsside.",
+  "app.requests.body":
+    "Et repository, som en kollega allerede har tilføjet, har sit eget projekt. Bed ejeren om adgang i stedet for at skrive i en anden kopi; anmodningen vises på projektets indstillingsside.",
   "app.requests.repo": "Repository",
   "app.requests.note": "Hvorfor (valgfrit)",
   "app.requests.notePlaceholder": "Hvad du arbejder på",
@@ -234,9 +241,12 @@ export const da: Messages = {
   "app.requests.pending": "Venter på en ejer",
   "app.requests.granted": "Adgang givet",
   "app.requests.declined": "Afvist",
-  "app.requests.requested": "Anmodning sendt. Ejeren ser den på projektets indstillingsside.",
-  "app.requests.already": "Du har allerede adgang, eller der er allerede en åben anmodning.",
-  "app.project.restoreConflict": "Stien blev skrevet igen, efter den blev slettet, så denne kopi forbliver slettet.",
+  "app.requests.requested":
+    "Anmodning sendt. Ejeren ser den på projektets indstillingsside.",
+  "app.requests.already":
+    "Du har allerede adgang, eller der er allerede en åben anmodning.",
+  "app.project.restoreConflict":
+    "Stien blev skrevet igen, efter den blev slettet, så denne kopi forbliver slettet.",
   "app.project.restoreGone": "Den erindring er ikke længere i papirkurven.",
   "app.project.delete": "Slet",
   "app.project.deleteHint":
@@ -494,7 +504,8 @@ export const da: Messages = {
   "app.projectSettings.folderHint":
     "En absolut sti i den stil, din maskine bruger: /Users/you/AI eller C:\\Users\\you\\AI. En mappe, der allerede er knyttet til et andet af dine projekter, skal frigives der først.",
   "app.projectSettings.requests": "Adgangsanmodninger",
-  "app.projectSettings.requestsBody": "Folk, der allerede har dette repository andetsteds, beder om at skrive her.",
+  "app.projectSettings.requestsBody":
+    "Folk, der allerede har dette repository andetsteds, beder om at skrive her.",
   "app.projectSettings.requestsEmpty": "Ingen åbne anmodninger.",
   "app.projectSettings.grant": "Giv skriveadgang",
   "app.projectSettings.decline": "Afvis",
@@ -626,7 +637,8 @@ export const da: Messages = {
   "app.profile.needCurrentPassword":
     "Skriv din nuværende adgangskode for at skifte e-mailadresse.",
   "app.profile.saved": "Gemt.",
-  "app.profile.emailPending": "Tjek den nye adresse, og klik på linket for at fuldføre ændringen.",
+  "app.profile.emailPending":
+    "Tjek den nye adresse, og klik på linket for at fuldføre ændringen.",
   "app.profile.passwordsDiffer": "De nye adgangskoder er ikke ens.",
   "app.profile.passwordChanged":
     "Adgangskoden er skiftet. Alle andre enheder er logget ud.",

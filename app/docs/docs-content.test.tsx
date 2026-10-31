@@ -289,6 +289,17 @@ describe("plugins", () => {
     );
   });
 
+  it("installs the Claude Code plugin from the marketplace", async () => {
+    const text = renderToStaticMarkup(await PluginsPage()).replace(
+      /<[^>]+>/g,
+      "",
+    );
+
+    expect(text).toContain("Claude Code");
+    expect(text).toContain("/plugin marketplace add mojoaar/mimir");
+    expect(text).toContain("/plugin install mimir@mimir");
+  });
+
   it("names the read tool the plugins also register", async () => {
     const text = renderToStaticMarkup(await PluginsPage()).replace(
       /<[^>]+>/g,

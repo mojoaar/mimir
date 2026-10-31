@@ -2,7 +2,7 @@
 
 Long-term memory for coding agents. Self-hosted, path-based, and readable by a human.
 
-> **Mímir** was the Norse god whose well held wisdom and memory; Odin (Óðinn) traded an eye for a single draught from it. The name is the same word as *memory* and *remember* - and a memory worth an eye is the right standard for one your agents drink from.
+> **Mímir** was the Norse god whose well held wisdom and memory; Odin (Óðinn) traded an eye for a single draught from it. The name is the same word as _memory_ and _remember_ - and a memory worth an eye is the right standard for one your agents drink from.
 
 An agent asks "what do we already know about this project?" and gets back the decisions, conventions and gotchas that were learned the hard way - scoped to the repository it is standing in. Memory is a tree of paths with three levels of detail, so an agent pays for one line until it needs the whole thing.
 
@@ -42,8 +42,8 @@ Muse) with the exact config file each one reads. The OpenCode plugin is
 `@mojoaar/opencode-mimir`, which runs on the OpenCode v2 plugin API and installs straight from this
 repository (`github:mojoaar/mimir#main::path:packages/opencode-plugin`); it needs a URL and a token, passed as
 plugin options or exported as `MIMIR_URL` and `MIMIR_TOKEN`, or it loads and stays inactive; Oh My Pi installs
-`@mojoaar/omp-mimir` with `omp plugin install @mojoaar/omp-mimir`; the Claude Code session-start hook is
-`hooks/mimir-session-start.sh`.
+`@mojoaar/omp-mimir` with `omp plugin install @mojoaar/omp-mimir`; Claude Code installs the plugin from this
+repository with `/plugin marketplace add mojoaar/mimir` and `/plugin install mimir@mimir`.
 
 The server also sends its protocol to every MCP client on `initialize` - digest first,
 search before re-deriving, one memory per outcome. A client that does not show that to
@@ -99,19 +99,19 @@ Open http://localhost:3000, sign in with `MIMIR_ADMIN_EMAIL` / `MIMIR_ADMIN_PASS
 
 11 MCP tools, mirrored one-to-one on `/api/v1`:
 
-| Tool | Purpose |
-|---|---|
-| `memory_digest` | Session-start context: titles plus recent summaries, inside a token budget |
-| `memory_search` | Hybrid search, optionally scoped to a path prefix |
-| `memory_tree` | List a directory of memory (virtual directories, L0 titles only) |
-| `memory_read` | One memory, with its summary and body |
-| `memory_write` | Upsert one path |
-| `memory_ingest` | Bulk import: up to 100 files (2 MB) into one path prefix |
-| `memory_learn` | Hand over a transcript; the project model writes up to three memories |
-| `memory_versions` | The versions of one path, newest first, with size and writer |
-| `memory_restore` | Put a version back; the current body is archived first |
-| `memory_delete` | Soft delete, recoverable for 30 days |
-| `project_list` | Projects the caller can reach |
+| Tool              | Purpose                                                                    |
+| ----------------- | -------------------------------------------------------------------------- |
+| `memory_digest`   | Session-start context: titles plus recent summaries, inside a token budget |
+| `memory_search`   | Hybrid search, optionally scoped to a path prefix                          |
+| `memory_tree`     | List a directory of memory (virtual directories, L0 titles only)           |
+| `memory_read`     | One memory, with its summary and body                                      |
+| `memory_write`    | Upsert one path                                                            |
+| `memory_ingest`   | Bulk import: up to 100 files (2 MB) into one path prefix                   |
+| `memory_learn`    | Hand over a transcript; the project model writes up to three memories      |
+| `memory_versions` | The versions of one path, newest first, with size and writer               |
+| `memory_restore`  | Put a version back; the current body is archived first                     |
+| `memory_delete`   | Soft delete, recoverable for 30 days                                       |
+| `project_list`    | Projects the caller can reach                                              |
 
 The client sends the repo key (`X-Mimir-Repo: github.com/owner/repo`), so two agents working in one checkout share one project without configuration. A directory that is not a repository can claim a folder instead: claim it on the project's settings page and every session you start in it or below it writes there, with a git remote still winning over a folder. The claim is personal, so a teammate on a shared project reaches it through a checkout of the same repository or by naming the project explicitly. A write can also carry the `client` and `session` that made it, which the memory's history then shows.
 
@@ -135,11 +135,11 @@ a dismissible warning when an hour runs far above the recent baseline. Providers
 start at their list price and can be repriced per row; an unpriced provider still
 counts calls, it just shows under **Unpriced**. The base URL depends on where Ollama runs:
 
-| Where Ollama runs | Base URL |
-|---|---|
-| On the host, Mimir in Docker | `http://host.docker.internal:11434` |
-| As a compose sidecar (profile `ollama`) | `http://ollama:11434` |
-| Remote | `https://…` |
+| Where Ollama runs                       | Base URL                            |
+| --------------------------------------- | ----------------------------------- |
+| On the host, Mimir in Docker            | `http://host.docker.internal:11434` |
+| As a compose sidecar (profile `ollama`) | `http://ollama:11434`               |
+| Remote                                  | `https://…`                         |
 
 Ollama binds to `127.0.0.1` by default, so the host case needs `OLLAMA_HOST=0.0.0.0`, and the model has to be present:
 

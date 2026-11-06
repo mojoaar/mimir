@@ -17,7 +17,7 @@
     "aws4fetch": "^1.0.20",
     "diff": "^9.0.0",
     "next": "16.4.3",
-    "otpauth": "^9.5.2",
+    "otpauth": "^9.6.0",
     "pg": "^8.23.1",
     "pg-boss": "^12.38.0",
     "prism-react-renderer": "^2.4.1",
